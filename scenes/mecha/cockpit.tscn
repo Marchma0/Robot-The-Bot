@@ -1,9 +1,6 @@
 [gd_scene format=3]
 
-[sub_resource type="StandardMaterial3D" id="Mat_hull"]
-albedo_color = Color(0.55, 0.5, 0.42, 1)
-metallic = 0.4
-roughness = 0.7
+[ext_resource type="PackedScene" path="res://assets/models/cockpit.glb" id="1_model"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_console"]
 albedo_color = Color(0.25, 0.3, 0.32, 1)
@@ -20,58 +17,17 @@ properties/1/replication_mode = 1
 [sub_resource type="BoxShape3D" id="Shape_Floor"]
 size = Vector3(6, 0.3, 6)
 
-[sub_resource type="BoxMesh" id="Mesh_Floor"]
-size = Vector3(6, 0.3, 6)
-material = SubResource("Mat_hull")
-
 [sub_resource type="BoxShape3D" id="Shape_WallLeft"]
 size = Vector3(0.2, 2.5, 6.4)
-
-[sub_resource type="BoxMesh" id="Mesh_WallLeft"]
-size = Vector3(0.2, 2.5, 6.4)
-material = SubResource("Mat_hull")
 
 [sub_resource type="BoxShape3D" id="Shape_WallRight"]
 size = Vector3(0.2, 2.5, 6.4)
 
-[sub_resource type="BoxMesh" id="Mesh_WallRight"]
-size = Vector3(0.2, 2.5, 6.4)
-material = SubResource("Mat_hull")
-
 [sub_resource type="BoxShape3D" id="Shape_WallBack"]
 size = Vector3(6, 2.5, 0.2)
 
-[sub_resource type="BoxMesh" id="Mesh_WallBack"]
+[sub_resource type="BoxShape3D" id="Shape_FrontWall"]
 size = Vector3(6, 2.5, 0.2)
-material = SubResource("Mat_hull")
-
-[sub_resource type="BoxShape3D" id="Shape_FrontLowWall"]
-size = Vector3(6, 1.2, 0.2)
-
-[sub_resource type="BoxMesh" id="Mesh_FrontLowWall"]
-size = Vector3(6, 1.2, 0.2)
-material = SubResource("Mat_hull")
-
-[sub_resource type="BoxShape3D" id="Shape_FrontBeam"]
-size = Vector3(6, 0.3, 0.2)
-
-[sub_resource type="BoxMesh" id="Mesh_FrontBeam"]
-size = Vector3(6, 0.3, 0.2)
-material = SubResource("Mat_hull")
-
-[sub_resource type="BoxShape3D" id="Shape_FrontPostL"]
-size = Vector3(0.15, 1, 0.15)
-
-[sub_resource type="BoxMesh" id="Mesh_FrontPostL"]
-size = Vector3(0.15, 1, 0.15)
-material = SubResource("Mat_hull")
-
-[sub_resource type="BoxShape3D" id="Shape_FrontPostR"]
-size = Vector3(0.15, 1, 0.15)
-
-[sub_resource type="BoxMesh" id="Mesh_FrontPostR"]
-size = Vector3(0.15, 1, 0.15)
-material = SubResource("Mat_hull")
 
 [sub_resource type="BoxShape3D" id="Shape_ConsolePilot"]
 size = Vector3(1.6, 1, 0.6)
@@ -96,6 +52,8 @@ material = SubResource("Mat_console")
 
 [node name="Cockpit" type="Node3D"]
 
+[node name="Model" parent="." instance=ExtResource("1_model")]
+
 [node name="Hull" type="AnimatableBody3D" parent="."]
 sync_to_physics = false
 
@@ -103,57 +61,21 @@ sync_to_physics = false
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
 shape = SubResource("Shape_Floor")
 
-[node name="Mesh" type="MeshInstance3D" parent="Hull/Floor"]
-mesh = SubResource("Mesh_Floor")
-
 [node name="WallLeft" type="CollisionShape3D" parent="Hull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.1, 1.25, 0)
 shape = SubResource("Shape_WallLeft")
-
-[node name="Mesh" type="MeshInstance3D" parent="Hull/WallLeft"]
-mesh = SubResource("Mesh_WallLeft")
 
 [node name="WallRight" type="CollisionShape3D" parent="Hull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.1, 1.25, 0)
 shape = SubResource("Shape_WallRight")
 
-[node name="Mesh" type="MeshInstance3D" parent="Hull/WallRight"]
-mesh = SubResource("Mesh_WallRight")
-
 [node name="WallBack" type="CollisionShape3D" parent="Hull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 3.1)
 shape = SubResource("Shape_WallBack")
 
-[node name="Mesh" type="MeshInstance3D" parent="Hull/WallBack"]
-mesh = SubResource("Mesh_WallBack")
-
-[node name="FrontLowWall" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -3.1)
-shape = SubResource("Shape_FrontLowWall")
-
-[node name="Mesh" type="MeshInstance3D" parent="Hull/FrontLowWall"]
-mesh = SubResource("Mesh_FrontLowWall")
-
-[node name="FrontBeam" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.35, -3.1)
-shape = SubResource("Shape_FrontBeam")
-
-[node name="Mesh" type="MeshInstance3D" parent="Hull/FrontBeam"]
-mesh = SubResource("Mesh_FrontBeam")
-
-[node name="FrontPostL" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.7, -3.1)
-shape = SubResource("Shape_FrontPostL")
-
-[node name="Mesh" type="MeshInstance3D" parent="Hull/FrontPostL"]
-mesh = SubResource("Mesh_FrontPostL")
-
-[node name="FrontPostR" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.7, -3.1)
-shape = SubResource("Shape_FrontPostR")
-
-[node name="Mesh" type="MeshInstance3D" parent="Hull/FrontPostR"]
-mesh = SubResource("Mesh_FrontPostR")
+[node name="FrontWall" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -3.1)
+shape = SubResource("Shape_FrontWall")
 
 [node name="ConsolePilot" type="CollisionShape3D" parent="Hull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -2.4)
