@@ -10,7 +10,7 @@ Objectif de base : amener le mécha d'un point A à un point B. Le game design e
 - **Ventre** : 2 nains aux postes des **jambes** (une jambe chacun).
 - **Tête** : 2 nains aux postes des **mains** — main gauche **grappin** (attraper des objets), main droite **foreuse**. Ils voient dehors par les deux yeux ronds (hublots).
 - On **monte** du ventre à la tête par un **escalier**, on **redescend** par une **barre de pompier**.
-- **Jambes** : chaque nain du ventre pilote **sa** jambe avec les leviers de sa console. Il faut se coordonner pour marcher.
+- **Jambes** (détail complet dans `docs/design_jambes.md`) : chaque nain du ventre pilote **sa** jambe avec **un joystick**. Pousser le joystick lève le pied et déplace un **curseur au sol** ; relâcher pose le pied sur le curseur, et l'**IK** plie le genou. Tirer vers soi recule le pied, écarter sur le côté fait pivoter le bassin. L'**équilibre** est réel : un pas mal compensé fait **chuter** le robot (ragdoll). Les actions spéciales (s'accroupir, se relever, sauter) se font à des **panneaux muraux**, par des **combinaisons à deux** gravées sur les murs (aucun QTE affiché à l'écran).
 - **Foreuse** : une fois activée, le bras **s'étend jusqu'à 3 m** et **mine** ce qui est minable devant lui.
 - **Grappin** : seule exception aux commandes libres. Le nain **s'assoit** devant un **petit écran** et ne contrôle plus son personnage. Il voit par une **caméra montée sur le bras du grappin**, pilote le bras et attrape des objets.
 - **Inventaire** : ce qui est attrapé va **automatiquement** dans un **gros sac à dos** porté dans le dos du robot.
@@ -104,9 +104,15 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 - [x] M3 — Système d'interaction : commandes physiques toujours actives (boutons instantanés, leviers/joysticks qu'on attrape), pas de poste verrouillant
 - [ ] M4 — Animations des nains : squelette Blender + animations `idle`, `walk`, `jump`, `grab` (tenir un levier), `press` (appuyer), état synchronisé et `AnimationTree` dans Godot. Les leviers et boutons s'animent déjà selon leur état (fait en M3)
 - [ ] M5 — Circulation dans le mécha : escalier pour monter du ventre à la tête, **barre de pompier** pour redescendre vite (mécanique de glissade), avec les animations `climb` et `slide_pole`
-- [ ] M6 — Marche du mécha : chaque nain du ventre pilote sa jambe avec les leviers de sa console. Squelette des jambes du robot (hanche, genou, pied) **animé** selon l'état simulé par l'hôte, version simple sans IK. Remplace le mouvement de test
+- [ ] M6 — Marche du mécha (détail : `docs/design_jambes.md`). Tout est simulé par l'hôte : les clients n'envoient que leurs joysticks, l'état (pieds, curseurs, bassin, phase) est synchronisé et l'IK est calculée chez chacun
+  - [ ] M6.1 — Squelette + IK + pas : jambes remodelées (cuisse, tibia, pied, os `leg_L_*`), **1 joystick par jambe** sur les consoles du ventre (à la place des 2 leviers), curseur au sol (anneau lumineux + petit écran « vue des pieds » sur la console), pousser = pied levé, relâcher = pied posé, IK 2 os, bassin qui suit les pieds, recul et pivot (pas chassé). Remplace le mouvement de test
+  - [ ] M6.2 — Équilibre : centre de gravité réel comparé à la zone d'appui des pieds, le robot penche (ressenti dans la cabine) jusqu'au point de non-retour
+  - [ ] M6.3 — Chute ragdoll : os physiques activés sur l'hôte, pose synchronisée, effondrement mou ; les nains dégringolent dans la cabine (gravité du monde au-delà d'une certaine inclinaison)
+  - [ ] M6.4 — Panneaux muraux + antisèches : boutons et leviers (système M3) sur les murs du ventre, système de **séquences à deux** validé par l'hôte (ordre + rôle gauche/droite), combinaisons fixes gravées sur les murs, actions s'accroupir / se relever
+  - [ ] M6.5 — Se relever : la séquence de redémarrage fige la physique, transition de la pose ragdoll vers une animation `get_up`, puis retour du contrôle
+  - [ ] M6.6 — Saut directionnel hybride : un joueur maintient la direction au joystick pendant que la séquence murale est exécutée, trajectoire calculée par l'hôte, réception déséquilibrée = chute
 - [ ] M7 — Foreuse : activation depuis la console de la tête, bras qui **s'étend en animation** jusqu'à 3 m, mèche qui tourne, minage des éléments minables (premiers blocs minables dans un niveau de test, avec une animation de destruction)
 - [ ] M8 — Grappin : poste assis avec petit écran (perte du contrôle du nain, animation `sit`), vue depuis une caméra sur le bras, **bras et pince animés**, attraper un objet
 - [ ] M9 — Inventaire : gros sac à dos dans le dos du robot, les objets attrapés y vont automatiquement, avec une **animation de rangement** (le bras dépose l'objet, le sac s'ouvre). Modèle + stockage synchronisé
-- [ ] M10 — Expérimentations game design (IK des jambes, équilibre…)
+- [ ] M10 — Expérimentations et réglages game design (parcours A → B, difficulté, sensations)
 - [ ] M11 — Bascule sur Steam (GodotSteam, lobby, invitations)
