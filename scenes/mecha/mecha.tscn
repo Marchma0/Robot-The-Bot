@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" path="res://assets/models/mecha.glb" id="1_glb"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/controls/lever.tscn" id="2_lever"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/controls/push_button.tscn" id="3_button"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/controls/seat.tscn" id="4_seat"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_mecha"]
 properties/0/path = NodePath(".:position")
@@ -63,8 +64,8 @@ size = Vector3(4.6, 2.7, 0.1)
 [sub_resource type="BoxShape3D" id="Shape_HeadCeiling"]
 size = Vector3(4.6, 0.1, 4)
 
-[sub_resource type="BoxShape3D" id="Shape_ArmConsoleL"]
-size = Vector3(0.9, 0.5, 0.6)
+[sub_resource type="BoxShape3D" id="Shape_GrabberDesk"]
+size = Vector3(0.8, 0.88, 0.4)
 
 [sub_resource type="BoxShape3D" id="Shape_ArmConsoleR"]
 size = Vector3(0.9, 0.5, 0.6)
@@ -157,9 +158,9 @@ shape = SubResource("Shape_HeadWallFront")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.35, 0)
 shape = SubResource("Shape_HeadCeiling")
 
-[node name="ArmConsoleL" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 5.85, -1.45)
-shape = SubResource("Shape_ArmConsoleL")
+[node name="GrabberDesk" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 6.04, -1.55)
+shape = SubResource("Shape_GrabberDesk")
 
 [node name="ArmConsoleR" type="CollisionShape3D" parent="Hull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 5.85, -1.45)
@@ -201,67 +202,90 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 5.6, -0.2)
 
 [node name="Controls" type="Node3D" parent="."]
 
-[node name="LegL_LeverA" parent="Controls" instance=ExtResource("2_lever")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.22, 3.22, -1.4)
-display_name = "Jambe gauche — levier A"
-axes = 0
-handle_length = 0.3
-knob_color = Color(0.45, 0.28, 0.14, 1)
-
-[node name="LegL_LeverB" parent="Controls" instance=ExtResource("2_lever")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.78, 3.22, -1.4)
-display_name = "Jambe gauche — levier B"
-axes = 0
-handle_length = 0.3
-knob_color = Color(0.45, 0.28, 0.14, 1)
-
-[node name="LegR_LeverA" parent="Controls" instance=ExtResource("2_lever")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.78, 3.22, -1.4)
-display_name = "Jambe droite — levier A"
-axes = 0
-handle_length = 0.3
-knob_color = Color(0.45, 0.28, 0.14, 1)
-
-[node name="LegR_LeverB" parent="Controls" instance=ExtResource("2_lever")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.22, 3.22, -1.4)
-display_name = "Jambe droite — levier B"
-axes = 0
-handle_length = 0.3
-knob_color = Color(0.45, 0.28, 0.14, 1)
-
-[node name="Grabber_Stick" parent="Controls" instance=ExtResource("2_lever")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 6.28, -1.38)
-display_name = "Grappin — joystick"
+[node name="LegL_Stick" parent="Controls" instance=ExtResource("2_lever")]
+transform = Transform3D(1, 0, 0, 0, 0.9397, -0.342, 0, 0.342, 0.9397, -1.22, 3.2249, -1.3944)
+display_name = "Jambe gauche — joystick"
 axes = 1
-handle_length = 0.2
-knob_color = Color(0.9, 0.7, 0.15, 1)
+handle_length = 0.3
+knob_color = Color(0.45, 0.28, 0.14, 1)
 
-[node name="Drill_Stick" parent="Controls" instance=ExtResource("2_lever")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 6.28, -1.38)
-display_name = "Foreuse — joystick"
+[node name="LegL_PadUp" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(0.55, 0, 0, 0, 0.5168, -0.1881, 0, 0.1881, 0.5168, -0.78, 3.2467, -1.4982)
+display_name = "Jambe gauche — pad haut"
+cap_color = Color(0.78, 0.76, 0.7, 1)
+show_debug = false
+
+[node name="LegL_PadDown" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(0.55, 0, 0, 0, 0.5168, -0.1881, 0, 0.1881, 0.5168, -0.78, 3.1954, -1.3573)
+display_name = "Jambe gauche — pad bas"
+cap_color = Color(0.78, 0.76, 0.7, 1)
+show_debug = false
+
+[node name="LegL_PadLeft" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(0.55, 0, 0, 0, 0.5168, -0.1881, 0, 0.1881, 0.5168, -0.855, 3.2211, -1.4278)
+display_name = "Jambe gauche — pad gauche"
+cap_color = Color(0.78, 0.76, 0.7, 1)
+show_debug = false
+
+[node name="LegL_PadRight" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(0.55, 0, 0, 0, 0.5168, -0.1881, 0, 0.1881, 0.5168, -0.705, 3.2211, -1.4278)
+display_name = "Jambe gauche — pad droite"
+cap_color = Color(0.78, 0.76, 0.7, 1)
+show_debug = false
+
+[node name="LegR_Stick" parent="Controls" instance=ExtResource("2_lever")]
+transform = Transform3D(1, 0, 0, 0, 0.9397, -0.342, 0, 0.342, 0.9397, 0.78, 3.2249, -1.3944)
+display_name = "Jambe droite — joystick"
 axes = 1
-handle_length = 0.2
+handle_length = 0.3
+knob_color = Color(0.45, 0.28, 0.14, 1)
+
+[node name="LegR_PadUp" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(0.55, 0, 0, 0, 0.5168, -0.1881, 0, 0.1881, 0.5168, 1.22, 3.2467, -1.4982)
+display_name = "Jambe droite — pad haut"
+cap_color = Color(0.78, 0.76, 0.7, 1)
+show_debug = false
+
+[node name="LegR_PadDown" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(0.55, 0, 0, 0, 0.5168, -0.1881, 0, 0.1881, 0.5168, 1.22, 3.1954, -1.3573)
+display_name = "Jambe droite — pad bas"
+cap_color = Color(0.78, 0.76, 0.7, 1)
+show_debug = false
+
+[node name="LegR_PadLeft" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(0.55, 0, 0, 0, 0.5168, -0.1881, 0, 0.1881, 0.5168, 1.145, 3.2211, -1.4278)
+display_name = "Jambe droite — pad gauche"
+cap_color = Color(0.78, 0.76, 0.7, 1)
+show_debug = false
+
+[node name="LegR_PadRight" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(0.55, 0, 0, 0, 0.5168, -0.1881, 0, 0.1881, 0.5168, 1.295, 3.2211, -1.4278)
+display_name = "Jambe droite — pad droite"
+cap_color = Color(0.78, 0.76, 0.7, 1)
+show_debug = false
+
+[node name="Drill_Depth" parent="Controls" instance=ExtResource("2_lever")]
+transform = Transform3D(1, 0, 0, 0, 0.9397, -0.342, 0, 0.342, 0.9397, 1.25, 6.2189, -1.3573)
+display_name = "Foreuse — profondeur"
+axes = 0
+handle_length = 0.28
+one_axis_min = 0
+spring_back = false
 knob_color = Color(0.8, 0.15, 0.1, 1)
 
-[node name="Grabber_ButtonGreen" parent="Controls" instance=ExtResource("3_button")]
-transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, -1.4, 6.22, -1.5)
-display_name = "Grappin — bouton vert"
-cap_color = Color(0.2, 0.7, 0.25, 1)
-
-[node name="Grabber_ButtonRed" parent="Controls" instance=ExtResource("3_button")]
-transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, -0.8, 6.22, -1.5)
-display_name = "Grappin — bouton rouge"
+[node name="Drill_Mine" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(1.4, 0, 0, 0, 1.3156, -0.4788, 0, 0.4788, 1.3156, 0.9, 6.2348, -1.4154)
+display_name = "Foreuse — miner"
 cap_color = Color(0.8, 0.15, 0.1, 1)
+toggle = true
 
-[node name="Drill_ButtonGreen" parent="Controls" instance=ExtResource("3_button")]
-transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, 0.8, 6.22, -1.5)
-display_name = "Foreuse — bouton vert"
-cap_color = Color(0.2, 0.7, 0.25, 1)
+[node name="Grabber_Seat" parent="Controls" node_paths=PackedStringArray("camera_anchor") instance=ExtResource("4_seat")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 5.6, -0.85)
+display_name = "Grappin — poste"
+camera_anchor = NodePath("../../GrabberCamAnchor")
 
-[node name="Drill_ButtonRed" parent="Controls" instance=ExtResource("3_button")]
-transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, 1.4, 6.22, -1.5)
-display_name = "Foreuse — bouton rouge"
-cap_color = Color(0.8, 0.15, 0.1, 1)
+[node name="GrabberCamAnchor" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.8829, 0.4695, 0, -0.4695, 0.8829, -2.95, 4.3, -2.3)
 
 [node name="Players" type="Node3D" parent="."]
 

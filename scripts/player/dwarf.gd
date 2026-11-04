@@ -30,6 +30,9 @@ var slot: int = 0
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3 = Vector3.ZERO
+## Regard accumulé pendant qu'on est assis (envoyé à la station à chaque frame physique).
+var _seat_look: Vector2 = Vector2.ZERO
+var _pov_active: bool = false
 
 @onready var _head: Node3D = %Head
 @onready var _camera: Camera3D = %Camera
@@ -39,6 +42,7 @@ var _spawn_position: Vector3 = Vector3.ZERO
 @onready var _interactor: Interactor = %Interactor
 @onready var _hud: CanvasLayer = %Hud
 @onready var _prompt_label: Label = %PromptLabel
+@onready var _crosshair: Control = %Crosshair
 
 
 func _enter_tree() -> void:
@@ -85,8 +89,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var motion: InputEventMouseMotion = event
-		# Quand on tient un levier, la souris le bouge au lieu de tourner la tête.
-		if _interactor.is_holding():
+		# Assis : la souris pilote la station. Levier tenu : elle bouge le levier.
+		if _interactor.get_seat() != null:
+			_seat_look += Vector2(motion.relative.x, -motion.relative.y) * mouse_sensitivity
+		elif _interactor.is_holding():
 			_interactor.drive_mouse(Vector2(motion.relative.x, -motion.relative.y))
 		else:
 			_look(-motion.relative * mouse_sensitivity)
@@ -94,6 +100,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	var stick: Vector2 = Input.get_vector("look_left", "look_right", "look_up", "look_down")
+	var seat: Seat = _interactor.get_seat()
+	_update_view(seat)
+	if seat != null:
+		_stay_seated(seat, Vector2(stick.x, -stick.y) * stick_look_speed * delta)
+		return
 	if _interactor.is_holding():
 		_interactor.drive_stick(Vector2(stick.x, -stick.y), delta)
 	else:
@@ -133,6 +144,28 @@ func setup(p_peer_id: int, p_slot: int) -> void:
 
 func _on_prompt_changed(text: String) -> void:
 	_prompt_label.text = text
+
+
+## Assis : le nain reste sur le siège et ses entrées partent vers la station (hôte).
+func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
+	global_transform = seat.get_sit_transform()
+	velocity = Vector3.ZERO
+	var move: Vector2 = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
+	seat.submit_controls.rpc_id(1, move, _seat_look + stick_look)
+	_seat_look = Vector2.ZERO
+
+
+## Plein écran sur la caméra de la station quand on est assis, sinon caméra du nain.
+func _update_view(seat: Seat) -> void:
+	var want_pov: bool = seat != null
+	if want_pov == _pov_active:
+		return
+	_pov_active = want_pov
+	if want_pov:
+		seat.get_pov_camera().current = true
+	else:
+		_camera.current = true
+	_crosshair.visible = not want_pov
 
 
 ## delta.x = lacet (corps), delta.y = tangage (tête), en radians.

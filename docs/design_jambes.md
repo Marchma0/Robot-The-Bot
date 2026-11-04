@@ -18,7 +18,7 @@ Statut : **validé** par le porteur du projet (2026-11-04). Implémentation déc
 
 - **Lever / poser le pied** : pousser le joystick **lève le pied** et déplace le curseur ; **relâcher le joystick pose le pied** sur le curseur. Le joystick revient au centre tout seul (ressort). On voit facilement qui a un pied en l'air.
 - **Voir son curseur** : un **anneau lumineux au sol**, visible par tous (aussi par le hublot du ventre), plus un **petit écran « vue des pieds »** sur chaque console de jambe.
-- **Consoles du ventre** : **1 joystick par jambe** (à la place des 2 leviers actuels). Les autres commandes (boutons, leviers) vont sur les **panneaux muraux**.
+- **Consoles du ventre** : **1 joystick (toutes directions) + 1 pad à 4 flèches par jambe** (en place depuis le 2026-11-04 ; le rôle du pad reste à définir). Les autres commandes (boutons, leviers) vont sur les **panneaux muraux**.
 
 ## Approche technique
 

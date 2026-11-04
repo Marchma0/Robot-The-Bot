@@ -56,6 +56,7 @@ unique_name_in_owner = true
 visible = false
 
 [node name="Crosshair" type="CenterContainer" parent="Hud"]
+unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

@@ -20,6 +20,8 @@ const RELEASE_MARGIN: float = 0.5
 @export var knob_color: Color = Color(0.45, 0.28, 0.14)
 ## Longueur de la tige (m), à l'échelle des nains : ~0.3 pour un levier, ~0.2 pour un joystick.
 @export var handle_length: float = 0.3
+## Levier à 1 axe : valeur minimale (0 = le levier ne va pas en arrière, ex. profondeur de la foreuse).
+@export_range(-1.0, 0.0) var one_axis_min: float = -1.0
 
 ## Position du levier, chaque axe dans [-1, 1]. y = avant (+) / arrière (-), x = droite (+) / gauche (-).
 var value: Vector2 = Vector2.ZERO
@@ -120,7 +122,7 @@ func _get_highlight_meshes() -> Array[GeometryInstance3D]:
 
 func _constrain(raw: Vector2) -> Vector2:
 	if axes == Axes.ONE:
-		return Vector2(0.0, clampf(raw.y, -1.0, 1.0))
+		return Vector2(0.0, clampf(raw.y, one_axis_min, 1.0))
 	# Joystick : débattement circulaire (la diagonale ne va pas plus loin que tout droit).
 	return raw.limit_length(1.0)
 
