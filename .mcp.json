@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "godot": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@coding-solo/godot-mcp"],
+      "env": {
+        "GODOT_PATH": "C:/Users/Kamel/Downloads/Godot/Godot_v4.7.2-stable_win64.exe"
+      }
+    },
+    "blender": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "uvx", "blender-mcp"]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Exports
+/build/
+/export/
+export_presets.cfg
+
+# Blender : sauvegardes auto
+*.blend1
+*.blend2
+*.blend@
+
+# Claude Code : réglages locaux
+.claude/settings.local.json
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,16 @@
+# Normalize EOL for all files that Git considers text files.
+* text=auto eol=lf
+
+# Fichiers binaires (pas de diff, pas de conversion EOL)
+*.blend binary
+*.glb binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.ttf binary
+*.otf binary
+*.exe binary
