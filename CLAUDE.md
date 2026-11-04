@@ -82,7 +82,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 5. Noter les décisions importantes dans `docs/decisions.md`.
 
 ## Roadmap (prototype)
-- [ ] M0 — Projet, Input Map, NetworkManager ENet (host/join local), spawn de 4 nains
+- [x] M0 — Projet, Input Map, NetworkManager ENet (host/join local), spawn de 4 nains
 - [ ] M1 — Nain contrôlable (CharacterBody3D) dans un cockpit qui bouge
 - [ ] M2 — Système d'interaction : prendre/lâcher un poste
 - [ ] M3 — Mécha blockout qui se déplace (version simple, sans IK)
