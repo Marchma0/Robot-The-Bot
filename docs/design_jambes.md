@@ -1,6 +1,6 @@
-# Design — Les jambes du mécha (M6)
+# Design — Les jambes du mécha (M7)
 
-Statut : **validé** par le porteur du projet (2026-11-04). Implémentation découpée en M6.1 à M6.6 (voir `CLAUDE.md`).
+Statut : **validé** par le porteur du projet (2026-11-04). Implémentation découpée en M7.1 à M7.6 (voir `CLAUDE.md`).
 
 ## Description (texte du porteur du projet)
 

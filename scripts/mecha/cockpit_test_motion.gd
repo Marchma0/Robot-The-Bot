@@ -1,5 +1,5 @@
 extends Node
-## Mouvement scripté TEMPORAIRE du cockpit, en attendant la vraie marche du mécha (M6).
+## Mouvement scripté TEMPORAIRE du cockpit, en attendant la vraie marche du mécha (M7).
 ## Fait tourner le cockpit en rond avec un balancement façon "pas de mécha".
 ## Tourne uniquement sur l'hôte ; le MultiplayerSynchronizer du cockpit réplique le résultat.
 
