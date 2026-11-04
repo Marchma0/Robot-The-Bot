@@ -18,6 +18,8 @@ const TUNIC_MATERIAL: String = "Tunic"
 const FALL_LIMIT: float = -10.0
 ## Temps sans sol (s) avant de jouer l'animation de saut / chute.
 const AIRBORNE_DELAY: float = 0.15
+## Longueur max du pseudo affiché au-dessus de la tête.
+const MAX_NAME_LENGTH: int = 18
 
 @export var walk_speed: float = 3.5
 @export var ground_acceleration: float = 30.0
@@ -29,6 +31,13 @@ const AIRBORNE_DELAY: float = 0.15
 
 var peer_id: int = 1
 var slot: int = 0
+## Pseudo affiché au-dessus du nain (pseudo Steam), écrit par le propriétaire et répliqué.
+## Vide = "Joueur N".
+var player_name: String = "":
+	set(value):
+		player_name = value
+		if is_node_ready():
+			_update_name_label()
 
 # --- État d'animation : écrit par le propriétaire, répliqué par le MultiplayerSynchronizer,
 # --- lu par DwarfAnimator sur chaque peer.
@@ -82,6 +91,7 @@ func _ready() -> void:
 	_camera.current = is_local
 	_hud.visible = is_local
 	if is_local:
+		player_name = NetworkManager.get_local_player_name()
 		_interactor.add_exception(self)
 		_interactor.set_active(true)
 		_interactor.prompt_changed.connect(_on_prompt_changed)
@@ -175,6 +185,8 @@ func _on_button_pressed() -> void:
 func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 	global_transform = seat.get_sit_transform()
 	velocity = Vector3.ZERO
+	# Tête droite face à l'écran (sinon elle garde l'inclinaison prise en visant le siège).
+	_head.rotation.x = 0.0
 	anim_seated = true
 	anim_speed = 0.0
 	anim_airborne = false
@@ -213,7 +225,16 @@ func _apply_slot_visuals() -> void:
 			var source: Material = mesh.mesh.surface_get_material(i)
 			if source and source.resource_name == TUNIC_MATERIAL:
 				mesh.set_surface_override_material(i, tunic)
-	_name_label.text = "Joueur %d" % (slot + 1)
+	_update_name_label()
+
+
+func _update_name_label() -> void:
+	var shown: String = player_name.strip_edges()
+	if shown.is_empty():
+		shown = "Joueur %d" % (slot + 1)
+	elif shown.length() > MAX_NAME_LENGTH:
+		shown = shown.left(MAX_NAME_LENGTH - 1) + "…"
+	_name_label.text = shown
 
 
 func _model_meshes() -> Array[MeshInstance3D]:

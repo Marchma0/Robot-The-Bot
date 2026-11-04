@@ -285,7 +285,7 @@ display_name = "Grappin — poste"
 camera_anchor = NodePath("../../GrabberCamAnchor")
 
 [node name="GrabberCamAnchor" type="Marker3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.8829, 0.4695, 0, -0.4695, 0.8829, -2.95, 4.3, -2.3)
+transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, -2.95, 3.98, -2.72)
 
 [node name="Players" type="Node3D" parent="."]
 

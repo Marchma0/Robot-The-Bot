@@ -35,6 +35,9 @@ properties/6/replication_mode = 2
 properties/7/path = NodePath(".:anim_press_count")
 properties/7/spawn = true
 properties/7/replication_mode = 2
+properties/8/path = NodePath(".:player_name")
+properties/8/spawn = true
+properties/8/replication_mode = 2
 
 [node name="Dwarf" type="CharacterBody3D"]
 script = ExtResource("1_dwarf")

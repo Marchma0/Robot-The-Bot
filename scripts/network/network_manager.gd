@@ -69,6 +69,12 @@ func get_steam_status() -> String:
 	return _steam.status_text
 
 
+## Pseudo du joueur local à afficher au-dessus de son nain : pseudo Steam si disponible,
+## sinon "" (le nain affiche alors "Joueur N").
+func get_local_player_name() -> String:
+	return _steam.persona_name
+
+
 ## Asynchrone : steam_lobby_created + session_started en cas de succès, connection_failed sinon.
 func host_game_steam() -> void:
 	_steam.host()

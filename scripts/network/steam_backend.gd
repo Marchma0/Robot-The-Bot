@@ -26,6 +26,8 @@ const VIRTUAL_PORT: int = 0
 var available: bool = false
 ## Explication lisible de l'état de Steam (affichée dans le menu).
 var status_text: String = ""
+## Pseudo Steam du joueur local ("" si Steam indisponible).
+var persona_name: String = ""
 var lobby_id: int = 0
 
 var _steam: Object = null
@@ -42,7 +44,8 @@ func _ready() -> void:
 		push_warning("Steam : %s" % result.get("verbal", "échec de l'initialisation"))
 		return
 	available = true
-	status_text = "Steam : connecté en tant que %s" % _steam.call("getPersonaName")
+	persona_name = _steam.call("getPersonaName")
+	status_text = "Steam : connecté en tant que %s" % persona_name
 	_steam.connect("lobby_created", _on_lobby_created)
 	_steam.connect("lobby_joined", _on_lobby_joined)
 	_steam.connect("join_requested", _on_join_requested)
@@ -90,7 +93,7 @@ func _on_lobby_created(result: int, new_lobby_id: int) -> void:
 	_steam.call("setLobbyData", lobby_id, "name", "Mécha de %s" % _steam.call("getPersonaName"))
 	# Permet aux amis de rejoindre depuis la liste d'amis Steam ("Rejoindre la partie").
 	_steam.call("setRichPresence", "connect", "+connect_lobby %d" % lobby_id)
-	var peer: MultiplayerPeer = ClassDB.instantiate("SteamMultiplayerPeer")
+	var peer: MultiplayerPeer = _new_peer()
 	var err: Error = peer.call("create_host", VIRTUAL_PORT)
 	if err != OK:
 		failed.emit("Hôte Steam impossible (%s)" % error_string(err))
@@ -107,13 +110,22 @@ func _on_lobby_joined(joined_lobby_id: int, _permissions: int, _locked: bool, re
 	if owner_id == _steam.call("getSteamID"):
 		return   # l'hôte reçoit aussi cet événement pour son propre lobby
 	lobby_id = joined_lobby_id
-	var peer: MultiplayerPeer = ClassDB.instantiate("SteamMultiplayerPeer")
+	var peer: MultiplayerPeer = _new_peer()
 	var err: Error = peer.call("create_client", owner_id, VIRTUAL_PORT)
 	if err != OK:
 		failed.emit("Connexion Steam impossible (%s)" % error_string(err))
 		leave()
 		return
 	client_ready.emit(peer)
+
+
+## En Steam, chaque client n'est connecté qu'à l'hôte : le relais doit être activé pour que
+## l'hôte retransmette aux autres clients ce qu'un client envoie (ex. la position de son nain).
+## Désactivé par défaut dans SteamMultiplayerPeer : sans lui, les clients ne se voient pas bouger.
+func _new_peer() -> MultiplayerPeer:
+	var peer: MultiplayerPeer = ClassDB.instantiate("SteamMultiplayerPeer")
+	peer.call("set_server_relay", true)
+	return peer
 
 
 ## Un ami a accepté une invitation ou cliqué "Rejoindre la partie" pendant que le jeu tourne.
