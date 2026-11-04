@@ -91,7 +91,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 - [x] M0 — Projet, Input Map, NetworkManager ENet (host/join local), spawn de 4 nains
 - [x] M1 — Nain contrôlable (CharacterBody3D) dans un cockpit qui bouge
 - [x] M2 — Modèles 3D low poly simples (Blender via MCP) : nain, mécha robot (ventre + tête, escalier, trou de la barre de pompier), postes → `.glb` + scènes héritées
-- [ ] M3 — Système d'interaction : prendre/lâcher un poste
+- [x] M3 — Système d'interaction : commandes physiques toujours actives (boutons instantanés, leviers/joysticks qu'on attrape), pas de poste verrouillant
 - [ ] M4 — Circulation dans le mécha : escalier pour monter du ventre à la tête, **barre de pompier** pour redescendre vite (mécanique de glissade)
 - [ ] M5 — Mécha blockout qui se déplace (version simple, sans IK)
 - [ ] M6 — Expérimentations game design (jambes, IK, équilibre…)

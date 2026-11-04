@@ -1,6 +1,8 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://assets/models/mecha.glb" id="1_glb"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/controls/lever.tscn" id="2_lever"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/controls/push_button.tscn" id="3_button"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_mecha"]
 properties/0/path = NodePath(".:position")
@@ -26,10 +28,10 @@ size = Vector3(4.6, 2.8, 0.1)
 size = Vector3(4.6, 2.8, 0.1)
 
 [sub_resource type="BoxShape3D" id="Shape_LegConsoleL"]
-size = Vector3(1, 0.7, 0.6)
+size = Vector3(1, 0.5, 0.6)
 
 [sub_resource type="BoxShape3D" id="Shape_LegConsoleR"]
-size = Vector3(1, 0.7, 0.6)
+size = Vector3(1, 0.5, 0.6)
 
 [sub_resource type="BoxShape3D" id="Shape_Slab1"]
 size = Vector3(3.6, 0.2, 3)
@@ -62,10 +64,10 @@ size = Vector3(4.6, 2.7, 0.1)
 size = Vector3(4.6, 0.1, 4)
 
 [sub_resource type="BoxShape3D" id="Shape_ArmConsoleL"]
-size = Vector3(0.9, 0.65, 0.6)
+size = Vector3(0.9, 0.5, 0.6)
 
 [sub_resource type="BoxShape3D" id="Shape_ArmConsoleR"]
-size = Vector3(0.9, 0.65, 0.6)
+size = Vector3(0.9, 0.5, 0.6)
 
 [sub_resource type="BoxShape3D" id="Shape_RailStairLong"]
 size = Vector3(1.5, 0.95, 0.06)
@@ -108,11 +110,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -1.95)
 shape = SubResource("Shape_BellyWallFront")
 
 [node name="LegConsoleL" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 2.95, -1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 2.85, -1.5)
 shape = SubResource("Shape_LegConsoleL")
 
 [node name="LegConsoleR" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 2.95, -1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 2.85, -1.5)
 shape = SubResource("Shape_LegConsoleR")
 
 [node name="Slab1" type="CollisionShape3D" parent="Hull"]
@@ -156,11 +158,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.35, 0)
 shape = SubResource("Shape_HeadCeiling")
 
 [node name="ArmConsoleL" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 5.925, -1.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 5.85, -1.45)
 shape = SubResource("Shape_ArmConsoleL")
 
 [node name="ArmConsoleR" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 5.925, -1.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 5.85, -1.45)
 shape = SubResource("Shape_ArmConsoleR")
 
 [node name="RailStairLong" type="CollisionShape3D" parent="Hull"]
@@ -196,6 +198,70 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 5.6, -0.2)
 
 [node name="Spawn4" type="Marker3D" parent="SpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 5.6, -0.2)
+
+[node name="Controls" type="Node3D" parent="."]
+
+[node name="LegL_LeverA" parent="Controls" instance=ExtResource("2_lever")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.22, 3.22, -1.4)
+display_name = "Jambe gauche — levier A"
+axes = 0
+handle_length = 0.3
+knob_color = Color(0.45, 0.28, 0.14, 1)
+
+[node name="LegL_LeverB" parent="Controls" instance=ExtResource("2_lever")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.78, 3.22, -1.4)
+display_name = "Jambe gauche — levier B"
+axes = 0
+handle_length = 0.3
+knob_color = Color(0.45, 0.28, 0.14, 1)
+
+[node name="LegR_LeverA" parent="Controls" instance=ExtResource("2_lever")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.78, 3.22, -1.4)
+display_name = "Jambe droite — levier A"
+axes = 0
+handle_length = 0.3
+knob_color = Color(0.45, 0.28, 0.14, 1)
+
+[node name="LegR_LeverB" parent="Controls" instance=ExtResource("2_lever")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.22, 3.22, -1.4)
+display_name = "Jambe droite — levier B"
+axes = 0
+handle_length = 0.3
+knob_color = Color(0.45, 0.28, 0.14, 1)
+
+[node name="Grabber_Stick" parent="Controls" instance=ExtResource("2_lever")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 6.28, -1.38)
+display_name = "Grappin — joystick"
+axes = 1
+handle_length = 0.2
+knob_color = Color(0.9, 0.7, 0.15, 1)
+
+[node name="Drill_Stick" parent="Controls" instance=ExtResource("2_lever")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 6.28, -1.38)
+display_name = "Foreuse — joystick"
+axes = 1
+handle_length = 0.2
+knob_color = Color(0.8, 0.15, 0.1, 1)
+
+[node name="Grabber_ButtonGreen" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, -1.4, 6.22, -1.5)
+display_name = "Grappin — bouton vert"
+cap_color = Color(0.2, 0.7, 0.25, 1)
+
+[node name="Grabber_ButtonRed" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, -0.8, 6.22, -1.5)
+display_name = "Grappin — bouton rouge"
+cap_color = Color(0.8, 0.15, 0.1, 1)
+
+[node name="Drill_ButtonGreen" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, 0.8, 6.22, -1.5)
+display_name = "Foreuse — bouton vert"
+cap_color = Color(0.2, 0.7, 0.25, 1)
+
+[node name="Drill_ButtonRed" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, 1.4, 6.22, -1.5)
+display_name = "Foreuse — bouton rouge"
+cap_color = Color(0.8, 0.15, 0.1, 1)
 
 [node name="Players" type="Node3D" parent="."]
 

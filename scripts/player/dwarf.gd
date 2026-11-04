@@ -36,6 +36,9 @@ var _spawn_position: Vector3 = Vector3.ZERO
 @onready var _body_model: Node3D = %BodyModel
 @onready var _head_model: Node3D = %HeadModel
 @onready var _name_label: Label3D = %NameLabel
+@onready var _interactor: Interactor = %Interactor
+@onready var _hud: CanvasLayer = %Hud
+@onready var _prompt_label: Label = %PromptLabel
 
 
 func _enter_tree() -> void:
@@ -52,12 +55,18 @@ func _ready() -> void:
 	platform_wall_layers = 0
 	platform_on_leave = PLATFORM_ON_LEAVE_DO_NOTHING
 	_apply_slot_visuals()
+	# Permet à l'hôte de retrouver le nain d'un joueur (validation de portée des commandes).
+	add_to_group(&"dwarves")
 
 	var is_local: bool = is_multiplayer_authority()
 	set_physics_process(is_local)
 	set_process_unhandled_input(is_local)
 	_camera.current = is_local
+	_hud.visible = is_local
 	if is_local:
+		_interactor.add_exception(self)
+		_interactor.set_active(true)
+		_interactor.prompt_changed.connect(_on_prompt_changed)
 		# On ne voit pas son propre corps, mais il garde son ombre.
 		for mesh: MeshInstance3D in _model_meshes():
 			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
@@ -76,12 +85,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var motion: InputEventMouseMotion = event
-		_look(-motion.relative * mouse_sensitivity)
+		# Quand on tient un levier, la souris le bouge au lieu de tourner la tête.
+		if _interactor.is_holding():
+			_interactor.drive_mouse(Vector2(motion.relative.x, -motion.relative.y))
+		else:
+			_look(-motion.relative * mouse_sensitivity)
 
 
 func _physics_process(delta: float) -> void:
 	var stick: Vector2 = Input.get_vector("look_left", "look_right", "look_up", "look_down")
-	_look(-stick * stick_look_speed * delta)
+	if _interactor.is_holding():
+		_interactor.drive_stick(Vector2(stick.x, -stick.y), delta)
+	else:
+		_look(-stick * stick_look_speed * delta)
 
 	# "Haut" du cockpit : la gravité et le saut suivent l'inclinaison du mécha.
 	up_direction = global_basis.y.normalized()
@@ -113,6 +129,10 @@ func setup(p_peer_id: int, p_slot: int) -> void:
 	peer_id = p_peer_id
 	slot = p_slot
 	name = str(p_peer_id)
+
+
+func _on_prompt_changed(text: String) -> void:
+	_prompt_label.text = text
 
 
 ## delta.x = lacet (corps), delta.y = tangage (tête), en radians.

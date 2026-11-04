@@ -1,0 +1,65 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/lever.gd" id="1_lever"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_grab"]
+size = Vector3(0.2, 0.45, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rod"]
+albedo_color = Color(0.78, 0.45, 0.22, 1)
+metallic = 0.9
+roughness = 0.35
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rod"]
+material = SubResource("StandardMaterial3D_rod")
+top_radius = 0.018
+bottom_radius = 0.018
+height = 0.3
+radial_segments = 8
+rings = 1
+
+[sub_resource type="SphereMesh" id="SphereMesh_knob"]
+radius = 0.045
+height = 0.09
+radial_segments = 10
+rings = 5
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_lever"]
+properties/0/path = NodePath(".:value")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:holder_peer_id")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+
+[node name="Lever" type="Area3D"]
+script = ExtResource("1_lever")
+
+[node name="GrabShape" type="CollisionShape3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+shape = SubResource("BoxShape3D_grab")
+
+[node name="Pivot" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Rod" type="MeshInstance3D" parent="Pivot"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21, 0)
+mesh = SubResource("CylinderMesh_rod")
+
+[node name="Knob" type="MeshInstance3D" parent="Pivot"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, 0)
+mesh = SubResource("SphereMesh_knob")
+
+[node name="DebugLabel" type="Label3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+billboard = 1
+pixel_size = 0.0025
+font_size = 32
+outline_size = 8
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_lever")

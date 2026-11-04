@@ -1,0 +1,50 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/push_button.gd" id="1_button"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_press"]
+size = Vector3(0.18, 0.14, 0.18)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_base"]
+albedo_color = Color(0.17, 0.17, 0.19, 1)
+metallic = 0.7
+roughness = 0.55
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_base"]
+material = SubResource("StandardMaterial3D_base")
+top_radius = 0.075
+bottom_radius = 0.075
+height = 0.03
+radial_segments = 12
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_cap"]
+top_radius = 0.05
+bottom_radius = 0.055
+height = 0.05
+radial_segments = 12
+rings = 1
+
+[node name="PushButton" type="Area3D"]
+script = ExtResource("1_button")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+shape = SubResource("BoxShape3D_press")
+
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+mesh = SubResource("CylinderMesh_base")
+
+[node name="Cap" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0)
+mesh = SubResource("CylinderMesh_cap")
+
+[node name="DebugLabel" type="Label3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+billboard = 1
+pixel_size = 0.0025
+font_size = 32
+outline_size = 8
