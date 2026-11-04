@@ -1,0 +1,98 @@
+[gd_scene format=3]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+ambient_light_source = 3
+tonemap_mode = 2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(80, 1, 80)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
+albedo_color = Color(0.45, 0.42, 0.38, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+material = SubResource("StandardMaterial3D_ground")
+size = Vector3(80, 1, 80)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pillar"]
+albedo_color = Color(0.35, 0.45, 0.6, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_pillar"]
+material = SubResource("StandardMaterial3D_pillar")
+size = Vector3(1, 6, 1)
+
+[node name="TestGround" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.321394, 0.383022, 0, 0.766044, 0.642788, -0.5, -0.55667, 0.663414, 0, 8, 0)
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+shape = SubResource("BoxShape3D_ground")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("BoxMesh_ground")
+
+[node name="Pillars" type="Node3D" parent="."]
+
+[node name="Pillar1" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3, 0)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar2" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 3, 0)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar3" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 7)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar4" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -7)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar5" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 3, 0)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar6" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 3, 0)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar7" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 24)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar8" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -24)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar9" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3, 17)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar10" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 3, -17)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar11" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3, -17)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar12" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 3, 17)
+mesh = SubResource("BoxMesh_pillar")
+
