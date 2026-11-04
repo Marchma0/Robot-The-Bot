@@ -72,6 +72,12 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 - Ne jamais éditer un `.glb` dans Godot : on modifie le `.blend`, on réexporte. Les ajustements se font dans une **scène héritée** (`scenes/mecha/mecha.tscn` hérite de `assets/models/mecha.glb`).
 - Via le MCP Blender : préférer le **blockout** (formes simples, proportions, collisions) à la modélisation détaillée. Toujours sauvegarder le `.blend` dans `blender/`.
 
+## Animation — tout ce qui bouge est animé
+- **Règle** : une mécanique n'est pas finie tant que ce qui bouge n'est pas animé (nains, jambes et bras du robot, foreuse, grappin, leviers, sac à dos…). Pas d'objet qui glisse ou qui se téléporte.
+- **Nains** : squelette (armature) fait dans Blender, animations exportées dans le `.glb` (actions nommées : `idle`, `walk`, `jump`, `climb`, `slide_pole`, `grab`, `press`, `sit`…), jouées dans Godot via un `AnimationTree`.
+- **Robot** : les jambes et les bras sont animés **à partir de l'état simulé par l'hôte** (angles des articulations, extension de la foreuse…). Ce sont des animations procédurales ou des blend d'actions Blender, jamais des positions inventées côté client.
+- **Réseau** : on synchronise l'**état** (vitesse, au sol, tient un levier, assis, glisse…), jamais l'animation elle-même. Chaque peer joue l'animation correspondante localement.
+
 ## Usage des MCP
 - **MCP Godot** : utiliser pour lancer le projet, lire les erreurs/sorties du debugger, inspecter l'arborescence des scènes. Après toute modification de script, **lancer le jeu et vérifier la sortie** avant de dire que c'est fini.
 - **MCP Blender** : Blender doit être ouvert avec l'addon connecté. Si la connexion échoue, le dire au lieu d'improviser.
@@ -96,10 +102,11 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 - [x] M1 — Nain contrôlable (CharacterBody3D) dans un cockpit qui bouge
 - [x] M2 — Modèles 3D low poly simples (Blender via MCP) : nain, mécha robot (ventre + tête, escalier, trou de la barre de pompier), postes → `.glb` + scènes héritées
 - [x] M3 — Système d'interaction : commandes physiques toujours actives (boutons instantanés, leviers/joysticks qu'on attrape), pas de poste verrouillant
-- [ ] M4 — Circulation dans le mécha : escalier pour monter du ventre à la tête, **barre de pompier** pour redescendre vite (mécanique de glissade)
-- [ ] M5 — Marche du mécha : chaque nain du ventre pilote sa jambe avec les leviers de sa console. Version simple sans IK, simulée par l'hôte, qui remplace le mouvement de test
-- [ ] M6 — Foreuse : activation depuis la console de la tête, bras qui s'étend jusqu'à 3 m, minage des éléments minables (premiers blocs minables dans un niveau de test)
-- [ ] M7 — Grappin : poste assis avec petit écran (perte du contrôle du nain), vue depuis une caméra sur le bras, pilotage du bras, attraper un objet
-- [ ] M8 — Inventaire : gros sac à dos dans le dos du robot, les objets attrapés y vont automatiquement (modèle + stockage synchronisé)
-- [ ] M9 — Expérimentations game design (jambes, IK, équilibre…)
-- [ ] M10 — Bascule sur Steam (GodotSteam, lobby, invitations)
+- [ ] M4 — Animations des nains : squelette Blender + animations `idle`, `walk`, `jump`, `grab` (tenir un levier), `press` (appuyer), état synchronisé et `AnimationTree` dans Godot. Les leviers et boutons s'animent déjà selon leur état (fait en M3)
+- [ ] M5 — Circulation dans le mécha : escalier pour monter du ventre à la tête, **barre de pompier** pour redescendre vite (mécanique de glissade), avec les animations `climb` et `slide_pole`
+- [ ] M6 — Marche du mécha : chaque nain du ventre pilote sa jambe avec les leviers de sa console. Squelette des jambes du robot (hanche, genou, pied) **animé** selon l'état simulé par l'hôte, version simple sans IK. Remplace le mouvement de test
+- [ ] M7 — Foreuse : activation depuis la console de la tête, bras qui **s'étend en animation** jusqu'à 3 m, mèche qui tourne, minage des éléments minables (premiers blocs minables dans un niveau de test, avec une animation de destruction)
+- [ ] M8 — Grappin : poste assis avec petit écran (perte du contrôle du nain, animation `sit`), vue depuis une caméra sur le bras, **bras et pince animés**, attraper un objet
+- [ ] M9 — Inventaire : gros sac à dos dans le dos du robot, les objets attrapés y vont automatiquement, avec une **animation de rangement** (le bras dépose l'objet, le sac s'ouvre). Modèle + stockage synchronisé
+- [ ] M10 — Expérimentations game design (IK des jambes, équilibre…)
+- [ ] M11 — Bascule sur Steam (GodotSteam, lobby, invitations)
