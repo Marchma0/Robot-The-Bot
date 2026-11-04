@@ -12,6 +12,8 @@ const SLOT_COLORS: Array[Color] = [
 	Color(0.95, 0.75, 0.2),
 ]
 const MAX_PITCH: float = deg_to_rad(85.0)
+## Nom du matériau Blender qui prend la couleur du joueur.
+const TUNIC_MATERIAL: String = "Tunic"
 ## En dessous de cette hauteur locale, le nain est tombé du cockpit : on le replace.
 const FALL_LIMIT: float = -10.0
 
@@ -31,8 +33,8 @@ var _spawn_position: Vector3 = Vector3.ZERO
 
 @onready var _head: Node3D = %Head
 @onready var _camera: Camera3D = %Camera
-@onready var _body_mesh: MeshInstance3D = %BodyMesh
-@onready var _visor: MeshInstance3D = %Visor
+@onready var _body_model: Node3D = %BodyModel
+@onready var _head_model: Node3D = %HeadModel
 @onready var _name_label: Label3D = %NameLabel
 
 
@@ -57,8 +59,8 @@ func _ready() -> void:
 	_camera.current = is_local
 	if is_local:
 		# On ne voit pas son propre corps, mais il garde son ombre.
-		_body_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-		_visor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		for mesh: MeshInstance3D in _model_meshes():
+			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 		_name_label.visible = false
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -120,7 +122,21 @@ func _look(delta: Vector2) -> void:
 
 
 func _apply_slot_visuals() -> void:
-	var material: StandardMaterial3D = StandardMaterial3D.new()
-	material.albedo_color = SLOT_COLORS[slot % SLOT_COLORS.size()]
-	_body_mesh.material_override = material
+	# La couleur du joueur remplace le matériau "Tunic" du modèle Blender.
+	var tunic: StandardMaterial3D = StandardMaterial3D.new()
+	tunic.albedo_color = SLOT_COLORS[slot % SLOT_COLORS.size()]
+	tunic.roughness = 0.8
+	for mesh: MeshInstance3D in _model_meshes():
+		for i: int in mesh.get_surface_override_material_count():
+			var source: Material = mesh.mesh.surface_get_material(i)
+			if source and source.resource_name == TUNIC_MATERIAL:
+				mesh.set_surface_override_material(i, tunic)
 	_name_label.text = "Joueur %d" % (slot + 1)
+
+
+func _model_meshes() -> Array[MeshInstance3D]:
+	var meshes: Array[MeshInstance3D] = []
+	for model: Node3D in [_body_model, _head_model]:
+		for node: Node in model.find_children("*", "MeshInstance3D", true, false):
+			meshes.append(node as MeshInstance3D)
+	return meshes

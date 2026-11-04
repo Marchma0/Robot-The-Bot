@@ -1,20 +1,12 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/player/dwarf.gd" id="1_dwarf"]
+[ext_resource type="PackedScene" path="res://assets/models/dwarf_body.glb" id="2_body"]
+[ext_resource type="PackedScene" path="res://assets/models/dwarf_head.glb" id="3_head"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.35
 height = 1.2
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
-radius = 0.35
-height = 1.2
-
-[sub_resource type="BoxMesh" id="BoxMesh_visor"]
-size = Vector3(0.4, 0.12, 0.1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_visor"]
-albedo_color = Color(0.1, 0.1, 0.1, 1)
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_dwarf"]
 properties/0/path = NodePath(".:position")
@@ -34,20 +26,15 @@ script = ExtResource("1_dwarf")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 shape = SubResource("CapsuleShape3D_body")
 
-[node name="BodyMesh" type="MeshInstance3D" parent="."]
+[node name="BodyModel" parent="." instance=ExtResource("2_body")]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
-mesh = SubResource("CapsuleMesh_body")
 
 [node name="Head" type="Node3D" parent="."]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
 
-[node name="Visor" type="MeshInstance3D" parent="Head"]
+[node name="HeadModel" parent="Head" instance=ExtResource("3_head")]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.32)
-mesh = SubResource("BoxMesh_visor")
-surface_material_override/0 = SubResource("StandardMaterial3D_visor")
 
 [node name="Camera" type="Camera3D" parent="Head"]
 unique_name_in_owner = true
