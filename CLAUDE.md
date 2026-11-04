@@ -84,7 +84,8 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 ## Roadmap (prototype)
 - [x] M0 — Projet, Input Map, NetworkManager ENet (host/join local), spawn de 4 nains
 - [x] M1 — Nain contrôlable (CharacterBody3D) dans un cockpit qui bouge
-- [ ] M2 — Système d'interaction : prendre/lâcher un poste
-- [ ] M3 — Mécha blockout qui se déplace (version simple, sans IK)
-- [ ] M4 — Expérimentations game design (jambes, IK, équilibre…)
-- [ ] M5 — Bascule sur Steam (GodotSteam, lobby, invitations)
+- [ ] M2 — Modèles 3D low poly simples (Blender via MCP) : nain, cockpit, postes, mécha → `.glb` + scènes héritées
+- [ ] M3 — Système d'interaction : prendre/lâcher un poste
+- [ ] M4 — Mécha blockout qui se déplace (version simple, sans IK)
+- [ ] M5 — Expérimentations game design (jambes, IK, équilibre…)
+- [ ] M6 — Bascule sur Steam (GodotSteam, lobby, invitations)
