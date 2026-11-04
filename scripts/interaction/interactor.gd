@@ -7,6 +7,8 @@ extends RayCast3D
 
 ## Le message à afficher a changé ("" = rien à afficher).
 signal prompt_changed(text: String)
+## Le joueur vient d'appuyer sur un bouton (sert à l'animation "press").
+signal button_pressed
 
 ## Délai max d'attente de la réponse de l'hôte après une demande (attraper, s'installer).
 const GRAB_TIMEOUT: float = 1.0
@@ -97,6 +99,7 @@ func _handle_actions() -> void:
 	var grab: bool = Input.is_action_just_pressed("grab")
 	if _target is PushButton and (press or grab):
 		(_target as PushButton).request_press.rpc_id(1)
+		button_pressed.emit()
 	elif _target is Seat and (press or grab) and _held == null:
 		_seat = _target as Seat
 		_seat_pending = true

@@ -16,6 +16,8 @@ const MAX_PITCH: float = deg_to_rad(85.0)
 const TUNIC_MATERIAL: String = "Tunic"
 ## En dessous de cette hauteur locale, le nain est tombé du cockpit : on le replace.
 const FALL_LIMIT: float = -10.0
+## Temps sans sol (s) avant de jouer l'animation de saut / chute.
+const AIRBORNE_DELAY: float = 0.15
 
 @export var walk_speed: float = 3.5
 @export var ground_acceleration: float = 30.0
@@ -28,11 +30,23 @@ const FALL_LIMIT: float = -10.0
 var peer_id: int = 1
 var slot: int = 0
 
+# --- État d'animation : écrit par le propriétaire, répliqué par le MultiplayerSynchronizer,
+# --- lu par DwarfAnimator sur chaque peer.
+## Vitesse au sol (m/s, relative au cockpit).
+var anim_speed: float = 0.0
+var anim_airborne: bool = false
+var anim_holding: bool = false
+var anim_seated: bool = false
+## Augmente à chaque appui sur un bouton (déclenche l'animation "press" chez tout le monde).
+var anim_press_count: int = 0
+
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3 = Vector3.ZERO
 ## Regard accumulé pendant qu'on est assis (envoyé à la station à chaque frame physique).
 var _seat_look: Vector2 = Vector2.ZERO
 var _pov_active: bool = false
+## Temps passé sans toucher le sol (évite l'animation de saut sur une marche ou un cahot).
+var _air_time: float = 0.0
 
 @onready var _head: Node3D = %Head
 @onready var _camera: Camera3D = %Camera
@@ -71,6 +85,7 @@ func _ready() -> void:
 		_interactor.add_exception(self)
 		_interactor.set_active(true)
 		_interactor.prompt_changed.connect(_on_prompt_changed)
+		_interactor.button_pressed.connect(_on_button_pressed)
 		# On ne voit pas son propre corps, mais il garde son ombre.
 		for mesh: MeshInstance3D in _model_meshes():
 			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
@@ -134,6 +149,12 @@ func _physics_process(delta: float) -> void:
 		position = _spawn_position
 		velocity = Vector3.ZERO
 
+	_air_time = 0.0 if is_on_floor() else _air_time + delta
+	anim_speed = horizontal.length()
+	anim_airborne = _air_time > AIRBORNE_DELAY
+	anim_holding = _interactor.is_holding()
+	anim_seated = false
+
 
 ## Appelé par le spawner avant add_child, avec les mêmes données sur tous les peers.
 func setup(p_peer_id: int, p_slot: int) -> void:
@@ -146,10 +167,18 @@ func _on_prompt_changed(text: String) -> void:
 	_prompt_label.text = text
 
 
+func _on_button_pressed() -> void:
+	anim_press_count += 1
+
+
 ## Assis : le nain reste sur le siège et ses entrées partent vers la station (hôte).
 func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 	global_transform = seat.get_sit_transform()
 	velocity = Vector3.ZERO
+	anim_seated = true
+	anim_speed = 0.0
+	anim_airborne = false
+	anim_holding = false
 	var move: Vector2 = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	seat.submit_controls.rpc_id(1, move, _seat_look + stick_look)
 	_seat_look = Vector2.ZERO

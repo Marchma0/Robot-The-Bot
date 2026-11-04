@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://assets/models/dwarf_body.glb" id="2_body"]
 [ext_resource type="PackedScene" path="res://assets/models/dwarf_head.glb" id="3_head"]
 [ext_resource type="Script" path="res://scripts/interaction/interactor.gd" id="4_interactor"]
+[ext_resource type="Script" path="res://scripts/player/dwarf_animator.gd" id="5_animator"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.35
@@ -19,6 +20,21 @@ properties/1/replication_mode = 1
 properties/2/path = NodePath("Head:rotation")
 properties/2/spawn = true
 properties/2/replication_mode = 1
+properties/3/path = NodePath(".:anim_speed")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+properties/4/path = NodePath(".:anim_airborne")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:anim_holding")
+properties/5/spawn = true
+properties/5/replication_mode = 2
+properties/6/path = NodePath(".:anim_seated")
+properties/6/spawn = true
+properties/6/replication_mode = 2
+properties/7/path = NodePath(".:anim_press_count")
+properties/7/spawn = true
+properties/7/replication_mode = 2
 
 [node name="Dwarf" type="CharacterBody3D"]
 script = ExtResource("1_dwarf")
@@ -101,3 +117,8 @@ outline_size = 12
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_dwarf")
+
+[node name="Animator" type="Node" parent="." node_paths=PackedStringArray("dwarf", "body_model")]
+script = ExtResource("5_animator")
+dwarf = NodePath("..")
+body_model = NodePath("../BodyModel")
