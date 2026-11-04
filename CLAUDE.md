@@ -27,7 +27,7 @@ Objectif de base : amener le mécha d'un point A à un point B. Le game design e
 ## Arborescence
 ```
 project.godot
-addons/            # plugins tiers (GodotSteam, etc.) — ne pas modifier
+addons/            # plugins tiers (GodotSteam, etc.) — ne pas modifier, NON versionnés : liste + installation dans addons/ADDONS.txt
 assets/
   models/          # .glb exportés depuis Blender
   textures/ audio/ fonts/
@@ -85,7 +85,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 
 ## Ce qu'il ne faut PAS faire
 - Ne jamais toucher à `.godot/`, aux fichiers `*.import`, ni à `addons/` (sauf demande explicite).
-- Ne pas ajouter de plugin/addon sans demander.
+- Ne pas ajouter de plugin/addon sans demander. Tout addon ajouté doit être inscrit dans `addons/ADDONS.txt` (version, source, dossier, rôle, installation).
 - Ne pas implémenter une idée de `docs/ideas.md` sans que je l'aie validée.
 - Ne pas faire de gros refactors non demandés. Petits pas, testables.
 - Pas de dépendance à Steam dans le gameplay (le jeu doit tourner en ENet local).
@@ -94,6 +94,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 1. Pour toute feature : proposer un plan court (fichiers touchés, nœuds créés, impact réseau) → je valide → implémentation.
 2. Prototyper chaque mécanique dans une scène isolée `tests/sandbox_<feature>.tscn` avant de l'intégrer.
 3. Tester le multi en local : Godot → Debug → *Customize Run Instances* → 2 à 4 instances (une hôte, les autres clients).
+   - À distance : exporter l'exe (`Godot --headless --path . --export-release "Windows Desktop" build/windows/mecha-nains.exe`, puis copier `steam_appid.txt` à côté), envoyer le dossier `build/windows/` zippé, et passer par Steam (lobby / invitation) ou par un VPN type Tailscale en mode local.
 4. Après chaque étape qui marche : proposer un message de commit git clair.
 5. Noter les décisions importantes dans `docs/decisions.md`.
 

@@ -14,3 +14,7 @@
 *.ttf binary
 *.otf binary
 *.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.pck binary

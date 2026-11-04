@@ -1,0 +1,29 @@
+ADDONS REQUIS — Mécha à Nains
+==============================
+
+Le contenu de addons/ n'est PAS versionné dans git (trop lourd).
+Seul ce fichier l'est. Après un clone, installer chaque addon ci-dessous
+dans le dossier indiqué, puis rouvrir le projet dans Godot.
+
+À chaque nouvel addon : l'ajouter ici (nom, version, source, dossier, rôle, installation).
+
+------------------------------------------------------------------------
+1. GodotSteam GDExtension
+------------------------------------------------------------------------
+Version     : 4.23.2 (Steamworks SDK 1.65), pour Godot 4.4 et plus (testé avec Godot 4.7.2)
+Source      : Godot Asset Library, asset n° 2445 « GodotSteam GDExtension 4.4+ »
+              https://godotengine.org/asset-library/asset/2445
+              Archive : https://codeberg.org/godotsteam/godotsteam/archive/f99b9f54ea64974b8f5288713adc778172e3c60a.zip
+              Versions précédentes : https://codeberg.org/godotsteam/godotsteam/releases
+Dossier     : addons/godotsteam/
+Rôle        : Steam (lobby d'amis, invitations, SteamMultiplayerPeer). Utilisé uniquement par
+              scripts/network/steam_backend.gd. Sans cet addon, le jeu tourne quand même en ENet
+              (boutons Steam grisés dans le menu).
+Installation :
+  - Dans l'éditeur : onglet AssetLib → chercher « GodotSteam GDExtension 4.4+ » → Télécharger →
+    Installer (garder le dossier addons/godotsteam). Redémarrer l'éditeur.
+  - Ou à la main : télécharger l'archive ci-dessus, copier son dossier addons/godotsteam
+    dans le addons/ du projet.
+  - Ne PAS activer le plugin dans Projet → Paramètres → Plugins : il ne sert qu'à vérifier
+    les mises à jour, il n'est pas nécessaire au fonctionnement.
+  - Le fichier steam_appid.txt (480) à la racine du projet est déjà versionné.

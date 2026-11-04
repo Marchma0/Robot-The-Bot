@@ -21,7 +21,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Panel" type="PanelContainer" parent="LobbyMenu/Center"]
-custom_minimum_size = Vector2(340, 0)
+custom_minimum_size = Vector2(380, 0)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="LobbyMenu/Center/Panel"]
@@ -40,10 +40,48 @@ layout_mode = 2
 text = "Mécha à Nains"
 horizontal_alignment = 1
 
+[node name="SteamTitle" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.75, 0.85, 1, 1)
+layout_mode = 2
+text = "— Steam (à distance) —"
+horizontal_alignment = 1
+
+[node name="SteamStatusLabel" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="SteamHostButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Héberger (Steam, amis)"
+
+[node name="SteamCodeEdit" type="LineEdit" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Code du lobby Steam"
+
+[node name="SteamJoinButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Rejoindre (code Steam)"
+
+[node name="Separator" type="HSeparator" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="LocalTitle" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.75, 0.85, 1, 1)
+layout_mode = 2
+text = "— Local / VPN (adresse IP) —"
+horizontal_alignment = 1
+
 [node name="HostButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Héberger"
+text = "Héberger (local)"
 
 [node name="AddressEdit" type="LineEdit" parent="LobbyMenu/Center/Panel/Margin/VBox"]
 unique_name_in_owner = true
@@ -54,7 +92,7 @@ placeholder_text = "Adresse de l'hôte"
 [node name="JoinButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Rejoindre"
+text = "Rejoindre (adresse IP)"
 
 [node name="StatusLabel" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox"]
 unique_name_in_owner = true
@@ -62,6 +100,18 @@ custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 3
+
+[node name="SessionInfo" type="Label" parent="LobbyMenu"]
+unique_name_in_owner = true
+visible = false
+offset_left = 12.0
+offset_top = 10.0
+offset_right = 700.0
+offset_bottom = 34.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 14
+
 [node name="World" type="Node3D" parent="."]
 
 [node name="TestGround" parent="World" instance=ExtResource("4_ground")]

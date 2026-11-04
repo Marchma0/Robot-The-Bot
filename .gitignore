@@ -5,7 +5,6 @@
 # Exports
 /build/
 /export/
-export_presets.cfg
 
 # Blender : sauvegardes auto
 *.blend1
@@ -18,3 +17,8 @@ export_presets.cfg
 # OS
 .DS_Store
 Thumbs.db
+
+# Addons tiers : non versionnés (trop lourds), liste et installation dans addons/ADDONS.txt
+/addons/*
+!/addons/ADDONS.txt
+!/addons/.gitkeep
