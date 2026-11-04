@@ -21,6 +21,7 @@ properties/2/replication_mode = 1
 
 [node name="Dwarf" type="CharacterBody3D"]
 script = ExtResource("1_dwarf")
+floor_max_angle = 0.872665
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)

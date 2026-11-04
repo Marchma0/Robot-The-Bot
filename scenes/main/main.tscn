@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/network/player_spawner.gd" id="2_spawner"]
 [ext_resource type="PackedScene" path="res://scenes/player/dwarf.tscn" id="3_dwarf"]
 [ext_resource type="PackedScene" path="res://scenes/levels/test_ground.tscn" id="4_ground"]
-[ext_resource type="PackedScene" path="res://scenes/mecha/cockpit.tscn" id="5_cockpit"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="5_mecha"]
 [ext_resource type="Script" path="res://scripts/mecha/cockpit_test_motion.gd" id="6_motion"]
 
 [node name="Main" type="Node"]
@@ -67,19 +67,19 @@ autowrap_mode = 3
 [node name="TestGround" parent="World" instance=ExtResource("4_ground")]
 
 [node name="MenuCamera" type="Camera3D" parent="World"]
-transform = Transform3D(0.707107, 0.183013, -0.683013, 0, 0.965926, 0.258819, 0.707107, -0.183013, 0.683013, 2, 6, 14)
+transform = Transform3D(0.707107, 0.0467, -0.705, 0, 0.997, 0.066, 0.707107, -0.0467, 0.705, -1, 6, 16)
 current = true
 
-[node name="Cockpit" parent="World" instance=ExtResource("5_cockpit")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3, 0)
+[node name="Mecha" parent="World" instance=ExtResource("5_mecha")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 0)
 
 [node name="CockpitTestMotion" type="Node" parent="World" node_paths=PackedStringArray("target")]
 script = ExtResource("6_motion")
-target = NodePath("../Cockpit")
+target = NodePath("../Mecha")
 
 [node name="PlayerSpawner" type="MultiplayerSpawner" parent="World" node_paths=PackedStringArray("spawn_points")]
-spawn_path = NodePath("../Cockpit/Players")
+spawn_path = NodePath("../Mecha/Players")
 spawn_limit = 4
 script = ExtResource("2_spawner")
 dwarf_scene = ExtResource("3_dwarf")
-spawn_points = NodePath("../Cockpit/SpawnPoints")
+spawn_points = NodePath("../Mecha/SpawnPoints")

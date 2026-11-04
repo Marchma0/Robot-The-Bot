@@ -1,0 +1,215 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/mecha.glb" id="1_glb"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_mecha"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+
+[sub_resource type="BoxShape3D" id="Shape_BellyFloor"]
+size = Vector3(4.4, 0.2, 3.8)
+
+[sub_resource type="BoxShape3D" id="Shape_BellyWallL"]
+size = Vector3(0.1, 2.8, 3.8)
+
+[sub_resource type="BoxShape3D" id="Shape_BellyWallR"]
+size = Vector3(0.1, 2.8, 3.8)
+
+[sub_resource type="BoxShape3D" id="Shape_BellyWallBack"]
+size = Vector3(4.6, 2.8, 0.1)
+
+[sub_resource type="BoxShape3D" id="Shape_BellyWallFront"]
+size = Vector3(4.6, 2.8, 0.1)
+
+[sub_resource type="BoxShape3D" id="Shape_LegConsoleL"]
+size = Vector3(1, 0.7, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_LegConsoleR"]
+size = Vector3(1, 0.7, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_Slab1"]
+size = Vector3(3.6, 0.2, 3)
+
+[sub_resource type="BoxShape3D" id="Shape_Slab2"]
+size = Vector3(0.8, 0.2, 1.5)
+
+[sub_resource type="BoxShape3D" id="Shape_Slab3"]
+size = Vector3(0.8, 0.2, 1.3)
+
+[sub_resource type="BoxShape3D" id="Shape_Slab4"]
+size = Vector3(1.1, 0.2, 0.8)
+
+[sub_resource type="BoxShape3D" id="Shape_StairLanding"]
+size = Vector3(0.6, 0.2, 0.8)
+
+[sub_resource type="BoxShape3D" id="Shape_HeadWallL"]
+size = Vector3(0.1, 2.7, 3.8)
+
+[sub_resource type="BoxShape3D" id="Shape_HeadWallR"]
+size = Vector3(0.1, 2.7, 3.8)
+
+[sub_resource type="BoxShape3D" id="Shape_HeadWallBack"]
+size = Vector3(4.6, 2.7, 0.1)
+
+[sub_resource type="BoxShape3D" id="Shape_HeadWallFront"]
+size = Vector3(4.6, 2.7, 0.1)
+
+[sub_resource type="BoxShape3D" id="Shape_HeadCeiling"]
+size = Vector3(4.6, 0.1, 4)
+
+[sub_resource type="BoxShape3D" id="Shape_ArmConsoleL"]
+size = Vector3(0.9, 0.65, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_ArmConsoleR"]
+size = Vector3(0.9, 0.65, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_RailStairLong"]
+size = Vector3(1.5, 0.95, 0.06)
+
+[sub_resource type="BoxShape3D" id="Shape_RailStairEnd"]
+size = Vector3(0.06, 0.95, 0.8)
+
+[sub_resource type="BoxShape3D" id="Shape_RailPoleBack"]
+size = Vector3(0.8, 0.95, 0.06)
+
+[sub_resource type="BoxShape3D" id="Shape_RailPoleFront"]
+size = Vector3(0.8, 0.95, 0.06)
+
+[sub_resource type="BoxShape3D" id="Shape_StairRamp"]
+size = Vector3(4.2426, 3, 0.8)
+
+[node name="Mecha" instance=ExtResource("1_glb")]
+
+[node name="Hull" type="AnimatableBody3D" parent="."]
+sync_to_physics = false
+
+[node name="BellyFloor" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+shape = SubResource("Shape_BellyFloor")
+
+[node name="BellyWallL" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.25, 4, 0)
+shape = SubResource("Shape_BellyWallL")
+
+[node name="BellyWallR" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.25, 4, 0)
+shape = SubResource("Shape_BellyWallR")
+
+[node name="BellyWallBack" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 1.95)
+shape = SubResource("Shape_BellyWallBack")
+
+[node name="BellyWallFront" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -1.95)
+shape = SubResource("Shape_BellyWallFront")
+
+[node name="LegConsoleL" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 2.95, -1.5)
+shape = SubResource("Shape_LegConsoleL")
+
+[node name="LegConsoleR" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 2.95, -1.5)
+shape = SubResource("Shape_LegConsoleR")
+
+[node name="Slab1" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 5.5, -0.4)
+shape = SubResource("Shape_Slab1")
+
+[node name="Slab2" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 5.5, -1.15)
+shape = SubResource("Shape_Slab2")
+
+[node name="Slab3" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 5.5, 1.25)
+shape = SubResource("Shape_Slab3")
+
+[node name="Slab4" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 5.5, 1.5)
+shape = SubResource("Shape_Slab4")
+
+[node name="StairLanding" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 5.5, 1.5)
+shape = SubResource("Shape_StairLanding")
+
+[node name="HeadWallL" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.25, 6.95, 0)
+shape = SubResource("Shape_HeadWallL")
+
+[node name="HeadWallR" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.25, 6.95, 0)
+shape = SubResource("Shape_HeadWallR")
+
+[node name="HeadWallBack" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.95, 1.95)
+shape = SubResource("Shape_HeadWallBack")
+
+[node name="HeadWallFront" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.95, -1.95)
+shape = SubResource("Shape_HeadWallFront")
+
+[node name="HeadCeiling" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.35, 0)
+shape = SubResource("Shape_HeadCeiling")
+
+[node name="ArmConsoleL" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 5.925, -1.45)
+shape = SubResource("Shape_ArmConsoleL")
+
+[node name="ArmConsoleR" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 5.925, -1.45)
+shape = SubResource("Shape_ArmConsoleR")
+
+[node name="RailStairLong" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 6.075, 1.1)
+shape = SubResource("Shape_RailStairLong")
+
+[node name="RailStairEnd" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 6.075, 1.5)
+shape = SubResource("Shape_RailStairEnd")
+
+[node name="RailPoleBack" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 6.075, 0.6)
+shape = SubResource("Shape_RailPoleBack")
+
+[node name="RailPoleFront" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 6.075, -0.4)
+shape = SubResource("Shape_RailPoleFront")
+
+[node name="StairRamp" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(0.7071, 0.7071, 0, -0.7071, 0.7071, 0, 0, 0, 1, -1.1607, 3.0393, 1.5)
+shape = SubResource("Shape_StairRamp")
+
+[node name="SpawnPoints" type="Node3D" parent="."]
+
+[node name="Spawn1" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 2.6, 0)
+
+[node name="Spawn2" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 2.6, 0)
+
+[node name="Spawn3" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 5.6, -0.2)
+
+[node name="Spawn4" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 5.6, -0.2)
+
+[node name="Players" type="Node3D" parent="."]
+
+[node name="BellyLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.1, -0.4)
+light_color = Color(1, 0.82, 0.6, 1)
+light_energy = 1.4
+omni_range = 5.5
+
+[node name="HeadLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
+light_color = Color(1, 0.82, 0.6, 1)
+light_energy = 1.4
+omni_range = 5.5
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_mecha")

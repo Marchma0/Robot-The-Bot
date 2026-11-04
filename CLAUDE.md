@@ -5,6 +5,12 @@ Jeu coop 3D à 4 joueurs en P2P via Steam. Quatre nains pilotent un mécha **dep
 ils se déplacent physiquement dans le cockpit et interagissent avec des postes/panneaux pour faire bouger le mécha.
 Objectif de base : amener le mécha d'un point A à un point B. Le game design est **en exploration** (voir `docs/ideas.md`, rien n'y est validé).
 
+### Le mécha (validé, voir `docs/decisions.md`)
+- Robot trapu low poly, style « robot cosy mais pas trop » (métal peint, chanfreins, rivets, hublots ronds, touches de cuivre — pas d'ambiance cabane).
+- **Ventre** : 2 nains aux postes des **jambes** (une jambe chacun).
+- **Tête** : 2 nains aux postes des **mains** — main gauche **grappin** (attraper des objets), main droite **foreuse**. Ils voient dehors par les deux yeux ronds (hublots).
+- On **monte** du ventre à la tête par un **escalier**, on **redescend** par une **barre de pompier**.
+
 ## Stack
 - **Moteur** : Godot 4.7.x, **GDScript uniquement** (pas de C#), physique 3D **Jolt**.
 - **3D** : Blender → export **glTF binaire (.glb)** dans `assets/models/`.
@@ -84,8 +90,9 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 ## Roadmap (prototype)
 - [x] M0 — Projet, Input Map, NetworkManager ENet (host/join local), spawn de 4 nains
 - [x] M1 — Nain contrôlable (CharacterBody3D) dans un cockpit qui bouge
-- [ ] M2 — Modèles 3D low poly simples (Blender via MCP) : nain, cockpit, postes, mécha → `.glb` + scènes héritées
+- [ ] M2 — Modèles 3D low poly simples (Blender via MCP) : nain, mécha robot (ventre + tête, escalier, trou de la barre de pompier), postes → `.glb` + scènes héritées
 - [ ] M3 — Système d'interaction : prendre/lâcher un poste
-- [ ] M4 — Mécha blockout qui se déplace (version simple, sans IK)
-- [ ] M5 — Expérimentations game design (jambes, IK, équilibre…)
-- [ ] M6 — Bascule sur Steam (GodotSteam, lobby, invitations)
+- [ ] M4 — Circulation dans le mécha : escalier pour monter du ventre à la tête, **barre de pompier** pour redescendre vite (mécanique de glissade)
+- [ ] M5 — Mécha blockout qui se déplace (version simple, sans IK)
+- [ ] M6 — Expérimentations game design (jambes, IK, équilibre…)
+- [ ] M7 — Bascule sur Steam (GodotSteam, lobby, invitations)
