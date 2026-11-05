@@ -2,7 +2,7 @@ class_name Interactor
 extends RayCast3D
 ## Rayon de visée du nain local (enfant de sa caméra).
 ## Trouve la commande visée, la surligne, envoie les demandes à l'hôte
-## (appuyer, attraper, lâcher, s'installer, se lever) et pilote le levier tenu.
+## (appuyer, attraper, lâcher, s'installer, se lever, grimper) et pilote le levier tenu.
 ## Actif uniquement pour le joueur local.
 
 ## Le message à afficher a changé ("" = rien à afficher).
@@ -26,6 +26,9 @@ var _wanted: Vector2 = Vector2.ZERO
 var _seat: Seat = null
 var _seat_pending: bool = false
 var _seat_wait: float = 0.0
+var _rope: Rope = null
+var _rope_pending: bool = false
+var _rope_wait: float = 0.0
 var _prompt: String = ""
 
 
@@ -38,6 +41,10 @@ func _physics_process(delta: float) -> void:
 		# Assis (ou en attente de l'hôte) : seule action possible, se lever.
 		_set_target(null)
 		_update_seat(delta)
+	elif _rope != null:
+		# Sur la corde (ou en attente de l'hôte) : seule action possible, lâcher.
+		_set_target(null)
+		_update_rope(delta)
 	else:
 		_update_target()
 		_handle_actions()
@@ -62,6 +69,21 @@ func get_seat() -> Seat:
 	if _seat != null and not _seat_pending and _seat.is_seated_locally():
 		return _seat
 	return null
+
+
+## La corde à laquelle le joueur grimpe (confirmé par l'hôte), sinon null.
+func get_rope() -> Rope:
+	if _rope != null and not _rope_pending and _rope.is_held_locally():
+		return _rope
+	return null
+
+
+## Lâche la corde (relâcher le bouton, sauter, ou arrivé en haut).
+func release_rope() -> void:
+	if _rope != null:
+		_rope.request_release.rpc_id(1)
+		_rope = null
+		_rope_pending = false
 
 
 ## Inclinaison affichée du levier tenu, en radians (x = côté, y = avant/arrière), ZERO si on ne tient rien.
@@ -107,6 +129,14 @@ func _handle_actions() -> void:
 	if _target is PushButton and (press or grab):
 		(_target as PushButton).request_press.rpc_id(1)
 		button_pressed.emit()
+	elif _target is BeamSwitch and (press or grab):
+		(_target as BeamSwitch).request_press.rpc_id(1)
+		button_pressed.emit()
+	elif _target is Rope and grab and _held == null:
+		_rope = _target as Rope
+		_rope_pending = true
+		_rope_wait = 0.0
+		_rope.request_grab.rpc_id(1)
 	elif _target is Seat and (press or grab) and _held == null:
 		_seat = _target as Seat
 		_seat_pending = true
@@ -159,6 +189,24 @@ func _update_seat(delta: float) -> void:
 		_seat = null
 
 
+func _update_rope(delta: float) -> void:
+	if _rope_pending:
+		_rope_wait += delta
+		if _rope.is_held_locally():
+			_rope_pending = false
+		elif not Input.is_action_pressed("grab"):
+			release_rope()
+		elif _rope_wait > GRAB_TIMEOUT or _rope.holder_peer_id != 0:
+			_rope = null   # refusé (trop loin, quelqu'un grimpe déjà)
+			_rope_pending = false
+		return
+	if not _rope.is_held_locally():
+		_rope = null   # l'hôte nous l'a retirée
+		return
+	if not Input.is_action_pressed("grab"):
+		release_rope()
+
+
 func _release() -> void:
 	# Envoyé même si l'hôte n'a pas encore répondu : les RPC fiables arrivent dans l'ordre,
 	# donc un "attraper" accepté juste avant sera bien suivi du "lâcher".
@@ -171,6 +219,8 @@ func _update_prompt() -> void:
 	var text: String = ""
 	if _seat != null and not _seat_pending:
 		text = _seat.get_prompt()
+	elif _rope != null and not _rope_pending:
+		text = _rope.get_prompt()
 	elif _held != null and not _grab_pending:
 		text = _held.get_prompt()
 	elif _target != null:

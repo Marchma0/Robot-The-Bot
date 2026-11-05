@@ -1,18 +1,22 @@
 class_name DwarfAnimator
 extends Node
 ## Anime le corps du nain à partir de son ÉTAT (vitesse, en l'air, tient un levier,
-## assis, compteur d'appuis). Cet état est synchronisé par le nain ; chaque peer
-## joue l'animation localement (on ne synchronise jamais l'animation elle-même).
+## assis, flotte dans le rayon, grimpe, compteur d'appuis). Cet état est synchronisé
+## par le nain ; chaque peer joue l'animation localement (on ne synchronise jamais
+## l'animation elle-même).
 ##
 ## AnimationTree construit en code :
-##   base  = machine à états idle / walk / air / sit (fondus)
+##   base  = machine à états idle / walk / air / sit / float / climb (fondus)
 ##   grab  = Blend2 filtré sur le bras droit (tenir un levier, même en marchant)
 ##   press = OneShot filtré sur le bras droit (appuyer sur un bouton)
 
-const LOOPING: Array[StringName] = [&"idle", &"walk"]
+const LOOPING: Array[StringName] = [&"idle", &"walk", &"float", &"climb"]
 const STATE_ANIMATIONS: Dictionary[StringName, StringName] = {
 	&"idle": &"idle", &"walk": &"walk", &"air": &"jump", &"sit": &"sit",
+	&"float": &"float", &"climb": &"climb",
 }
+## États dont la vitesse de lecture suit la vitesse du nain (marche, grimpe).
+const SCALED_STATES: Array[StringName] = [&"walk", &"climb"]
 ## Os animés par la couche haut du corps (tenir / appuyer).
 const ARM_TRACK: NodePath = ^"DwarfRig/Skeleton3D:arm_R"
 const CROSSFADE: float = 0.15
@@ -23,7 +27,9 @@ const WALK_THRESHOLD: float = 0.3
 @export var body_model: Node3D
 ## Vitesse (m/s) à laquelle l'animation de marche joue à vitesse normale.
 @export var walk_reference_speed: float = 2.0
-## Bac à sable : force un état ("idle", "walk", "air", "sit", "grab", "press"), sinon vide.
+## Vitesse de grimpe (m/s) à laquelle l'animation "climb" joue à vitesse normale.
+@export var climb_reference_speed: float = 1.4
+## Bac à sable : force un état ("idle", "walk", "air", "sit", "float", "climb", "grab", "press"), sinon vide.
 @export var preview_state: String = ""
 
 var _tree: AnimationTree
@@ -53,17 +59,27 @@ func _process(delta: float) -> void:
 	var seated: bool = dwarf.anim_seated
 	var holding: bool = dwarf.anim_holding
 	var press_count: int = dwarf.anim_press_count
+	var floating: bool = dwarf.anim_floating
+	var climbing: bool = dwarf.anim_climbing
 	if preview_state != "":
 		_preview_timer += delta
 		speed = walk_reference_speed if preview_state == "walk" else 0.0
+		if preview_state == "climb":
+			speed = climb_reference_speed
 		airborne = preview_state == "air"
 		seated = preview_state == "sit"
 		holding = preview_state == "grab"
+		floating = preview_state == "float"
+		climbing = preview_state == "climb"
 		press_count = int(_preview_timer / 1.2) if preview_state == "press" else 0
 
 	var target: StringName = &"idle"
 	if seated:
 		target = &"sit"
+	elif climbing:
+		target = &"climb"
+	elif floating:
+		target = &"float"
 	elif airborne:
 		target = &"air"
 	elif speed > WALK_THRESHOLD:
@@ -71,6 +87,8 @@ func _process(delta: float) -> void:
 	if _playback.get_current_node() != target:
 		_playback.travel(target)
 	_tree.set("parameters/base/walk/scale/scale", clampf(speed / walk_reference_speed, 0.6, 2.0))
+	# À l'arrêt sur la corde, l'animation de grimpe se fige.
+	_tree.set("parameters/base/climb/scale/scale", clampf(speed / climb_reference_speed, 0.0, 2.0))
 
 	_grab_amount = move_toward(_grab_amount, 1.0 if holding else 0.0, delta * 6.0)
 	_tree.set("parameters/grab/blend_amount", _grab_amount)
@@ -85,8 +103,8 @@ func _build_tree() -> AnimationNodeBlendTree:
 	var x: float = 0.0
 	for state: StringName in STATE_ANIMATIONS:
 		var node: AnimationRootNode = _animation_node(STATE_ANIMATIONS[state])
-		if state == &"walk":
-			# La marche passe par un TimeScale pour suivre la vitesse du nain.
+		if state in SCALED_STATES:
+			# Marche et grimpe passent par un TimeScale pour suivre la vitesse du nain.
 			var walk_tree: AnimationNodeBlendTree = AnimationNodeBlendTree.new()
 			walk_tree.add_node(&"anim", node)
 			walk_tree.add_node(&"scale", AnimationNodeTimeScale.new())

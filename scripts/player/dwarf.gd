@@ -20,6 +20,12 @@ const FALL_LIMIT: float = -10.0
 const AIRBORNE_DELAY: float = 0.15
 ## Longueur max du pseudo affiché au-dessus de la tête.
 const MAX_NAME_LENGTH: int = 18
+## Corde : distance entre la corde et le nain qui grimpe (m).
+const CLIMB_DISTANCE: float = 0.22
+## Corde : on se hisse quand les pieds sont à cette distance sous le plancher (m).
+const CLIMB_TOP_BELOW_FLOOR: float = 0.55
+## Durée du mouvement pour se hisser sur le plancher (s).
+const PULLUP_DURATION: float = 0.45
 
 @export var walk_speed: float = 3.5
 @export var ground_acceleration: float = 30.0
@@ -28,6 +34,8 @@ const MAX_NAME_LENGTH: int = 18
 @export var mouse_sensitivity: float = 0.0025
 ## Vitesse de rotation au stick droit (rad/s).
 @export var stick_look_speed: float = 3.0
+## Vitesse de grimpe à la corde (m/s).
+@export var climb_speed: float = 1.4
 
 var peer_id: int = 1
 var slot: int = 0
@@ -48,6 +56,10 @@ var anim_holding: bool = false
 var anim_seated: bool = false
 ## Augmente à chaque appui sur un bouton (déclenche l'animation "press" chez tout le monde).
 var anim_press_count: int = 0
+## Porté par le rayon tracteur.
+var anim_floating: bool = false
+## Grimpe à la corde (anim_speed = vitesse de grimpe).
+var anim_climbing: bool = false
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3 = Vector3.ZERO
@@ -60,6 +72,13 @@ var _air_time: float = 0.0
 var _hold_look: Vector2 = Vector2.ZERO
 var _hold_origin: Vector2 = Vector2.ZERO
 var _was_holding: bool = false
+## Dehors : vrai si le nain était hors du mécha à la frame précédente, et sa place dans le monde.
+var _was_outside: bool = false
+var _world_transform: Transform3D = Transform3D.IDENTITY
+## Se hisser en haut de la corde : avancement (0..1, -1 = inactif), départ et arrivée (repère du parent).
+var _pullup_time: float = -1.0
+var _pullup_from: Vector3 = Vector3.ZERO
+var _pullup_to: Vector3 = Vector3.ZERO
 
 @onready var _head: Node3D = %Head
 @onready var _camera: Camera3D = %Camera
@@ -134,42 +153,68 @@ func _physics_process(delta: float) -> void:
 	if seat != null:
 		_stay_seated(seat, Vector2(stick.x, -stick.y) * stick_look_speed * delta)
 		return
+	if _pullup_time >= 0.0:
+		_update_pullup(delta)
+		return
+	var rope: Rope = _interactor.get_rope()
+	if rope == null:
+		_update_outside()
 	if _interactor.is_holding():
 		_interactor.drive_stick(Vector2(stick.x, -stick.y), delta)
 		_follow_held_lever()
 	else:
 		_was_holding = false
 		_look(-stick * stick_look_speed * delta)
+	if rope != null:
+		_climb(rope, delta)
+		return
 
-	# "Haut" du cockpit : la gravité et le saut suivent l'inclinaison du mécha.
-	up_direction = global_basis.y.normalized()
+	# "Haut" du cockpit : la gravité et le saut suivent l'inclinaison du mécha (dehors : celle du monde).
+	up_direction = Vector3.UP if _was_outside else global_basis.y.normalized()
 	var vertical: Vector3 = up_direction * velocity.dot(up_direction)
 	var horizontal: Vector3 = velocity - vertical
-
-	if is_on_floor():
-		vertical = Vector3.ZERO
-		if Input.is_action_just_pressed("jump"):
-			vertical = up_direction * jump_velocity
-	else:
-		vertical -= up_direction * _gravity * delta
-
 	var input: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var wish: Vector3 = global_basis * Vector3(input.x, 0.0, input.y) * walk_speed
-	var accel: float = ground_acceleration if is_on_floor() else air_acceleration
-	horizontal = horizontal.move_toward(wish, accel * delta)
+	var beam: TractorBeam = _find_beam()
+	# Arrivé en bas d'un rayon qui descend : on est posé au sol, la gravité normale reprend.
+	if beam != null and not beam.going_up and not beam.is_travelling(global_position):
+		beam = null
+
+	if beam != null:
+		# Dans le rayon : il porte le nain vers le haut ou le bas et le recentre pendant le trajet.
+		var travelling: bool = beam.is_travelling(global_position)
+		vertical = beam.global_basis.y * beam.get_lift_speed(global_position)
+		if travelling:
+			wish *= 0.3
+		horizontal = horizontal.move_toward(wish + beam.get_centering(global_position), ground_acceleration * delta)
+		anim_floating = travelling or not is_on_floor()
+	else:
+		anim_floating = false
+		if is_on_floor():
+			vertical = Vector3.ZERO
+			if Input.is_action_just_pressed("jump"):
+				vertical = up_direction * jump_velocity
+		else:
+			vertical -= up_direction * _gravity * delta
+		var accel: float = ground_acceleration if is_on_floor() else air_acceleration
+		horizontal = horizontal.move_toward(wish, accel * delta)
 
 	velocity = horizontal + vertical
 	move_and_slide()
+	if _was_outside:
+		_world_transform = global_transform
 
 	if position.y < FALL_LIMIT:
 		position = _spawn_position
 		velocity = Vector3.ZERO
+		_was_outside = false
 
-	_air_time = 0.0 if is_on_floor() else _air_time + delta
+	_air_time = 0.0 if is_on_floor() or anim_floating else _air_time + delta
 	anim_speed = horizontal.length()
 	anim_airborne = _air_time > AIRBORNE_DELAY
 	anim_holding = _interactor.is_holding()
 	anim_seated = false
+	anim_climbing = false
 
 
 ## Appelé par le spawner avant add_child, avec les mêmes données sur tous les peers.
@@ -197,6 +242,8 @@ func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 	anim_speed = 0.0
 	anim_airborne = false
 	anim_holding = false
+	anim_floating = false
+	anim_climbing = false
 	var move: Vector2 = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	seat.submit_controls.rpc_id(1, move, _seat_look + stick_look)
 	_seat_look = Vector2.ZERO
@@ -213,6 +260,83 @@ func _update_view(seat: Seat) -> void:
 	else:
 		_camera.current = true
 	_crosshair.visible = not want_pov
+
+
+## Sur la corde : avancer / reculer = monter / descendre, saut = lâcher.
+## Arrivé en haut, le nain se hisse sur le plancher du ventre.
+func _climb(rope: Rope, delta: float) -> void:
+	_was_outside = false
+	rotation = Vector3(0.0, rotation.y, 0.0)
+	var climb_input: float = Input.get_axis("move_back", "move_forward")
+	var top: float = rope.floor_height - CLIMB_TOP_BELOW_FLOOR
+	var rope_height: float = clampf(rope.height_of(global_position) + climb_input * climb_speed * delta, -rope.length, top)
+	# Le nain se tient juste derrière la corde, face à elle.
+	var rope_up: Vector3 = rope.global_basis.y
+	var back: Vector3 = global_basis.z - rope_up * global_basis.z.dot(rope_up)
+	global_position = rope.point_at(rope_height) + back.normalized() * CLIMB_DISTANCE
+	velocity = Vector3.ZERO
+	anim_climbing = true
+	anim_speed = absf(climb_input) * climb_speed
+	anim_floating = false
+	anim_airborne = false
+	anim_holding = false
+	anim_seated = false
+	if Input.is_action_just_pressed("jump"):
+		_interactor.release_rope()
+		velocity = back.normalized() * 1.5 + rope_up * 1.5
+	elif rope_height >= top - 0.001 and climb_input > 0.0:
+		# Se hisser : court trajet en arc jusqu'au plancher, dans le repère du mécha.
+		_pullup_from = position
+		_pullup_to = get_parent().to_local(rope.to_global(rope.exit_point))
+		_pullup_time = 0.0
+		_interactor.release_rope()
+
+
+func _update_pullup(delta: float) -> void:
+	_pullup_time += delta / PULLUP_DURATION
+	var t: float = minf(_pullup_time, 1.0)
+	position = _pullup_from.lerp(_pullup_to, ease(t, -1.6)) + Vector3.UP * sin(PI * t) * 0.25
+	velocity = Vector3.ZERO
+	anim_climbing = t < 1.0
+	anim_speed = climb_speed
+	if t >= 1.0:
+		_pullup_time = -1.0
+
+
+## Dehors (hors du volume intérieur du mécha), le nain ne suit plus le mécha : il reste
+## enfant du mécha (pour le réseau) mais annule chaque frame le déplacement de celui-ci.
+func _update_outside() -> void:
+	var outside: bool = not _is_inside_mecha()
+	if outside:
+		if _was_outside:
+			global_transform = _world_transform
+		else:
+			# On vient de sortir : debout par rapport au monde.
+			global_basis = Basis(Vector3.UP, global_basis.get_euler().y)
+			_world_transform = global_transform
+	elif _was_outside:
+		# De retour dedans : debout par rapport au mécha.
+		rotation = Vector3(0.0, rotation.y, 0.0)
+	_was_outside = outside
+
+
+func _is_inside_mecha() -> bool:
+	var volumes: Array[Node] = get_tree().get_nodes_in_group(&"mecha_interiors")
+	if volumes.is_empty():
+		return true   # scène sans mécha (bac à sable)
+	var center: Vector3 = global_position + global_basis.y * 0.6
+	for volume: Node in volumes:
+		if (volume as InteriorVolume).contains(center):
+			return true
+	return false
+
+
+func _find_beam() -> TractorBeam:
+	for node: Node in get_tree().get_nodes_in_group(&"tractor_beams"):
+		var beam: TractorBeam = node as TractorBeam
+		if beam.contains(global_position):
+			return beam
+	return null
 
 
 ## Levier tenu : la vue tourne exactement du même angle que le levier, en même temps

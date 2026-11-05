@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/test_ground.tscn" id="1_ground"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="2_mecha"]
+[ext_resource type="Script" path="res://scripts/mecha/cockpit_test_motion.gd" id="3_motion"]
+[ext_resource type="PackedScene" path="res://scenes/player/dwarf.tscn" id="4_dwarf"]
+
+[node name="SandboxCirculation" type="Node3D"]
+
+[node name="TestGround" parent="." instance=ExtResource("1_ground")]
+
+[node name="Mecha" parent="." instance=ExtResource("2_mecha")]
+
+[node name="CockpitTestMotion" type="Node" parent="." node_paths=PackedStringArray("target")]
+script = ExtResource("3_motion")
+target = NodePath("../Mecha")
+forward_speed = 0.6
+turn_rate = 0.05
+
+[node name="1" parent="Mecha/Players" instance=ExtResource("4_dwarf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 2.6, 0)

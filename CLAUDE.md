@@ -9,7 +9,8 @@ Objectif de base : amener le mécha d'un point A à un point B. Le game design e
 - Robot trapu low poly, style « robot cosy mais pas trop » (métal peint, chanfreins, rivets, hublots ronds, touches de cuivre — pas d'ambiance cabane).
 - **Ventre** : 2 nains aux postes des **jambes** (une jambe chacun).
 - **Tête** : 2 nains aux postes des **mains** — main gauche **grappin** (attraper des objets), main droite **foreuse**. Ils voient dehors par les deux yeux ronds (hublots).
-- On **monte** du ventre à la tête par un **escalier**, on **redescend** par une **barre de pompier**.
+- On **monte** et on **descend** entre le ventre et la tête par un **rayon tracteur** (colonne lumineuse) ; un **interrupteur à chaque étage** inverse son sens (bleu = monte, orange = descend).
+- On **sort** du robot par une **trappe** dans le plancher du ventre (on saute dedans) et on **remonte** par une **corde** qui pend jusqu'au sol. Dehors, le nain ne suit plus le mécha.
 - **Jambes** (détail complet dans `docs/design_jambes.md`) : chaque nain du ventre pilote **sa** jambe avec **un joystick**. Pousser le joystick lève le pied et déplace un **curseur au sol** ; relâcher pose le pied sur le curseur, et l'**IK** plie le genou. Tirer vers soi recule le pied, écarter sur le côté fait pivoter le bassin. L'**équilibre** est réel : un pas mal compensé fait **chuter** le robot (ragdoll). Les actions spéciales (s'accroupir, se relever, sauter) se font à des **panneaux muraux**, par des **combinaisons à deux** gravées sur les murs (aucun QTE affiché à l'écran).
 - **Foreuse** : console de la tête avec un **levier de profondeur** (0 → 3 m, il reste où on le laisse) et un gros **bouton « miner »** (interrupteur). Le bras **s'étend jusqu'à 3 m** et **mine** ce qui est minable devant lui.
 - **Grappin** : seule exception aux commandes libres. Le nain **s'assoit** (station `Seat`) devant un **petit écran** et ne contrôle plus son personnage. Il voit par une **caméra montée sur le bras du grappin**, pilote le bras et attrape des objets.
@@ -74,7 +75,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 
 ## Animation — tout ce qui bouge est animé
 - **Règle** : une mécanique n'est pas finie tant que ce qui bouge n'est pas animé (nains, jambes et bras du robot, foreuse, grappin, leviers, sac à dos…). Pas d'objet qui glisse ou qui se téléporte.
-- **Nains** : squelette (armature) fait dans Blender, animations exportées dans le `.glb` (actions nommées : `idle`, `walk`, `jump`, `climb`, `slide_pole`, `grab`, `press`, `sit`…), jouées dans Godot via un `AnimationTree`.
+- **Nains** : squelette (armature) fait dans Blender, animations exportées dans le `.glb` (actions nommées : `idle`, `walk`, `jump`, `float`, `climb`, `grab`, `press`, `sit`…), jouées dans Godot via un `AnimationTree`.
 - **Robot** : les jambes et les bras sont animés **à partir de l'état simulé par l'hôte** (angles des articulations, extension de la foreuse…). Ce sont des animations procédurales ou des blend d'actions Blender, jamais des positions inventées côté client.
 - **Réseau** : on synchronise l'**état** (vitesse, au sol, tient un levier, assis, glisse…), jamais l'animation elle-même. Chaque peer joue l'animation correspondante localement.
 
@@ -101,11 +102,11 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 ## Roadmap (prototype)
 - [x] M0 — Projet, Input Map, NetworkManager ENet (host/join local), spawn de 4 nains
 - [x] M1 — Nain contrôlable (CharacterBody3D) dans un cockpit qui bouge
-- [x] M2 — Modèles 3D low poly simples (Blender via MCP) : nain, mécha robot (ventre + tête, escalier, trou de la barre de pompier), postes → `.glb` + scènes héritées
+- [x] M2 — Modèles 3D low poly simples (Blender via MCP) : nain, mécha robot (ventre + tête, trou de circulation), postes → `.glb` + scènes héritées
 - [x] M3 — Système d'interaction : commandes physiques toujours actives (boutons instantanés, leviers/joysticks qu'on attrape), pas de poste verrouillant
 - [x] M4 — Animations des nains : squelette Blender + animations `idle`, `walk`, `jump`, `grab` (tenir un levier), `press` (appuyer), état synchronisé et `AnimationTree` dans Godot. Les leviers et boutons s'animent déjà selon leur état (fait en M3)
 - [ ] M5 — Steam (avancé pour tester à distance) : GodotSteam (App ID 480), choix ENet / Steam isolé dans `network_manager.gd`, lobby Steam, rejoindre par invitation ou code de lobby, export Windows (`.exe`) à envoyer aux testeurs. ENet reste disponible pour les tests locaux
-- [ ] M6 — Circulation dans le mécha : escalier pour monter du ventre à la tête, **barre de pompier** pour redescendre vite (mécanique de glissade), avec les animations `climb` et `slide_pole`
+- [x] M6 — Circulation : **rayon tracteur** entre le ventre et la tête (interrupteur de sens à chaque étage), **trappe** dans le plancher du ventre pour sortir et **corde** pour remonter (on se hisse en haut), nain « dehors » qui ne suit plus le mécha, avec les animations `float` et `climb`
 - [ ] M7 — Marche du mécha (détail : `docs/design_jambes.md`). Tout est simulé par l'hôte : les clients n'envoient que leurs joysticks, l'état (pieds, curseurs, bassin, phase) est synchronisé et l'IK est calculée chez chacun
   - [ ] M7.1 — Squelette + IK + pas : jambes remodelées (cuisse, tibia, pied, os `leg_L_*`), **1 joystick + 1 pad à 4 flèches par jambe** sur les consoles du ventre (commandes déjà en place), curseur au sol (anneau lumineux + petit écran « vue des pieds » sur la console), pousser = pied levé, relâcher = pied posé, IK 2 os, bassin qui suit les pieds, recul et pivot (pas chassé). Remplace le mouvement de test
   - [ ] M7.2 — Équilibre : centre de gravité réel comparé à la zone d'appui des pieds, le robot penche (ressenti dans la cabine) jusqu'au point de non-retour

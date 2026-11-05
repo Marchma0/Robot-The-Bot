@@ -38,6 +38,12 @@ properties/7/replication_mode = 2
 properties/8/path = NodePath(".:player_name")
 properties/8/spawn = true
 properties/8/replication_mode = 2
+properties/9/path = NodePath(".:anim_floating")
+properties/9/spawn = true
+properties/9/replication_mode = 2
+properties/10/path = NodePath(".:anim_climbing")
+properties/10/spawn = true
+properties/10/replication_mode = 2
 
 [node name="Dwarf" type="CharacterBody3D"]
 script = ExtResource("1_dwarf")

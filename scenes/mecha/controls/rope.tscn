@@ -1,0 +1,58 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/rope.gd" id="1_rope"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rope"]
+size = Vector3(0.3, 4.3, 0.3)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rope"]
+top_radius = 0.025
+bottom_radius = 0.025
+height = 4.3
+radial_segments = 8
+rings = 1
+
+[sub_resource type="SphereMesh" id="SphereMesh_knot"]
+radius = 0.05
+height = 0.1
+radial_segments = 8
+rings = 4
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_rope"]
+properties/0/path = NodePath(".:holder_peer_id")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+
+[node name="Rope" type="Area3D"]
+script = ExtResource("1_rope")
+display_name = "Corde"
+reach = 1.2
+
+[node name="GrabShape" type="CollisionShape3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.15, 0)
+shape = SubResource("BoxShape3D_rope")
+
+[node name="Sway" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="RopeMesh" type="MeshInstance3D" parent="Sway"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.15, 0)
+mesh = SubResource("CylinderMesh_rope")
+
+[node name="Knot" type="MeshInstance3D" parent="Sway"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.3, 0)
+mesh = SubResource("SphereMesh_knot")
+
+[node name="DebugLabel" type="Label3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.3, 0)
+billboard = 1
+pixel_size = 0.0025
+font_size = 32
+outline_size = 8
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_rope")
