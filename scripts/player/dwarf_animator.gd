@@ -11,18 +11,19 @@ extends Node
 ##   press = OneShot filtré sur le bras droit (appuyer sur un bouton)
 ##   gesture = OneShot filtré sur le haut du corps (emotes « geste », jouables en marchant) ;
 ##             les emotes en boucle (danse) sont des états de la machine
+##   throw / hit = OneShot filtrés sur le haut du corps (lancer un objet / recevoir un caca)
 
-const LOOPING: Array[StringName] = [&"idle", &"walk", &"float", &"climb", &"emote_dance", &"crouch", &"crouch_walk"]
+const LOOPING: Array[StringName] = [&"idle", &"walk", &"float", &"climb", &"emote_dance", &"crouch", &"crouch_walk", &"poop"]
 const STATE_ANIMATIONS: Dictionary[StringName, StringName] = {
 	&"idle": &"idle", &"walk": &"walk", &"air": &"jump", &"sit": &"sit",
 	&"float": &"float", &"climb": &"climb", &"dance": &"emote_dance",
-	&"crouch": &"crouch", &"crouch_walk": &"crouch_walk",
+	&"crouch": &"crouch", &"crouch_walk": &"crouch_walk", &"poop": &"poop",
 }
 ## Texte affiché dans la bulle d'état pour chaque état de base.
 const STATE_LABELS: Dictionary[StringName, String] = {
 	&"idle": "Au repos", &"walk": "Marche", &"air": "Saute", &"sit": "Assis",
 	&"float": "Flotte", &"climb": "Grimpe", &"dance": "Danse",
-	&"crouch": "Accroupi", &"crouch_walk": "Se dandine",
+	&"crouch": "Accroupi", &"crouch_walk": "Se dandine", &"poop": "Fait caca",
 }
 ## États dont la vitesse de lecture suit la vitesse du nain (marche, grimpe).
 const SCALED_STATES: Array[StringName] = [&"walk", &"climb", &"crouch_walk"]
@@ -60,6 +61,10 @@ var _last_emote_count: int = 0
 var _gesture_playing: bool = false
 var _gesture_label: String = ""
 var _gesture_time: float = 0.0
+var _last_throw_count: int = 0
+var _last_hit_count: int = 0
+var _event_label: String = ""
+var _event_time: float = 0.0
 
 ## Ce que fait le nain, en mots (lu par la bulle d'état).
 var state_label: String = "Au repos"
@@ -92,6 +97,7 @@ func _process(delta: float) -> void:
 	var emote: int = dwarf.anim_emote
 	var emote_count: int = dwarf.anim_emote_count
 	var crouching: bool = dwarf.anim_crouching
+	var pooping: bool = dwarf.anim_pooping
 	if preview_state != "":
 		_preview_timer += delta
 		speed = walk_reference_speed if preview_state == "walk" else 0.0
@@ -113,7 +119,7 @@ func _process(delta: float) -> void:
 
 	var target: StringName = &"idle"
 	if seated:
-		target = &"sit"
+		target = &"poop" if pooping else &"sit"
 	elif Emotes.is_loop(emote):
 		target = &"dance"
 	elif climbing:
@@ -154,9 +160,27 @@ func _process(delta: float) -> void:
 		_gesture_playing = false
 		_gesture_time = 0.0
 
-	# Texte de la bulle : le geste en cours a la priorité sur l'état de base.
+	# Lancer / recevoir un caca : couches du haut du corps, déclenchées par des compteurs.
+	if dwarf.anim_throw_count != _last_throw_count:
+		_last_throw_count = dwarf.anim_throw_count
+		_tree.set("parameters/throw/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+		_event_label = "Lance !"
+		_event_time = 0.8
+	if dwarf.anim_hit_count != _last_hit_count:
+		_last_hit_count = dwarf.anim_hit_count
+		_tree.set("parameters/hit/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+		_event_label = "Touché !"
+		_event_time = 1.2
+
+	# Texte de la bulle : un événement (lancer, touché), puis un geste, puis l'état de base.
 	_gesture_time -= delta
-	state_label = _gesture_label if _gesture_time > 0.0 else STATE_LABELS.get(target, "")
+	_event_time -= delta
+	if _event_time > 0.0:
+		state_label = _event_label
+	elif _gesture_time > 0.0:
+		state_label = _gesture_label
+	else:
+		state_label = STATE_LABELS.get(target, "")
 
 
 func _build_tree() -> AnimationNodeBlendTree:
@@ -223,7 +247,21 @@ func _build_tree() -> AnimationNodeBlendTree:
 		index += 1
 	root.connect_node(&"gesture", 0, &"press")
 	root.connect_node(&"gesture", 1, &"gesture_pick")
-	root.connect_node(&"output", 0, &"gesture")
+	var last: StringName = &"gesture"
+	for layer: StringName in [&"throw", &"hit"]:
+		var shot: AnimationNodeOneShot = AnimationNodeOneShot.new()
+		shot.filter_enabled = true
+		for track: NodePath in UPPER_BODY_TRACKS:
+			shot.set_filter_path(track, true)
+		shot.fadein_time = 0.05
+		shot.fadeout_time = 0.15
+		root.add_node(layer, shot)
+		var anim_name: StringName = StringName(String(layer) + "_anim")
+		root.add_node(anim_name, _animation_node(layer))
+		root.connect_node(layer, 0, last)
+		root.connect_node(layer, 1, anim_name)
+		last = layer
+	root.connect_node(&"output", 0, last)
 	return root
 
 

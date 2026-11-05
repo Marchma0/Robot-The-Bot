@@ -2,13 +2,16 @@ class_name Interactor
 extends RayCast3D
 ## Rayon de visée du nain local (enfant de sa caméra).
 ## Trouve la commande visée, la surligne, envoie les demandes à l'hôte
-## (appuyer, attraper, lâcher, s'installer, se lever, grimper) et pilote le levier tenu.
+## (appuyer, attraper, lâcher, s'installer, se lever, grimper, ramasser / lancer un caca)
+## et pilote le levier tenu.
 ## Actif uniquement pour le joueur local.
 
 ## Le message à afficher a changé ("" = rien à afficher).
 signal prompt_changed(text: String)
 ## Le joueur vient d'appuyer sur un bouton (sert à l'animation "press").
 signal button_pressed
+## Le joueur vient de lancer un objet (sert à l'animation "throw").
+signal thrown
 
 ## Délai max d'attente de la réponse de l'hôte après une demande (attraper, s'installer).
 const GRAB_TIMEOUT: float = 1.0
@@ -29,6 +32,8 @@ var _seat_wait: float = 0.0
 var _rope: Rope = null
 var _rope_pending: bool = false
 var _rope_wait: float = 0.0
+var _poop: Poop = null
+var _poop_wait: float = 0.0
 var _prompt: String = ""
 
 
@@ -49,6 +54,7 @@ func _physics_process(delta: float) -> void:
 		_update_target()
 		_handle_actions()
 		_update_held(delta)
+		_update_poop(delta)
 	_update_prompt()
 
 
@@ -84,6 +90,11 @@ func release_rope() -> void:
 		_rope.request_release.rpc_id(1)
 		_rope = null
 		_rope_pending = false
+
+
+## Vrai quand le joueur tient un caca (confirmé par l'hôte).
+func is_holding_poop() -> bool:
+	return _poop != null and is_instance_valid(_poop) and _poop.is_held_locally()
 
 
 ## Inclinaison affichée du levier tenu, en radians (x = côté, y = avant/arrière), ZERO si on ne tient rien.
@@ -126,23 +137,43 @@ func _set_target(target: Interactable) -> void:
 func _handle_actions() -> void:
 	var press: bool = Input.is_action_just_pressed("interact")
 	var grab: bool = Input.is_action_just_pressed("grab")
-	if _target is PushButton and (press or grab):
+	if is_holding_poop():
+		# Caca en main : clic = lancer dans la direction du regard, E = le poser.
+		if grab:
+			_poop.request_throw.rpc_id(1, -global_basis.z)
+			_poop = null
+			thrown.emit()
+			return
+		if press and not (_target is PushButton or _target is BeamSwitch or _target is DoorHandle):
+			_poop.request_throw.rpc_id(1, Vector3.ZERO)
+			_poop = null
+			return
+	var free_hands: bool = _held == null and _poop == null
+	if _target is PoopHandle and (press or grab) and free_hands:
+		_poop = (_target as PoopHandle).poop
+		_poop_wait = 0.0
+		_poop.request_pick.rpc_id(1)
+		button_pressed.emit()
+	elif _target is PushButton and (press or grab):
 		(_target as PushButton).request_press.rpc_id(1)
 		button_pressed.emit()
 	elif _target is BeamSwitch and (press or grab):
 		(_target as BeamSwitch).request_press.rpc_id(1)
 		button_pressed.emit()
-	elif _target is Rope and grab and _held == null:
+	elif _target is DoorHandle and (press or grab):
+		(_target as DoorHandle).request_toggle.rpc_id(1)
+		button_pressed.emit()
+	elif _target is Rope and grab and free_hands:
 		_rope = _target as Rope
 		_rope_pending = true
 		_rope_wait = 0.0
 		_rope.request_grab.rpc_id(1)
-	elif _target is Seat and (press or grab) and _held == null:
+	elif _target is Seat and (press or grab) and free_hands:
 		_seat = _target as Seat
 		_seat_pending = true
 		_seat_wait = 0.0
 		_seat.request_sit.rpc_id(1)
-	elif _target is Lever and grab and _held == null:
+	elif _target is Lever and grab and free_hands:
 		_held = _target as Lever
 		_grab_pending = true
 		_grab_wait = 0.0
@@ -215,9 +246,25 @@ func _release() -> void:
 	_grab_pending = false
 
 
+## Attente de la réponse de l'hôte après « ramasser » (refusé = on oublie le caca).
+func _update_poop(delta: float) -> void:
+	if _poop == null:
+		return
+	if not is_instance_valid(_poop):
+		_poop = null
+		return
+	if _poop.is_held_locally():
+		return
+	_poop_wait += delta
+	if _poop_wait > GRAB_TIMEOUT or _poop.holder_peer_id != 0:
+		_poop = null
+
+
 func _update_prompt() -> void:
 	var text: String = ""
-	if _seat != null and not _seat_pending:
+	if is_holding_poop():
+		text = "[clic / RT] lancer le caca — [E] le poser"
+	elif _seat != null and not _seat_pending:
 		text = _seat.get_prompt()
 	elif _rope != null and not _rope_pending:
 		text = _rope.get_prompt()

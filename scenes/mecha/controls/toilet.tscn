@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/mecha/controls/seat.tscn" id="1_seat"]
+[ext_resource type="Script" path="res://scripts/mecha/toilet.gd" id="2_toilet"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bowl"]
+size = Vector3(0.4, 0.38, 0.4)
+
+[node name="Toilet" instance=ExtResource("1_seat")]
+script = ExtResource("2_toilet")
+display_name = "Toilettes"
+has_screen = false
+show_debug = false
+
+[node name="CollisionShape3D" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, -0.02)
+shape = SubResource("BoxShape3D_bowl")
+
+[node name="BowlPoint" type="Marker3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, -0.02)

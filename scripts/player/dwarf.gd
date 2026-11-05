@@ -38,6 +38,8 @@ const STAND_HEIGHT: float = 1.2
 const CROUCH_HEIGHT: float = 0.72
 ## Hauteur des yeux debout / accroupi (m).
 const EYE_HEIGHT: float = 0.95
+## Position d'un objet tenu en main, par rapport aux yeux (m).
+const HOLD_OFFSET: Vector3 = Vector3(0.2, -0.22, -0.4)
 const CROUCH_EYE_HEIGHT: float = 0.7
 
 @export var walk_speed: float = 3.5
@@ -79,6 +81,12 @@ var anim_climbing: bool = false
 var anim_emote: int = Emotes.NONE
 ## Augmente à chaque emote lancée (permet de rejouer la même emote chez tout le monde).
 var anim_emote_count: int = 0
+## Assis sur les toilettes (animation "poop").
+var anim_pooping: bool = false
+## Augmente à chaque lancer (animation "throw" chez tout le monde).
+var anim_throw_count: int = 0
+## Augmente à chaque caca reçu (animation "hit" chez tout le monde).
+var anim_hit_count: int = 0
 ## Accroupi (maintenir Ctrl / B). Change aussi la collision du nain, chez tout le monde.
 var anim_crouching: bool = false:
 	set(value):
@@ -123,6 +131,7 @@ var _emote_time: float = 0.0
 @onready var _head_pitch: Node3D = %HeadPitch
 @onready var _body_shape: CollisionShape3D = %CollisionShape3D
 @onready var _state_bubble: StateBubble = %StateBubble
+@onready var _splat_overlay: SplatOverlay = %SplatOverlay
 
 
 func _enter_tree() -> void:
@@ -160,6 +169,7 @@ func _ready() -> void:
 		_interactor.set_active(true)
 		_interactor.prompt_changed.connect(_on_prompt_changed)
 		_interactor.button_pressed.connect(_on_button_pressed)
+		_interactor.thrown.connect(_on_thrown)
 		# Vue à la première personne : on voit son corps (en baissant les yeux, ses gestes),
 		# mais pas sa propre tête, qui boucherait la vue (elle garde son ombre).
 		for mesh: MeshInstance3D in _meshes_of(_head_model):
@@ -280,8 +290,9 @@ func _physics_process(delta: float) -> void:
 	_air_time = 0.0 if is_on_floor() or anim_floating else _air_time + delta
 	anim_speed = horizontal.length()
 	anim_airborne = _air_time > AIRBORNE_DELAY
-	anim_holding = _interactor.is_holding()
+	anim_holding = _interactor.is_holding() or _interactor.is_holding_poop()
 	anim_seated = false
+	anim_pooping = false
 	anim_climbing = false
 
 
@@ -300,6 +311,25 @@ func _on_button_pressed() -> void:
 	anim_press_count += 1
 
 
+func _on_thrown() -> void:
+	anim_throw_count += 1
+
+
+## Où se trouve un objet tenu en main (devant soi, en bas à droite de la vue), en global.
+## Suit l'inclinaison du regard, pour que l'objet reste visible.
+func get_hold_transform() -> Transform3D:
+	return _head.global_transform * Transform3D(Basis.IDENTITY, HOLD_OFFSET)
+
+
+## Envoyé par l'hôte quand un caca lancé touche ce nain : écran taché + animation "hit".
+@rpc("any_peer", "call_local", "reliable")
+func receive_splat() -> void:
+	if multiplayer.get_remote_sender_id() != 1 or not is_multiplayer_authority():
+		return
+	anim_hit_count += 1
+	_splat_overlay.splat()
+
+
 ## Assis : le nain reste sur le siège. À une station (écran), ses entrées partent vers
 ## la station (hôte) ; sur un simple siège (canapé), il regarde autour de lui.
 func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
@@ -315,6 +345,7 @@ func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 		_look(Vector2(-stick_look.x, stick_look.y))
 		global_transform = seat.get_sit_transform() * Transform3D(Basis(Vector3.UP, _seat_yaw), Vector3.ZERO)
 	anim_seated = true
+	anim_pooping = seat is Toilet
 	anim_speed = 0.0
 	anim_airborne = false
 	anim_holding = false

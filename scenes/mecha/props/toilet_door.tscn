@@ -1,0 +1,105 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/mecha/toilet_door.gd" id="1_door"]
+[ext_resource type="Script" path="res://scripts/mecha/door_handle.gd" id="2_handle"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.5, 0.32, 0.16, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_panel"]
+material = SubResource("StandardMaterial3D_wood")
+size = Vector3(0.04, 1.38, 0.84)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_moon"]
+albedo_color = Color(0.12, 0.08, 0.05, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_moon"]
+material = SubResource("StandardMaterial3D_moon")
+top_radius = 0.07
+bottom_radius = 0.07
+height = 0.012
+radial_segments = 14
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cover"]
+albedo_color = Color(0.5, 0.32, 0.16, 1)
+roughness = 0.85
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_cover"]
+material = SubResource("StandardMaterial3D_cover")
+top_radius = 0.065
+bottom_radius = 0.065
+height = 0.016
+radial_segments = 14
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_copper"]
+albedo_color = Color(0.78, 0.45, 0.22, 1)
+metallic = 0.9
+roughness = 0.35
+
+[sub_resource type="SphereMesh" id="SphereMesh_knob"]
+material = SubResource("StandardMaterial3D_copper")
+radius = 0.03
+height = 0.06
+radial_segments = 8
+rings = 4
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_panel"]
+size = Vector3(0.05, 1.38, 0.84)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_handle"]
+size = Vector3(0.14, 1.38, 0.84)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_door"]
+properties/0/path = NodePath(".:is_open")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+
+[node name="ToiletDoor" type="Node3D"]
+script = ExtResource("1_door")
+
+[node name="Panel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.43)
+mesh = SubResource("BoxMesh_panel")
+
+[node name="Moon" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0.02, 1.15, 0.43)
+mesh = SubResource("CylinderMesh_moon")
+
+[node name="MoonCover" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0.026, 1.17, 0.46)
+mesh = SubResource("CylinderMesh_cover")
+
+[node name="Knob" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.04, 0.75, 0.78)
+mesh = SubResource("SphereMesh_knob")
+
+[node name="Sign" type="Label3D" parent="."]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.026, 0.92, 0.43)
+pixel_size = 0.004
+text = "WC"
+font_size = 48
+outline_size = 8
+modulate = Color(0.95, 0.88, 0.7, 1)
+
+[node name="Body" type="AnimatableBody3D" parent="."]
+sync_to_physics = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.43)
+shape = SubResource("BoxShape3D_panel")
+
+[node name="Handle" type="Area3D" parent="." node_paths=PackedStringArray("door")]
+script = ExtResource("2_handle")
+display_name = "Porte"
+show_debug = false
+door = NodePath("..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Handle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.43)
+shape = SubResource("BoxShape3D_handle")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_door")

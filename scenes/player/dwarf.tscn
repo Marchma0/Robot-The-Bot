@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/player/dwarf_animator.gd" id="5_animator"]
 [ext_resource type="PackedScene" path="res://scenes/ui/emote_wheel.tscn" id="6_wheel"]
 [ext_resource type="PackedScene" path="res://scenes/ui/state_bubble.tscn" id="7_bubble"]
+[ext_resource type="Script" path="res://scripts/ui/splat_overlay.gd" id="8_splat"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.35
@@ -55,6 +56,15 @@ properties/12/replication_mode = 2
 properties/13/path = NodePath(".:anim_crouching")
 properties/13/spawn = true
 properties/13/replication_mode = 2
+properties/14/path = NodePath(".:anim_pooping")
+properties/14/spawn = true
+properties/14/replication_mode = 2
+properties/15/path = NodePath(".:anim_throw_count")
+properties/15/spawn = true
+properties/15/replication_mode = 2
+properties/16/path = NodePath(".:anim_hit_count")
+properties/16/spawn = true
+properties/16/replication_mode = 2
 
 [node name="Dwarf" type="CharacterBody3D"]
 script = ExtResource("1_dwarf")
@@ -137,6 +147,17 @@ unique_name_in_owner = true
 
 [node name="StateBubble" parent="Hud" instance=ExtResource("7_bubble")]
 unique_name_in_owner = true
+
+[node name="SplatOverlay" type="Control" parent="Hud"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("8_splat")
 
 [node name="NameLabel" type="Label3D" parent="."]
 unique_name_in_owner = true
