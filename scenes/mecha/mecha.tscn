@@ -42,13 +42,10 @@ size = Vector3(1, 0.5, 0.6)
 size = Vector3(1, 0.5, 0.6)
 
 [sub_resource type="BoxShape3D" id="Shape_Slab1"]
-size = Vector3(3.6, 0.2, 3.8)
+size = Vector3(3.5, 0.2, 3.8)
 
 [sub_resource type="BoxShape3D" id="Shape_Slab2"]
-size = Vector3(0.8, 0.2, 1.5)
-
-[sub_resource type="BoxShape3D" id="Shape_Slab3"]
-size = Vector3(0.8, 0.2, 1.3)
+size = Vector3(0.9, 0.2, 2.9)
 
 [sub_resource type="BoxShape3D" id="Shape_HeadWallL"]
 size = Vector3(0.1, 2.7, 3.8)
@@ -74,11 +71,8 @@ size = Vector3(0.9, 0.5, 0.6)
 [sub_resource type="BoxShape3D" id="Shape_RailHatch"]
 size = Vector3(0.06, 0.95, 0.95)
 
-[sub_resource type="BoxShape3D" id="Shape_RailPoleBack"]
-size = Vector3(0.8, 0.95, 0.06)
-
-[sub_resource type="BoxShape3D" id="Shape_RailPoleFront"]
-size = Vector3(0.8, 0.95, 0.06)
+[sub_resource type="BoxShape3D" id="Shape_RailBeam"]
+size = Vector3(0.9, 0.95, 0.06)
 
 [node name="Mecha" instance=ExtResource("1_glb")]
 
@@ -118,16 +112,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 2.85, -1.5)
 shape = SubResource("Shape_LegConsoleR")
 
 [node name="Slab1" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 5.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 5.5, 0)
 shape = SubResource("Shape_Slab1")
 
 [node name="Slab2" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 5.5, -1.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75, 5.5, -0.45)
 shape = SubResource("Shape_Slab2")
-
-[node name="Slab3" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 5.5, 1.25)
-shape = SubResource("Shape_Slab3")
 
 [node name="HeadWallL" type="CollisionShape3D" parent="Hull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.25, 6.95, 0)
@@ -161,13 +151,9 @@ shape = SubResource("Shape_ArmConsoleR")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.23, 3.075, 1.425)
 shape = SubResource("Shape_RailHatch")
 
-[node name="RailPoleBack" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 6.075, 0.6)
-shape = SubResource("Shape_RailPoleBack")
-
-[node name="RailPoleFront" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 6.075, -0.4)
-shape = SubResource("Shape_RailPoleFront")
+[node name="RailBeam" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75, 6.075, 1)
+shape = SubResource("Shape_RailBeam")
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 
@@ -271,12 +257,12 @@ camera_anchor = NodePath("../../GrabberCamAnchor")
 transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, -2.95, 3.98, -2.72)
 
 [node name="BeamSwitch_Belly" parent="Controls" node_paths=PackedStringArray("beam") instance=ExtResource("6_switch")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 2.19, 3.45, -0.75)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 2.19, 3.45, 0.3)
 display_name = "Rayon tracteur (ventre)"
 beam = NodePath("../../TractorBeam")
 
 [node name="BeamSwitch_Head" parent="Controls" node_paths=PackedStringArray("beam") instance=ExtResource("6_switch")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 2.19, 6.45, -0.75)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 2.19, 6.45, 0.55)
 display_name = "Rayon tracteur (tête)"
 beam = NodePath("../../TractorBeam")
 
@@ -287,7 +273,7 @@ floor_height = -1.81
 exit_point = Vector3(0, -1.79, -0.95)
 
 [node name="TractorBeam" parent="." instance=ExtResource("5_beam")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 2.6, 0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75, 2.6, 1.45)
 
 [node name="Interior" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.35, 0)
