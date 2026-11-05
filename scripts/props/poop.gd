@@ -20,11 +20,19 @@ const LIFETIME: float = 120.0
 var holder_peer_id: int = 0
 ## Écrasé (après avoir touché quelqu'un) : il s'aplatit.
 var splatted: bool = false
+## Caca légendaire (doré, brillant, ne disparaît jamais). Fixé à la création.
+var golden: bool = false:
+	set(value):
+		golden = value
+		if is_node_ready():
+			_apply_look()
 
 var _thrower: int = 0
 var _flying: bool = false
 var _slow_time: float = 0.0
 var _age: float = 0.0
+var _gold_material: StandardMaterial3D
+var _gold_light: OmniLight3D
 
 @onready var _model: Node3D = %Model
 
@@ -36,6 +44,7 @@ func _ready() -> void:
 	contact_monitor = true
 	max_contacts_reported = 2
 	body_entered.connect(_on_body_entered)
+	_apply_look()
 
 
 func _physics_process(delta: float) -> void:
@@ -47,7 +56,7 @@ func _physics_process(delta: float) -> void:
 		_slow_time = _slow_time + delta if linear_velocity.length() < 0.3 else 0.0
 		if _slow_time > 0.3:
 			_land()
-	elif holder_peer_id == 0 and _age > LIFETIME:
+	elif holder_peer_id == 0 and _age > LIFETIME and not golden:
 		queue_free()
 
 
@@ -58,6 +67,11 @@ func _process(_delta: float) -> void:
 		if dwarf != null:
 			global_transform = dwarf.get_hold_transform()
 	_model.scale = Vector3(1.4, 0.45, 1.4) if splatted else Vector3.ONE
+	if _gold_material != null:
+		# Scintillement du caca doré.
+		var shine: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.006)
+		_gold_material.emission_energy_multiplier = 0.4 + 0.8 * shine
+		_gold_light.light_energy = 0.25 + 0.25 * shine
 
 
 func is_held_locally() -> bool:
@@ -114,6 +128,24 @@ func _on_body_entered(body: Node) -> void:
 		dwarf.receive_splat.rpc()
 		splatted = true
 		linear_velocity *= 0.15
+
+
+## Matériau doré + petite lumière pour le caca légendaire.
+func _apply_look() -> void:
+	if not golden or _gold_material != null:
+		return
+	_gold_material = StandardMaterial3D.new()
+	_gold_material.albedo_color = Color(1.0, 0.78, 0.2)
+	_gold_material.metallic = 1.0
+	_gold_material.roughness = 0.2
+	_gold_material.emission_enabled = true
+	_gold_material.emission = Color(1.0, 0.7, 0.2)
+	for node: Node in _model.find_children("*", "MeshInstance3D", true, false):
+		(node as MeshInstance3D).material_override = _gold_material
+	_gold_light = OmniLight3D.new()
+	_gold_light.light_color = Color(1.0, 0.8, 0.35)
+	_gold_light.omni_range = 1.2
+	add_child(_gold_light)
 
 
 func _land() -> void:

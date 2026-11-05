@@ -63,6 +63,8 @@ var _gesture_label: String = ""
 var _gesture_time: float = 0.0
 var _last_throw_count: int = 0
 var _last_hit_count: int = 0
+var _last_sigh_count: int = 0
+var _last_golden_count: int = 0
 var _event_label: String = ""
 var _event_time: float = 0.0
 
@@ -171,6 +173,18 @@ func _process(delta: float) -> void:
 		_tree.set("parameters/hit/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 		_event_label = "Touché !"
 		_event_time = 1.2
+
+	# Toilettes : raté = soupir (geste « je sais pas ») ; caca légendaire = annonce dans la bulle.
+	if dwarf.anim_sigh_count != _last_sigh_count:
+		_last_sigh_count = dwarf.anim_sigh_count
+		_tree.set("parameters/gesture_pick/transition_request", "emote_shrug")
+		_tree.set("parameters/gesture/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+		_event_label = "Raté…"
+		_event_time = 1.4
+	if dwarf.anim_golden_count != _last_golden_count:
+		_last_golden_count = dwarf.anim_golden_count
+		_event_label = "CACA LÉGENDAIRE !"
+		_event_time = 3.0
 
 	# Texte de la bulle : un événement (lancer, touché), puis un geste, puis l'état de base.
 	_gesture_time -= delta

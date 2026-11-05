@@ -70,6 +70,13 @@ D'autres idées en réserve :
   - Des compétences qui donnent un rôle à chaque nain sans enfermer personne dans un poste.
 - **Rejouer les missions** pour faire de meilleurs scores, ou finir des défis (une étoile par objectif).
 
+## Cacas de collection (proposé le 2026-11-05)
+
+- **Raretés :** commun (marron), rare (vert ou bleu), très rare (violet, à paillettes), légendaire (doré, déjà fait). Plus c'est rare, plus le mini-jeu « Poussée » est dur.
+- **Les cacas rares et plus** ne se jettent pas : en les ramassant, on peut les **exposer sur une étagère à trophées**, dans le salon ou dans le lobby, chacun sur un petit socle avec une étiquette (nom du nain, date, rareté).
+- **L'étagère** fait partie de la sauvegarde de la partie : c'est la collection de l'équipe.
+- **Pistes :** un succès « collectionneur » quand l'étagère est pleine, et des cacas à effets (le doré fait briller la cabine, le violet laisse des paillettes en vol…).
+
 ## Fléchettes jouables dans le salon du ventre (proposé le 2026-11-05)
 
 La cible et l'ardoise des scores sont déjà au mur du fond du ventre (décor).

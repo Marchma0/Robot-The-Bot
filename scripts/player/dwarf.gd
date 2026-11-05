@@ -87,6 +87,9 @@ var anim_pooping: bool = false
 var anim_throw_count: int = 0
 ## Augmente à chaque caca reçu (animation "hit" chez tout le monde).
 var anim_hit_count: int = 0
+## Mini-jeu des toilettes : raté (soupir) / caca légendaire réussi.
+var anim_sigh_count: int = 0
+var anim_golden_count: int = 0
 ## Accroupi (maintenir Ctrl / B). Change aussi la collision du nain, chez tout le monde.
 var anim_crouching: bool = false:
 	set(value):
@@ -101,6 +104,8 @@ var _seat_look: Vector2 = Vector2.ZERO
 var _pov_active: bool = false
 ## Assis sur un simple siège (canapé) : on tourne la tête / le buste de cet angle (rad).
 var _seat_yaw: float = 0.0
+## Dernière partie du mini-jeu des toilettes lancée chez nous (numéro donné par l'hôte).
+var _poop_round: int = 0
 ## Temps passé sans toucher le sol (évite l'animation de saut sur une marche ou un cahot).
 var _air_time: float = 0.0
 ## Levier tenu : décalage de vue déjà appliqué (rad) et position du levier au moment de l'attraper.
@@ -132,6 +137,7 @@ var _emote_time: float = 0.0
 @onready var _body_shape: CollisionShape3D = %CollisionShape3D
 @onready var _state_bubble: StateBubble = %StateBubble
 @onready var _splat_overlay: SplatOverlay = %SplatOverlay
+@onready var _poop_game: PoopMinigame = %PoopMinigame
 
 
 func _enter_tree() -> void:
@@ -170,6 +176,7 @@ func _ready() -> void:
 		_interactor.prompt_changed.connect(_on_prompt_changed)
 		_interactor.button_pressed.connect(_on_button_pressed)
 		_interactor.thrown.connect(_on_thrown)
+		_poop_game.finished.connect(_on_poop_game_finished)
 		# Vue à la première personne : on voit son corps (en baissant les yeux, ses gestes),
 		# mais pas sa propre tête, qui boucherait la vue (elle garde son ombre).
 		for mesh: MeshInstance3D in _meshes_of(_head_model):
@@ -223,6 +230,8 @@ func _physics_process(delta: float) -> void:
 	var stick: Vector2 = Input.get_vector("look_left", "look_right", "look_up", "look_down")
 	var seat: Seat = _interactor.get_seat()
 	_update_view(seat)
+	if not (seat is Toilet) and _poop_game.is_active():
+		_poop_game.stop()   # on s'est levé en pleine partie
 	var busy: bool = seat != null or _interactor.get_rope() != null or _pullup_time >= 0.0 or _interactor.is_holding()
 	_update_emotes(delta, stick, busy)
 	if _emote_wheel.is_open():
@@ -311,6 +320,17 @@ func _on_button_pressed() -> void:
 	anim_press_count += 1
 
 
+func _on_poop_game_finished(success: bool) -> void:
+	var toilet: Toilet = _interactor.get_seat() as Toilet
+	if toilet == null:
+		return
+	toilet.submit_result.rpc_id(1, _poop_round, success)
+	if not success:
+		anim_sigh_count += 1
+	elif toilet.local_round_golden:
+		anim_golden_count += 1
+
+
 func _on_thrown() -> void:
 	anim_throw_count += 1
 
@@ -346,6 +366,12 @@ func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 		global_transform = seat.get_sit_transform() * Transform3D(Basis(Vector3.UP, _seat_yaw), Vector3.ZERO)
 	anim_seated = true
 	anim_pooping = seat is Toilet
+	if seat is Toilet:
+		# Nouvelle partie du mini-jeu « Poussée » envoyée par l'hôte.
+		var toilet: Toilet = seat as Toilet
+		if toilet.local_round_id != _poop_round:
+			_poop_round = toilet.local_round_id
+			_poop_game.start(toilet.local_round_golden)
 	anim_speed = 0.0
 	anim_airborne = false
 	anim_holding = false

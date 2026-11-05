@@ -8,7 +8,7 @@ extends Interactable
 func get_prompt() -> String:
 	if poop.holder_peer_id != 0:
 		return ""
-	return "[E / clic] ramasser — %s" % display_name
+	return "[E / clic] ramasser — %s" % ("Caca LÉGENDAIRE" if poop.golden else display_name)
 
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:

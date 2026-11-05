@@ -15,6 +15,7 @@ Objectif de base : amener le mécha d'un point A à un point B. Le game design e
 - **Foreuse** : console de la tête avec un **levier de profondeur** (0 → 3 m, il reste où on le laisse) et un gros **bouton « miner »** (interrupteur). Le bras **s'étend jusqu'à 3 m** et **mine** ce qui est minable devant lui.
 - **Grappin** : seule exception aux commandes libres. Le nain **s'assoit** (station `Seat`) devant un **petit écran** et ne contrôle plus son personnage. Il voit par une **caméra montée sur le bras du grappin**, pilote le bras et attrape des objets.
 - **Inventaire** : ce qui est attrapé va **automatiquement** dans un **gros sac à dos** porté dans le dos du robot.
+- **Vie à bord** : le ventre est un salon (canapé où s'asseoir, télé animée, cible de fléchettes décorative, lampe qui se balance), la tête a des toilettes (mini-jeu « Poussée » pour faire caca, cacas qu'on ramasse et qu'on lance, caca légendaire doré). Intérieur usé et encombré, jamais vide.
 
 ## Stack
 - **Moteur** : Godot 4.7.x, **GDScript uniquement** (pas de C#), physique 3D **Jolt**.
@@ -75,7 +76,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 
 ## Animation — tout ce qui bouge est animé
 - **Règle** : une mécanique n'est pas finie tant que ce qui bouge n'est pas animé (nains, jambes et bras du robot, foreuse, grappin, leviers, sac à dos…). Pas d'objet qui glisse ou qui se téléporte.
-- **Nains** : squelette (armature) fait dans Blender, animations exportées dans le `.glb` (actions nommées : `idle`, `walk`, `jump`, `float`, `climb`, `grab`, `press`, `sit`…), jouées dans Godot via un `AnimationTree`.
+- **Nains** : squelette (armature) fait dans Blender, animations exportées dans le `.glb` (actions nommées : `idle`, `walk`, `jump`, `float`, `climb`, `grab`, `press`, `sit`, `crouch`, `crouch_walk`, `poop`, `throw`, `hit`, `emote_*`…), jouées dans Godot via un `AnimationTree`.
 - **Robot** : les jambes et les bras sont animés **à partir de l'état simulé par l'hôte** (angles des articulations, extension de la foreuse…). Ce sont des animations procédurales ou des blend d'actions Blender, jamais des positions inventées côté client.
 - **Réseau** : on synchronise l'**état** (vitesse, au sol, tient un levier, assis, glisse…), jamais l'animation elle-même. Chaque peer joue l'animation correspondante localement.
 
@@ -107,6 +108,14 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 - [x] M4 — Animations des nains : squelette Blender + animations `idle`, `walk`, `jump`, `grab` (tenir un levier), `press` (appuyer), état synchronisé et `AnimationTree` dans Godot. Les leviers et boutons s'animent déjà selon leur état (fait en M3)
 - [ ] M5 — Steam (avancé pour tester à distance) : GodotSteam (App ID 480), choix ENet / Steam isolé dans `network_manager.gd`, lobby Steam, rejoindre par invitation ou code de lobby, export Windows (`.exe`) à envoyer aux testeurs. ENet reste disponible pour les tests locaux
 - [x] M6 — Circulation : **rayon tracteur** entre le ventre et la tête (interrupteur de sens à chaque étage), **trappe** dans le plancher du ventre pour sortir et **corde** pour remonter (on se hisse en haut), nain « dehors » qui ne suit plus le mécha, avec les animations `float` et `climb`
+- [x] M6.5 — Vie à bord (hors plan initial, ajouté en route) :
+  - [x] Commandes : la vue suit exactement l'inclinaison du levier / joystick tenu
+  - [x] Roue d'emotes (B / LB) : 8 emotes (coucou, pouce levé, pointer, applaudir, danse, je sais pas, salut nain, doigt d'honneur), gestes du haut du corps jouables en marchant, doigts et os `head` ajoutés au nain
+  - [x] Vue à la première personne : on voit son corps (pas sa tête), les yeux avancent quand on baisse le regard
+  - [x] Bulle d'état en haut à droite : mini-portrait 3D animé de son propre nain + nom de l'état
+  - [x] S'accroupir (Ctrl / B) : jambes rentrées dans la tunique, collision réduite
+  - [x] Intérieur décoré (salon du ventre, tête encombrée, hublots, usure), canapé où s'asseoir
+  - [x] Toilettes : porte manuelle, mini-jeu « Poussée », caca à ramasser / lancer (touché = recul + écran taché), caca légendaire doré
 - [ ] M7 — Marche du mécha (détail : `docs/design_jambes.md`). Tout est simulé par l'hôte : les clients n'envoient que leurs joysticks, l'état (pieds, curseurs, bassin, phase) est synchronisé et l'IK est calculée chez chacun
   - [ ] M7.1 — Squelette + IK + pas : jambes remodelées (cuisse, tibia, pied, os `leg_L_*`), **1 joystick + 1 pad à 4 flèches par jambe** sur les consoles du ventre (commandes déjà en place), curseur au sol (anneau lumineux + petit écran « vue des pieds » sur la console), pousser = pied levé, relâcher = pied posé, IK 2 os, bassin qui suit les pieds, recul et pivot (pas chassé). Remplace le mouvement de test
   - [ ] M7.2 — Équilibre : centre de gravité réel comparé à la zone d'appui des pieds, le robot penche (ressenti dans la cabine) jusqu'au point de non-retour

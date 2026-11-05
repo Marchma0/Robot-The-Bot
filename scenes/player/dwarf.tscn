@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/emote_wheel.tscn" id="6_wheel"]
 [ext_resource type="PackedScene" path="res://scenes/ui/state_bubble.tscn" id="7_bubble"]
 [ext_resource type="Script" path="res://scripts/ui/splat_overlay.gd" id="8_splat"]
+[ext_resource type="Script" path="res://scripts/ui/poop_minigame.gd" id="9_poopgame"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.35
@@ -65,6 +66,12 @@ properties/15/replication_mode = 2
 properties/16/path = NodePath(".:anim_hit_count")
 properties/16/spawn = true
 properties/16/replication_mode = 2
+properties/17/path = NodePath(".:anim_sigh_count")
+properties/17/spawn = true
+properties/17/replication_mode = 2
+properties/18/path = NodePath(".:anim_golden_count")
+properties/18/spawn = true
+properties/18/replication_mode = 2
 
 [node name="Dwarf" type="CharacterBody3D"]
 script = ExtResource("1_dwarf")
@@ -158,6 +165,17 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("8_splat")
+
+[node name="PoopMinigame" type="Control" parent="Hud"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("9_poopgame")
 
 [node name="NameLabel" type="Label3D" parent="."]
 unique_name_in_owner = true
