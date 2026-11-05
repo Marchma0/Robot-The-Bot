@@ -60,6 +60,10 @@ var anim_press_count: int = 0
 var anim_floating: bool = false
 ## Grimpe à la corde (anim_speed = vitesse de grimpe).
 var anim_climbing: bool = false
+## Emote en cours (index dans Emotes.LIST, Emotes.NONE = aucune).
+var anim_emote: int = Emotes.NONE
+## Augmente à chaque emote lancée (permet de rejouer la même emote chez tout le monde).
+var anim_emote_count: int = 0
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3 = Vector3.ZERO
@@ -80,6 +84,11 @@ var _world_yaw: float = 0.0
 var _pullup_time: float = -1.0
 var _pullup_from: Vector3 = Vector3.ZERO
 var _pullup_to: Vector3 = Vector3.ZERO
+## Emote : temps restant (s) avant la fin d'un geste.
+var _emote_time: float = 0.0
+## Caméra derrière soi active pendant une emote, et décalage d'orbite à la souris (rad).
+var _emote_cam_active: bool = false
+var _emote_orbit: Vector2 = Vector2.ZERO
 
 @onready var _head: Node3D = %Head
 @onready var _camera: Camera3D = %Camera
@@ -90,6 +99,9 @@ var _pullup_to: Vector3 = Vector3.ZERO
 @onready var _hud: CanvasLayer = %Hud
 @onready var _prompt_label: Label = %PromptLabel
 @onready var _crosshair: Control = %Crosshair
+@onready var _emote_wheel: EmoteWheel = %EmoteWheel
+@onready var _emote_arm: SpringArm3D = %EmoteArm
+@onready var _emote_camera: Camera3D = %EmoteCamera
 
 
 func _enter_tree() -> void:
@@ -118,6 +130,7 @@ func _ready() -> void:
 		player_name = NetworkManager.get_local_player_name()
 		_interactor.add_exception(self)
 		_interactor.set_active(true)
+		_emote_arm.add_excluded_object(get_rid())
 		_interactor.prompt_changed.connect(_on_prompt_changed)
 		_interactor.button_pressed.connect(_on_button_pressed)
 		# On ne voit pas son propre corps, mais il garde son ombre.
@@ -138,11 +151,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var motion: InputEventMouseMotion = event
-		# Assis : la souris pilote la station. Levier tenu : elle bouge le levier.
-		if _interactor.get_seat() != null:
+		# Roue d'emotes ouverte : la souris choisit. Assis : elle pilote la station.
+		# Levier tenu : elle bouge le levier. Pendant une emote : elle tourne autour du nain.
+		if _emote_wheel.is_open():
+			_emote_wheel.push_mouse(motion.relative)
+		elif _interactor.get_seat() != null:
 			_seat_look += Vector2(motion.relative.x, -motion.relative.y) * mouse_sensitivity
 		elif _interactor.is_holding():
 			_interactor.drive_mouse(Vector2(motion.relative.x, -motion.relative.y))
+		elif _emote_cam_active:
+			_orbit_emote_camera(-motion.relative * mouse_sensitivity)
 		else:
 			_look(-motion.relative * mouse_sensitivity)
 
@@ -159,6 +177,12 @@ func _physics_process(delta: float) -> void:
 	var stick: Vector2 = Input.get_vector("look_left", "look_right", "look_up", "look_down")
 	var seat: Seat = _interactor.get_seat()
 	_update_view(seat)
+	var busy: bool = seat != null or _interactor.get_rope() != null or _pullup_time >= 0.0 or _interactor.is_holding()
+	_update_emotes(delta, stick, busy)
+	if _emote_cam_active and not _emote_wheel.is_open():
+		_orbit_emote_camera(-stick * stick_look_speed * delta)
+	if _emote_wheel.is_open() or _emote_cam_active:
+		stick = Vector2.ZERO   # le stick droit sert à la roue / la vue ne bouge pas pendant une emote
 	if seat != null:
 		_stay_seated(seat, Vector2(stick.x, -stick.y) * stick_look_speed * delta)
 		return
@@ -350,6 +374,59 @@ func _find_beam() -> TractorBeam:
 		if beam.contains(global_position):
 			return beam
 	return null
+
+
+## Roue d'emotes (maintenir B / LB, relâcher pour jouer) et fin des emotes.
+## `busy` : assis, sur la corde ou en train de tenir un levier (pas d'emote possible).
+func _update_emotes(delta: float, stick: Vector2, busy: bool) -> void:
+	if _emote_wheel.is_open():
+		_emote_wheel.set_stick(stick)
+		if busy or not Input.is_action_pressed("emote_wheel"):
+			var chosen: int = _emote_wheel.close()
+			if not busy and Emotes.is_valid(chosen):
+				_play_emote(chosen)
+	elif Input.is_action_just_pressed("emote_wheel") and not busy:
+		_emote_wheel.open()
+
+	if anim_emote != Emotes.NONE:
+		_emote_time -= delta
+		var moving: bool = Input.get_vector("move_left", "move_right", "move_forward", "move_back").length() > 0.1 \
+			or Input.is_action_just_pressed("jump")
+		# Un geste s'arrête tout seul ; la danse s'arrête dès qu'on bouge.
+		if busy or _emote_time <= 0.0 or (Emotes.is_loop(anim_emote) and moving):
+			anim_emote = Emotes.NONE
+	_set_emote_camera(anim_emote != Emotes.NONE)
+
+
+func _play_emote(index: int) -> void:
+	anim_emote = index
+	anim_emote_count += 1
+	_emote_time = INF if Emotes.is_loop(index) else float(Emotes.LIST[index]["duration"])
+
+
+## Pendant une emote, la caméra passe devant le nain pour qu'on se voie (puis revient).
+func _set_emote_camera(active: bool) -> void:
+	if active == _emote_cam_active:
+		return
+	_emote_cam_active = active
+	_emote_orbit = Vector2.ZERO
+	_orbit_emote_camera(Vector2.ZERO)
+	if active:
+		_emote_camera.current = true
+	elif _interactor.get_seat() == null:
+		_camera.current = true
+	_crosshair.visible = not active
+	var shadow_mode: GeometryInstance3D.ShadowCastingSetting = GeometryInstance3D.SHADOW_CASTING_SETTING_ON \
+		if active else GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	for mesh: MeshInstance3D in _model_meshes():
+		mesh.cast_shadow = shadow_mode
+
+
+## Fait tourner la caméra d'emote autour du nain (x = autour de lui, y = plus haut / plus bas).
+func _orbit_emote_camera(change: Vector2) -> void:
+	_emote_orbit.x += change.x
+	_emote_orbit.y = clampf(_emote_orbit.y + change.y, -0.6, 0.5)
+	_emote_arm.basis = Basis(Vector3.UP, PI + _emote_orbit.x) * Basis(Vector3.RIGHT, deg_to_rad(-15.0) + _emote_orbit.y)
 
 
 ## Levier tenu : la vue tourne exactement du même angle que le levier, en même temps

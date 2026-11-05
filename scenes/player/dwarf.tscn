@@ -5,10 +5,14 @@
 [ext_resource type="PackedScene" path="res://assets/models/dwarf_head.glb" id="3_head"]
 [ext_resource type="Script" path="res://scripts/interaction/interactor.gd" id="4_interactor"]
 [ext_resource type="Script" path="res://scripts/player/dwarf_animator.gd" id="5_animator"]
+[ext_resource type="PackedScene" path="res://scenes/ui/emote_wheel.tscn" id="6_wheel"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.35
 height = 1.2
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_emote_cam"]
+radius = 0.15
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_dwarf"]
 properties/0/path = NodePath(".:position")
@@ -44,6 +48,12 @@ properties/9/replication_mode = 2
 properties/10/path = NodePath(".:anim_climbing")
 properties/10/spawn = true
 properties/10/replication_mode = 2
+properties/11/path = NodePath(".:anim_emote")
+properties/11/spawn = true
+properties/11/replication_mode = 2
+properties/12/path = NodePath(".:anim_emote_count")
+properties/12/spawn = true
+properties/12/replication_mode = 2
 
 [node name="Dwarf" type="CharacterBody3D"]
 script = ExtResource("1_dwarf")
@@ -75,6 +85,18 @@ target_position = Vector3(0, 0, -2.2)
 collision_mask = 5
 collide_with_areas = true
 script = ExtResource("4_interactor")
+
+[node name="EmoteArm" type="SpringArm3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(-1, 0, 0, 0, 0.9659, 0.2588, 0, 0.2588, -0.9659, 0, 1, 0)
+shape = SubResource("SphereShape3D_emote_cam")
+spring_length = 1.8
+margin = 0.1
+
+[node name="EmoteCamera" type="Camera3D" parent="EmoteArm"]
+unique_name_in_owner = true
+near = 0.05
+fov = 75.0
 
 [node name="Hud" type="CanvasLayer" parent="."]
 unique_name_in_owner = true
@@ -113,6 +135,9 @@ theme_override_constants/outline_size = 6
 theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="EmoteWheel" parent="Hud" instance=ExtResource("6_wheel")]
+unique_name_in_owner = true
 
 [node name="NameLabel" type="Label3D" parent="."]
 unique_name_in_owner = true

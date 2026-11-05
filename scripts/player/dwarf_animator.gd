@@ -9,16 +9,25 @@ extends Node
 ##   base  = machine à états idle / walk / air / sit / float / climb (fondus)
 ##   grab  = Blend2 filtré sur le bras droit (tenir un levier, même en marchant)
 ##   press = OneShot filtré sur le bras droit (appuyer sur un bouton)
+##   gesture = OneShot filtré sur le haut du corps (emotes « geste », jouables en marchant) ;
+##             les emotes en boucle (danse) sont des états de la machine
 
-const LOOPING: Array[StringName] = [&"idle", &"walk", &"float", &"climb"]
+const LOOPING: Array[StringName] = [&"idle", &"walk", &"float", &"climb", &"emote_dance"]
 const STATE_ANIMATIONS: Dictionary[StringName, StringName] = {
 	&"idle": &"idle", &"walk": &"walk", &"air": &"jump", &"sit": &"sit",
-	&"float": &"float", &"climb": &"climb",
+	&"float": &"float", &"climb": &"climb", &"dance": &"emote_dance",
 }
 ## États dont la vitesse de lecture suit la vitesse du nain (marche, grimpe).
 const SCALED_STATES: Array[StringName] = [&"walk", &"climb"]
 ## Os animés par la couche haut du corps (tenir / appuyer).
 const ARM_TRACK: NodePath = ^"DwarfRig/Skeleton3D:arm_R"
+## Os animés par les gestes (emotes) : tout le haut du corps, doigts compris.
+const UPPER_BODY_TRACKS: Array[NodePath] = [
+	^"DwarfRig/Skeleton3D:torso",
+	^"DwarfRig/Skeleton3D:arm_L", ^"DwarfRig/Skeleton3D:arm_R",
+	^"DwarfRig/Skeleton3D:finger_L", ^"DwarfRig/Skeleton3D:finger_R",
+	^"DwarfRig/Skeleton3D:thumb_L", ^"DwarfRig/Skeleton3D:thumb_R",
+]
 const CROSSFADE: float = 0.15
 ## En dessous de cette vitesse (m/s), le nain est considéré à l'arrêt.
 const WALK_THRESHOLD: float = 0.3
@@ -31,12 +40,16 @@ const WALK_THRESHOLD: float = 0.3
 @export var climb_reference_speed: float = 1.4
 ## Bac à sable : force un état ("idle", "walk", "air", "sit", "float", "climb", "grab", "press"), sinon vide.
 @export var preview_state: String = ""
+## Bac à sable : rejoue cette emote (index dans Emotes.LIST) toutes les 2,5 s, -1 = non.
+@export var preview_emote: int = Emotes.NONE
 
 var _tree: AnimationTree
 var _playback: AnimationNodeStateMachinePlayback
 var _grab_amount: float = 0.0
 var _last_press_count: int = 0
 var _preview_timer: float = 0.0
+var _last_emote_count: int = 0
+var _gesture_playing: bool = false
 
 
 func _ready() -> void:
@@ -61,6 +74,8 @@ func _process(delta: float) -> void:
 	var press_count: int = dwarf.anim_press_count
 	var floating: bool = dwarf.anim_floating
 	var climbing: bool = dwarf.anim_climbing
+	var emote: int = dwarf.anim_emote
+	var emote_count: int = dwarf.anim_emote_count
 	if preview_state != "":
 		_preview_timer += delta
 		speed = walk_reference_speed if preview_state == "walk" else 0.0
@@ -72,10 +87,16 @@ func _process(delta: float) -> void:
 		floating = preview_state == "float"
 		climbing = preview_state == "climb"
 		press_count = int(_preview_timer / 1.2) if preview_state == "press" else 0
+	if preview_emote != Emotes.NONE:
+		_preview_timer += delta
+		emote = preview_emote
+		emote_count = int(_preview_timer / 2.5) + 1
 
 	var target: StringName = &"idle"
 	if seated:
 		target = &"sit"
+	elif Emotes.is_loop(emote):
+		target = &"dance"
 	elif climbing:
 		target = &"climb"
 	elif floating:
@@ -96,6 +117,17 @@ func _process(delta: float) -> void:
 	if press_count != _last_press_count:
 		_last_press_count = press_count
 		_tree.set("parameters/press/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+
+	# Gestes : une nouvelle emote (compteur) lance le geste ; s'il est annulé, il s'efface.
+	if emote_count != _last_emote_count:
+		_last_emote_count = emote_count
+		if Emotes.is_valid(emote) and not Emotes.is_loop(emote):
+			_tree.set("parameters/gesture_pick/transition_request", String(Emotes.LIST[emote]["animation"]))
+			_tree.set("parameters/gesture/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+			_gesture_playing = true
+	elif _gesture_playing and not Emotes.is_valid(emote):
+		_tree.set("parameters/gesture/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
+		_gesture_playing = false
 
 
 func _build_tree() -> AnimationNodeBlendTree:
@@ -141,7 +173,28 @@ func _build_tree() -> AnimationNodeBlendTree:
 	root.add_node(&"press_anim", _animation_node(&"press"))
 	root.connect_node(&"press", 0, &"grab")
 	root.connect_node(&"press", 1, &"press_anim")
-	root.connect_node(&"output", 0, &"press")
+
+	var gesture: AnimationNodeOneShot = AnimationNodeOneShot.new()
+	gesture.filter_enabled = true
+	for track: NodePath in UPPER_BODY_TRACKS:
+		gesture.set_filter_path(track, true)
+	gesture.fadein_time = 0.12
+	gesture.fadeout_time = 0.2
+	root.add_node(&"gesture", gesture)
+	var pick: AnimationNodeTransition = AnimationNodeTransition.new()
+	root.add_node(&"gesture_pick", pick)
+	var index: int = 0
+	for entry: Dictionary in Emotes.LIST:
+		if entry["loop"]:
+			continue
+		var anim_name: StringName = entry["animation"]
+		pick.add_input(String(anim_name))
+		root.add_node(anim_name, _animation_node(anim_name))
+		root.connect_node(&"gesture_pick", index, anim_name)
+		index += 1
+	root.connect_node(&"gesture", 0, &"press")
+	root.connect_node(&"gesture", 1, &"gesture_pick")
+	root.connect_node(&"output", 0, &"gesture")
 	return root
 
 
