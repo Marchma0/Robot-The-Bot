@@ -116,6 +116,9 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
   - [x] S'accroupir (Ctrl / B) : jambes rentrées dans la tunique, collision réduite
   - [x] Intérieur décoré (salon du ventre, tête encombrée, hublots, usure), canapé où s'asseoir
   - [x] Toilettes : porte manuelle, mini-jeu « Poussée », caca à ramasser / lancer (touché = recul + écran taché), caca légendaire doré
+- [ ] M6.6 — **PRIORITÉ (prévu le 2026-11-06)**, à faire avant M7 :
+  - [ ] Gravité et interactions entre joueurs : points **1 à 5** de « Synchro réseau et physique » dans `docs/ideas.md` (validés) : nain dehors synchronisé dans le monde, lissage des autres joueurs et du mécha, `physics_interpolation`, moins de trafic, ordre de calcul fixe (mécha avant nains)
+  - [ ] Interface : retirer les textes d'aide bruts à l'écran (consignes, noms d'état, invites d'interaction…) et les remplacer par des **icônes**, ou au pire de **petits mots** dans une police soignée (police à choisir et à ajouter dans `assets/fonts/`)
 - [ ] M7 — Marche du mécha (détail : `docs/design_jambes.md`). Tout est simulé par l'hôte : les clients n'envoient que leurs joysticks, l'état (pieds, curseurs, bassin, phase) est synchronisé et l'IK est calculée chez chacun
   - [ ] M7.1 — Squelette + IK + pas : jambes remodelées (cuisse, tibia, pied, os `leg_L_*`), **1 joystick + 1 pad à 4 flèches par jambe** sur les consoles du ventre (commandes déjà en place), curseur au sol (anneau lumineux + petit écran « vue des pieds » sur la console), pousser = pied levé, relâcher = pied posé, IK 2 os, bassin qui suit les pieds, recul et pivot (pas chassé). Remplace le mouvement de test
   - [ ] M7.2 — Équilibre : centre de gravité réel comparé à la zone d'appui des pieds, le robot penche (ressenti dans la cabine) jusqu'au point de non-retour

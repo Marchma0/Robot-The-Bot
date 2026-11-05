@@ -86,7 +86,7 @@ La cible et l'ardoise des scores sont déjà au mur du fond du ventre (décor).
 - **Variante :** une partie de « 301 » à plusieurs pendant les trajets, les gages du perdant en emote.
 - **Réseau :** le lancer est une demande envoyée à l'hôte. L'hôte calcule l'impact et le score, et les fléchettes plantées sont synchronisées.
 
-## Synchro réseau et physique (proposé le 2026-11-05)
+## Synchro réseau et physique (proposé le 2026-11-05 — points 1 à 5 validés le 2026-11-05, roadmap M6.6)
 
 Constat : la synchro marche mais elle est « brute ». Chaque nain et le mécha envoient leur position environ 60 fois par seconde, sans lissage. Chez les autres, les positions arrivent donc par à-coups. Un nain dehors tremble aussi un peu vu par les autres.
 
