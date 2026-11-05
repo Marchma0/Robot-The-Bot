@@ -110,7 +110,7 @@ size = Vector3(0.42, 0.65, 0.95)
 size = Vector3(0.26, 0.24, 0.26)
 
 [sub_resource type="BoxShape3D" id="Shape_ToiletFront"]
-size = Vector3(1, 1.6, 0.05)
+size = Vector3(1.35, 1.6, 0.05)
 
 [sub_resource type="BoxShape3D" id="Shape_ToiletSide"]
 size = Vector3(0.06, 1.6, 0.12)
@@ -232,11 +232,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 5.72, -1.65)
 shape = SubResource("Shape_HeadPot")
 
 [node name="ToiletFront" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7, 6.4, 0.905)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.525, 6.4, 0.905)
 shape = SubResource("Shape_ToiletFront")
 
 [node name="ToiletSide" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 6.4, 1.84)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 6.4, 1.84)
 shape = SubResource("Shape_ToiletSide")
 
 [node name="ToiletBowl" type="CollisionShape3D" parent="Hull"]
@@ -394,7 +394,7 @@ omni_range = 2.2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 5.4, -0.1)
 
 [node name="ToiletDoor" parent="." instance=ExtResource("12_door")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 5.6, 0.93)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 5.6, 0.93)
 
 [node name="Props" type="Node3D" parent="."]
 
