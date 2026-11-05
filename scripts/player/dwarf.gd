@@ -74,7 +74,8 @@ var _hold_origin: Vector2 = Vector2.ZERO
 var _was_holding: bool = false
 ## Dehors : vrai si le nain était hors du mécha à la frame précédente, et sa place dans le monde.
 var _was_outside: bool = false
-var _world_transform: Transform3D = Transform3D.IDENTITY
+var _world_position: Vector3 = Vector3.ZERO
+var _world_yaw: float = 0.0
 ## Se hisser en haut de la corde : avancement (0..1, -1 = inactif), départ et arrivée (repère du parent).
 var _pullup_time: float = -1.0
 var _pullup_from: Vector3 = Vector3.ZERO
@@ -146,6 +147,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			_look(-motion.relative * mouse_sensitivity)
 
 
+func _process(_delta: float) -> void:
+	# Dehors : le mécha a pu bouger depuis la dernière frame physique (son script, ou la
+	# synchronisation réseau chez un client). On se replace à chaque image affichée, sinon
+	# le nain est emporté une image sur deux (secousses).
+	if _was_outside and is_multiplayer_authority() and _pullup_time < 0.0 and _interactor.get_rope() == null:
+		_apply_world_place()
+
+
 func _physics_process(delta: float) -> void:
 	var stick: Vector2 = Input.get_vector("look_left", "look_right", "look_up", "look_down")
 	var seat: Seat = _interactor.get_seat()
@@ -202,7 +211,7 @@ func _physics_process(delta: float) -> void:
 	velocity = horizontal + vertical
 	move_and_slide()
 	if _was_outside:
-		_world_transform = global_transform
+		_world_position = global_position
 
 	if position.y < FALL_LIMIT:
 		position = _spawn_position
@@ -308,16 +317,20 @@ func _update_pullup(delta: float) -> void:
 func _update_outside() -> void:
 	var outside: bool = not _is_inside_mecha()
 	if outside:
-		if _was_outside:
-			global_transform = _world_transform
-		else:
-			# On vient de sortir : debout par rapport au monde.
-			global_basis = Basis(Vector3.UP, global_basis.get_euler().y)
-			_world_transform = global_transform
+		if not _was_outside:
+			# On vient de sortir : on mémorise sa place et son orientation dans le monde.
+			_world_position = global_position
+			_world_yaw = global_basis.get_euler().y
+		_apply_world_place()
 	elif _was_outside:
 		# De retour dedans : debout par rapport au mécha.
 		rotation = Vector3(0.0, rotation.y, 0.0)
 	_was_outside = outside
+
+
+## Dehors : place le nain à sa position mémorisée dans le monde, debout, tourné de `_world_yaw`.
+func _apply_world_place() -> void:
+	global_transform = Transform3D(Basis(Vector3.UP, _world_yaw), _world_position)
 
 
 func _is_inside_mecha() -> bool:
@@ -356,7 +369,12 @@ func _follow_held_lever() -> void:
 
 ## delta.x = lacet (corps), delta.y = tangage (tête), en radians.
 func _look(delta: Vector2) -> void:
-	rotation.y += delta.x
+	if _was_outside:
+		# Dehors, l'orientation du nain est mémorisée dans le monde (le mécha ne le tourne plus).
+		_world_yaw += delta.x
+		_apply_world_place()
+	else:
+		rotation.y += delta.x
 	_head.rotation.x = clampf(_head.rotation.x + delta.y, -MAX_PITCH, MAX_PITCH)
 
 
