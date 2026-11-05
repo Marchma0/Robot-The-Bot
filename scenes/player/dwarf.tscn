@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/interaction/interactor.gd" id="4_interactor"]
 [ext_resource type="Script" path="res://scripts/player/dwarf_animator.gd" id="5_animator"]
 [ext_resource type="PackedScene" path="res://scenes/ui/emote_wheel.tscn" id="6_wheel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/state_bubble.tscn" id="7_bubble"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.35
@@ -51,12 +52,16 @@ properties/11/replication_mode = 2
 properties/12/path = NodePath(".:anim_emote_count")
 properties/12/spawn = true
 properties/12/replication_mode = 2
+properties/13/path = NodePath(".:anim_crouching")
+properties/13/spawn = true
+properties/13/replication_mode = 2
 
 [node name="Dwarf" type="CharacterBody3D"]
 script = ExtResource("1_dwarf")
 floor_max_angle = 0.872665
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 shape = SubResource("CapsuleShape3D_body")
 
@@ -128,6 +133,9 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="EmoteWheel" parent="Hud" instance=ExtResource("6_wheel")]
+unique_name_in_owner = true
+
+[node name="StateBubble" parent="Hud" instance=ExtResource("7_bubble")]
 unique_name_in_owner = true
 
 [node name="NameLabel" type="Label3D" parent="."]

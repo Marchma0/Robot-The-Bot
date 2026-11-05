@@ -31,6 +31,12 @@ const EYE_FORWARD: float = -0.08
 const EYE_FORWARD_LOOKING_DOWN: float = -0.3
 ## Inclinaison vers le bas (rad) à partir de laquelle les yeux sont tout à fait avancés.
 const LOOK_DOWN_FULL: float = deg_to_rad(60.0)
+## Hauteur de la capsule de collision debout / accroupi (m). Accroupi, les jambes rentrent dans le corps.
+const STAND_HEIGHT: float = 1.2
+const CROUCH_HEIGHT: float = 0.72
+## Hauteur des yeux debout / accroupi (m).
+const EYE_HEIGHT: float = 0.95
+const CROUCH_EYE_HEIGHT: float = 0.7
 
 @export var walk_speed: float = 3.5
 @export var ground_acceleration: float = 30.0
@@ -41,6 +47,8 @@ const LOOK_DOWN_FULL: float = deg_to_rad(60.0)
 @export var stick_look_speed: float = 3.0
 ## Vitesse de grimpe à la corde (m/s).
 @export var climb_speed: float = 1.4
+## Vitesse accroupi (m/s).
+@export var crouch_speed: float = 2.0
 
 var peer_id: int = 1
 var slot: int = 0
@@ -69,6 +77,12 @@ var anim_climbing: bool = false
 var anim_emote: int = Emotes.NONE
 ## Augmente à chaque emote lancée (permet de rejouer la même emote chez tout le monde).
 var anim_emote_count: int = 0
+## Accroupi (maintenir Ctrl / B). Change aussi la collision du nain, chez tout le monde.
+var anim_crouching: bool = false:
+	set(value):
+		anim_crouching = value
+		if is_node_ready():
+			_apply_crouch_shape()
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3 = Vector3.ZERO
@@ -103,6 +117,8 @@ var _emote_time: float = 0.0
 @onready var _crosshair: Control = %Crosshair
 @onready var _emote_wheel: EmoteWheel = %EmoteWheel
 @onready var _head_pitch: Node3D = %HeadPitch
+@onready var _body_shape: CollisionShape3D = %CollisionShape3D
+@onready var _state_bubble: StateBubble = %StateBubble
 
 
 func _enter_tree() -> void:
@@ -119,6 +135,9 @@ func _ready() -> void:
 	platform_wall_layers = 0
 	platform_on_leave = PLATFORM_ON_LEAVE_DO_NOTHING
 	_apply_slot_visuals()
+	# Chaque nain a sa propre capsule (elle rétrécit quand il s'accroupit).
+	_body_shape.shape = _body_shape.shape.duplicate()
+	_apply_crouch_shape()
 	# Permet à l'hôte de retrouver le nain d'un joueur (validation de portée des commandes).
 	add_to_group(&"dwarves")
 
@@ -127,7 +146,11 @@ func _ready() -> void:
 	set_process_unhandled_input(is_local)
 	_camera.current = is_local
 	_hud.visible = is_local
+	if not is_local:
+		# La bulle d'état (portrait 3D) ne sert qu'au joueur local : inutile de la rendre ailleurs.
+		_state_bubble.queue_free()
 	if is_local:
+		_state_bubble.setup(self)
 		player_name = NetworkManager.get_local_player_name()
 		_interactor.add_exception(self)
 		_interactor.set_active(true)
@@ -172,6 +195,9 @@ func _process(_delta: float) -> void:
 		# regarder par-dessus le ventre (sinon le haut de la tunique bouche tout l'écran).
 		var looking_down: float = clampf(-_head.rotation.x / LOOK_DOWN_FULL, 0.0, 1.0)
 		_head.position.z = lerpf(EYE_FORWARD, EYE_FORWARD_LOOKING_DOWN, looking_down)
+		# Les yeux descendent / remontent en douceur quand on s'accroupit / se relève.
+		var eye_height: float = CROUCH_EYE_HEIGHT if anim_crouching else EYE_HEIGHT
+		_head.position.y = move_toward(_head.position.y, eye_height, _delta * 2.5)
 	# Dehors : le mécha a pu bouger depuis la dernière frame physique (son script, ou la
 	# synchronisation réseau chez un client). On se replace à chaque image affichée, sinon
 	# le nain est emporté une image sur deux (secousses).
@@ -210,8 +236,9 @@ func _physics_process(delta: float) -> void:
 	up_direction = Vector3.UP if _was_outside else global_basis.y.normalized()
 	var vertical: Vector3 = up_direction * velocity.dot(up_direction)
 	var horizontal: Vector3 = velocity - vertical
+	_update_crouch()
 	var input: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	var wish: Vector3 = global_basis * Vector3(input.x, 0.0, input.y) * walk_speed
+	var wish: Vector3 = global_basis * Vector3(input.x, 0.0, input.y) * (crouch_speed if anim_crouching else walk_speed)
 	var beam: TractorBeam = _find_beam()
 	# Arrivé en bas d'un rayon qui descend : on est posé au sol, la gravité normale reprend.
 	if beam != null and not beam.going_up and not beam.is_travelling(global_position):
@@ -229,7 +256,7 @@ func _physics_process(delta: float) -> void:
 		anim_floating = false
 		if is_on_floor():
 			vertical = Vector3.ZERO
-			if Input.is_action_just_pressed("jump"):
+			if Input.is_action_just_pressed("jump") and not anim_crouching:
 				vertical = up_direction * jump_velocity
 		else:
 			vertical -= up_direction * _gravity * delta
@@ -281,6 +308,7 @@ func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 	anim_holding = false
 	anim_floating = false
 	anim_climbing = false
+	anim_crouching = false
 	var move: Vector2 = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	seat.submit_controls.rpc_id(1, move, _seat_look + stick_look)
 	_seat_look = Vector2.ZERO
@@ -313,6 +341,7 @@ func _climb(rope: Rope, delta: float) -> void:
 	global_position = rope.point_at(rope_height) + back.normalized() * CLIMB_DISTANCE
 	velocity = Vector3.ZERO
 	anim_climbing = true
+	anim_crouching = false
 	anim_speed = absf(climb_input) * climb_speed
 	anim_floating = false
 	anim_airborne = false
@@ -395,13 +424,39 @@ func _update_emotes(delta: float, stick: Vector2, busy: bool) -> void:
 	if anim_emote != Emotes.NONE:
 		_emote_time -= delta
 		var moving: bool = Input.get_vector("move_left", "move_right", "move_forward", "move_back").length() > 0.1 \
-			or Input.is_action_just_pressed("jump")
+			or Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("crouch")
 		# Un geste s'arrête tout seul ; la danse s'arrête dès qu'on bouge.
 		if busy or _emote_time <= 0.0 or (Emotes.is_loop(anim_emote) and moving):
 			anim_emote = Emotes.NONE
 
 
+## S'accroupir tant que Ctrl / B est maintenu ; on ne se relève que s'il y a la place.
+func _update_crouch() -> void:
+	var wanted: bool = Input.is_action_pressed("crouch")
+	if wanted and not anim_crouching:
+		anim_crouching = true
+		if Emotes.is_loop(anim_emote):
+			anim_emote = Emotes.NONE   # on ne danse pas accroupi
+	elif not wanted and anim_crouching and _can_stand():
+		anim_crouching = false
+
+
+## Vrai si rien n'empêche de se relever (plafond, table…).
+func _can_stand() -> bool:
+	return not test_move(global_transform, up_direction * (STAND_HEIGHT - CROUCH_HEIGHT + 0.02))
+
+
+func _apply_crouch_shape() -> void:
+	var capsule: CapsuleShape3D = _body_shape.shape as CapsuleShape3D
+	capsule.height = CROUCH_HEIGHT if anim_crouching else STAND_HEIGHT
+	_body_shape.position.y = capsule.height / 2.0
+
+
 func _play_emote(index: int) -> void:
+	if Emotes.is_loop(index) and anim_crouching:
+		if not _can_stand():
+			return   # pas la place de se relever pour danser
+		anim_crouching = false
 	anim_emote = index
 	anim_emote_count += 1
 	_emote_time = INF if Emotes.is_loop(index) else float(Emotes.LIST[index]["duration"])
@@ -433,16 +488,22 @@ func _look(delta: Vector2) -> void:
 	_head.rotation.x = clampf(_head.rotation.x + delta.y, -MAX_PITCH, MAX_PITCH)
 
 
-func _apply_slot_visuals() -> void:
-	# La couleur du joueur remplace le matériau "Tunic" du modèle Blender.
+## Donne la couleur du joueur (matériau "Tunic" du modèle Blender) à un modèle de nain
+## (le sien, ou celui du portrait de la bulle d'état).
+func tint_model(model: Node3D) -> void:
 	var tunic: StandardMaterial3D = StandardMaterial3D.new()
 	tunic.albedo_color = SLOT_COLORS[slot % SLOT_COLORS.size()]
 	tunic.roughness = 0.8
-	for mesh: MeshInstance3D in _model_meshes():
+	for mesh: MeshInstance3D in _meshes_of(model):
 		for i: int in mesh.get_surface_override_material_count():
 			var source: Material = mesh.mesh.surface_get_material(i)
 			if source and source.resource_name == TUNIC_MATERIAL:
 				mesh.set_surface_override_material(i, tunic)
+
+
+func _apply_slot_visuals() -> void:
+	tint_model(_body_model)
+	tint_model(_head_model)
 	_update_name_label()
 
 

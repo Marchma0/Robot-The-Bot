@@ -1,0 +1,96 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/state_bubble.gd" id="1_bubble"]
+[ext_resource type="PackedScene" path="res://assets/models/dwarf_body.glb" id="2_body"]
+[ext_resource type="PackedScene" path="res://assets/models/dwarf_head.glb" id="3_head"]
+[ext_resource type="Script" path="res://scripts/player/dwarf_animator.gd" id="4_animator"]
+
+[sub_resource type="Shader" id="Shader_round"]
+code = "shader_type canvas_item;
+
+// Découpe le portrait en disque (bord adouci).
+void fragment() {
+	vec4 color = texture(TEXTURE, UV);
+	color.a *= 1.0 - smoothstep(0.47, 0.5, distance(UV, vec2(0.5)));
+	COLOR = color;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_round"]
+shader = SubResource("Shader_round")
+
+[sub_resource type="Environment" id="Environment_portrait"]
+background_mode = 1
+background_color = Color(0, 0, 0, 0)
+ambient_light_source = 2
+ambient_light_color = Color(1, 0.95, 0.85, 1)
+ambient_light_energy = 0.7
+
+[node name="StateBubble" type="Control"]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -172.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = 200.0
+grow_horizontal = 0
+mouse_filter = 2
+script = ExtResource("1_bubble")
+
+[node name="Portrait" type="SubViewportContainer" parent="."]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_round")
+layout_mode = 0
+offset_left = 9.0
+offset_top = 4.0
+offset_right = 149.0
+offset_bottom = 144.0
+mouse_filter = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="Portrait"]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+msaa_3d = 1
+size = Vector2i(140, 140)
+render_target_update_mode = 4
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Portrait/SubViewport"]
+environment = SubResource("Environment_portrait")
+
+[node name="Light" type="DirectionalLight3D" parent="Portrait/SubViewport"]
+transform = Transform3D(0.866, 0, -0.5, 0.383, 0.643, 0.663, 0.321, -0.766, 0.556, 0, 2, 2)
+light_energy = 1.2
+
+[node name="Camera" type="Camera3D" parent="Portrait/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 0.9991, 0.042, 0, -0.042, 0.9991, 0, 0.7, 2.4)
+fov = 30.0
+
+[node name="PuppetModel" parent="Portrait/SubViewport" instance=ExtResource("2_body")]
+unique_name_in_owner = true
+transform = Transform3D(-0.8776, 0, 0.4794, 0, 1, 0, -0.4794, 0, -0.8776, 0, 0, 0)
+
+[node name="HeadBone" type="BoneAttachment3D" parent="Portrait/SubViewport/PuppetModel/DwarfRig/Skeleton3D"]
+bone_name = "head"
+
+[node name="HeadModel" parent="Portrait/SubViewport/PuppetModel/DwarfRig/Skeleton3D/HeadBone" instance=ExtResource("3_head")]
+
+[node name="PuppetAnimator" type="Node" parent="Portrait/SubViewport" node_paths=PackedStringArray("body_model")]
+unique_name_in_owner = true
+script = ExtResource("4_animator")
+body_model = NodePath("../PuppetModel")
+
+[node name="StateLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 150.0
+offset_right = 158.0
+offset_bottom = 180.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 18
+text = "Au repos"
+horizontal_alignment = 1

@@ -12,13 +12,20 @@ extends Node
 ##   gesture = OneShot filtré sur le haut du corps (emotes « geste », jouables en marchant) ;
 ##             les emotes en boucle (danse) sont des états de la machine
 
-const LOOPING: Array[StringName] = [&"idle", &"walk", &"float", &"climb", &"emote_dance"]
+const LOOPING: Array[StringName] = [&"idle", &"walk", &"float", &"climb", &"emote_dance", &"crouch", &"crouch_walk"]
 const STATE_ANIMATIONS: Dictionary[StringName, StringName] = {
 	&"idle": &"idle", &"walk": &"walk", &"air": &"jump", &"sit": &"sit",
 	&"float": &"float", &"climb": &"climb", &"dance": &"emote_dance",
+	&"crouch": &"crouch", &"crouch_walk": &"crouch_walk",
+}
+## Texte affiché dans la bulle d'état pour chaque état de base.
+const STATE_LABELS: Dictionary[StringName, String] = {
+	&"idle": "Au repos", &"walk": "Marche", &"air": "Saute", &"sit": "Assis",
+	&"float": "Flotte", &"climb": "Grimpe", &"dance": "Danse",
+	&"crouch": "Accroupi", &"crouch_walk": "Se dandine",
 }
 ## États dont la vitesse de lecture suit la vitesse du nain (marche, grimpe).
-const SCALED_STATES: Array[StringName] = [&"walk", &"climb"]
+const SCALED_STATES: Array[StringName] = [&"walk", &"climb", &"crouch_walk"]
 ## Os animés par la couche haut du corps (tenir / appuyer).
 const ARM_TRACK: NodePath = ^"DwarfRig/Skeleton3D:arm_R"
 ## Os animés par les gestes (emotes) : tout le haut du corps, doigts compris.
@@ -38,7 +45,8 @@ const WALK_THRESHOLD: float = 0.3
 @export var walk_reference_speed: float = 2.0
 ## Vitesse de grimpe (m/s) à laquelle l'animation "climb" joue à vitesse normale.
 @export var climb_reference_speed: float = 1.4
-## Bac à sable : force un état ("idle", "walk", "air", "sit", "float", "climb", "grab", "press"), sinon vide.
+## Bac à sable : force un état ("idle", "walk", "air", "sit", "float", "climb", "crouch", "crouch_walk",
+## "grab", "press"), sinon vide.
 @export var preview_state: String = ""
 ## Bac à sable : rejoue cette emote (index dans Emotes.LIST) toutes les 2,5 s, -1 = non.
 @export var preview_emote: int = Emotes.NONE
@@ -50,6 +58,11 @@ var _last_press_count: int = 0
 var _preview_timer: float = 0.0
 var _last_emote_count: int = 0
 var _gesture_playing: bool = false
+var _gesture_label: String = ""
+var _gesture_time: float = 0.0
+
+## Ce que fait le nain, en mots (lu par la bulle d'état).
+var state_label: String = "Au repos"
 
 
 func _ready() -> void:
@@ -67,6 +80,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	# Purement visuel : lit l'état et pilote l'AnimationTree.
+	if dwarf == null:
+		return
 	var speed: float = dwarf.anim_speed
 	var airborne: bool = dwarf.anim_airborne
 	var seated: bool = dwarf.anim_seated
@@ -76,6 +91,7 @@ func _process(delta: float) -> void:
 	var climbing: bool = dwarf.anim_climbing
 	var emote: int = dwarf.anim_emote
 	var emote_count: int = dwarf.anim_emote_count
+	var crouching: bool = dwarf.anim_crouching
 	if preview_state != "":
 		_preview_timer += delta
 		speed = walk_reference_speed if preview_state == "walk" else 0.0
@@ -86,6 +102,9 @@ func _process(delta: float) -> void:
 		holding = preview_state == "grab"
 		floating = preview_state == "float"
 		climbing = preview_state == "climb"
+		crouching = preview_state in ["crouch", "crouch_walk"]
+		if preview_state == "crouch_walk":
+			speed = 1.2
 		press_count = int(_preview_timer / 1.2) if preview_state == "press" else 0
 	if preview_emote != Emotes.NONE:
 		_preview_timer += delta
@@ -101,6 +120,8 @@ func _process(delta: float) -> void:
 		target = &"climb"
 	elif floating:
 		target = &"float"
+	elif crouching:
+		target = &"crouch_walk" if speed > WALK_THRESHOLD else &"crouch"
 	elif airborne:
 		target = &"air"
 	elif speed > WALK_THRESHOLD:
@@ -110,6 +131,7 @@ func _process(delta: float) -> void:
 	_tree.set("parameters/base/walk/scale/scale", clampf(speed / walk_reference_speed, 0.6, 2.0))
 	# À l'arrêt sur la corde, l'animation de grimpe se fige.
 	_tree.set("parameters/base/climb/scale/scale", clampf(speed / climb_reference_speed, 0.0, 2.0))
+	_tree.set("parameters/base/crouch_walk/scale/scale", clampf(speed / 1.2, 0.6, 2.0))
 
 	_grab_amount = move_toward(_grab_amount, 1.0 if holding else 0.0, delta * 6.0)
 	_tree.set("parameters/grab/blend_amount", _grab_amount)
@@ -125,9 +147,16 @@ func _process(delta: float) -> void:
 			_tree.set("parameters/gesture_pick/transition_request", String(Emotes.LIST[emote]["animation"]))
 			_tree.set("parameters/gesture/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 			_gesture_playing = true
+			_gesture_label = Emotes.LIST[emote]["label"]
+			_gesture_time = float(Emotes.LIST[emote]["duration"])
 	elif _gesture_playing and not Emotes.is_valid(emote):
 		_tree.set("parameters/gesture/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
 		_gesture_playing = false
+		_gesture_time = 0.0
+
+	# Texte de la bulle : le geste en cours a la priorité sur l'état de base.
+	_gesture_time -= delta
+	state_label = _gesture_label if _gesture_time > 0.0 else STATE_LABELS.get(target, "")
 
 
 func _build_tree() -> AnimationNodeBlendTree:
