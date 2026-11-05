@@ -23,7 +23,7 @@ const SCALED_STATES: Array[StringName] = [&"walk", &"climb"]
 const ARM_TRACK: NodePath = ^"DwarfRig/Skeleton3D:arm_R"
 ## Os animés par les gestes (emotes) : tout le haut du corps, doigts compris.
 const UPPER_BODY_TRACKS: Array[NodePath] = [
-	^"DwarfRig/Skeleton3D:torso",
+	^"DwarfRig/Skeleton3D:torso", ^"DwarfRig/Skeleton3D:head",
 	^"DwarfRig/Skeleton3D:arm_L", ^"DwarfRig/Skeleton3D:arm_R",
 	^"DwarfRig/Skeleton3D:finger_L", ^"DwarfRig/Skeleton3D:finger_R",
 	^"DwarfRig/Skeleton3D:thumb_L", ^"DwarfRig/Skeleton3D:thumb_R",

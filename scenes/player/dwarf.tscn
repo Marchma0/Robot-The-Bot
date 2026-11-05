@@ -11,9 +11,6 @@
 radius = 0.35
 height = 1.2
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_emote_cam"]
-radius = 0.15
-
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_dwarf"]
 properties/0/path = NodePath(".:position")
 properties/0/spawn = true
@@ -66,12 +63,18 @@ shape = SubResource("CapsuleShape3D_body")
 [node name="BodyModel" parent="." instance=ExtResource("2_body")]
 unique_name_in_owner = true
 
+[node name="HeadBone" type="BoneAttachment3D" parent="BodyModel/DwarfRig/Skeleton3D"]
+bone_name = "head"
+
+[node name="HeadPitch" type="Node3D" parent="BodyModel/DwarfRig/Skeleton3D/HeadBone"]
+unique_name_in_owner = true
+
+[node name="HeadModel" parent="BodyModel/DwarfRig/Skeleton3D/HeadBone/HeadPitch" instance=ExtResource("3_head")]
+unique_name_in_owner = true
+
 [node name="Head" type="Node3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
-
-[node name="HeadModel" parent="Head" instance=ExtResource("3_head")]
-unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, -0.08)
 
 [node name="Camera" type="Camera3D" parent="Head"]
 unique_name_in_owner = true
@@ -85,18 +88,6 @@ target_position = Vector3(0, 0, -2.2)
 collision_mask = 5
 collide_with_areas = true
 script = ExtResource("4_interactor")
-
-[node name="EmoteArm" type="SpringArm3D" parent="."]
-unique_name_in_owner = true
-transform = Transform3D(-1, 0, 0, 0, 0.9659, 0.2588, 0, 0.2588, -0.9659, 0, 1, 0)
-shape = SubResource("SphereShape3D_emote_cam")
-spring_length = 1.8
-margin = 0.1
-
-[node name="EmoteCamera" type="Camera3D" parent="EmoteArm"]
-unique_name_in_owner = true
-near = 0.05
-fov = 75.0
 
 [node name="Hud" type="CanvasLayer" parent="."]
 unique_name_in_owner = true

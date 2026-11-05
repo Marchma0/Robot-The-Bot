@@ -26,6 +26,11 @@ const CLIMB_DISTANCE: float = 0.22
 const CLIMB_TOP_BELOW_FLOOR: float = 0.55
 ## Durée du mouvement pour se hisser sur le plancher (s).
 const PULLUP_DURATION: float = 0.45
+## Position des yeux devant le centre du corps (m, -Z = devant) : regard droit / regard vers le bas.
+const EYE_FORWARD: float = -0.08
+const EYE_FORWARD_LOOKING_DOWN: float = -0.3
+## Inclinaison vers le bas (rad) à partir de laquelle les yeux sont tout à fait avancés.
+const LOOK_DOWN_FULL: float = deg_to_rad(60.0)
 
 @export var walk_speed: float = 3.5
 @export var ground_acceleration: float = 30.0
@@ -86,9 +91,6 @@ var _pullup_from: Vector3 = Vector3.ZERO
 var _pullup_to: Vector3 = Vector3.ZERO
 ## Emote : temps restant (s) avant la fin d'un geste.
 var _emote_time: float = 0.0
-## Caméra derrière soi active pendant une emote, et décalage d'orbite à la souris (rad).
-var _emote_cam_active: bool = false
-var _emote_orbit: Vector2 = Vector2.ZERO
 
 @onready var _head: Node3D = %Head
 @onready var _camera: Camera3D = %Camera
@@ -100,8 +102,7 @@ var _emote_orbit: Vector2 = Vector2.ZERO
 @onready var _prompt_label: Label = %PromptLabel
 @onready var _crosshair: Control = %Crosshair
 @onready var _emote_wheel: EmoteWheel = %EmoteWheel
-@onready var _emote_arm: SpringArm3D = %EmoteArm
-@onready var _emote_camera: Camera3D = %EmoteCamera
+@onready var _head_pitch: Node3D = %HeadPitch
 
 
 func _enter_tree() -> void:
@@ -130,11 +131,11 @@ func _ready() -> void:
 		player_name = NetworkManager.get_local_player_name()
 		_interactor.add_exception(self)
 		_interactor.set_active(true)
-		_emote_arm.add_excluded_object(get_rid())
 		_interactor.prompt_changed.connect(_on_prompt_changed)
 		_interactor.button_pressed.connect(_on_button_pressed)
-		# On ne voit pas son propre corps, mais il garde son ombre.
-		for mesh: MeshInstance3D in _model_meshes():
+		# Vue à la première personne : on voit son corps (en baissant les yeux, ses gestes),
+		# mais pas sa propre tête, qui boucherait la vue (elle garde son ombre).
+		for mesh: MeshInstance3D in _meshes_of(_head_model):
 			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 		_name_label.visible = false
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -159,13 +160,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			_seat_look += Vector2(motion.relative.x, -motion.relative.y) * mouse_sensitivity
 		elif _interactor.is_holding():
 			_interactor.drive_mouse(Vector2(motion.relative.x, -motion.relative.y))
-		elif _emote_cam_active:
-			_orbit_emote_camera(-motion.relative * mouse_sensitivity)
 		else:
 			_look(-motion.relative * mouse_sensitivity)
 
 
 func _process(_delta: float) -> void:
+	# La tête visible (accrochée à l'os "head", animé) suit aussi l'inclinaison du regard (répliquée).
+	_head_pitch.rotation.x = _head.rotation.x
+	if is_multiplayer_authority():
+		# Vue à la première personne : en baissant les yeux, le point de vue avance pour
+		# regarder par-dessus le ventre (sinon le haut de la tunique bouche tout l'écran).
+		var looking_down: float = clampf(-_head.rotation.x / LOOK_DOWN_FULL, 0.0, 1.0)
+		_head.position.z = lerpf(EYE_FORWARD, EYE_FORWARD_LOOKING_DOWN, looking_down)
 	# Dehors : le mécha a pu bouger depuis la dernière frame physique (son script, ou la
 	# synchronisation réseau chez un client). On se replace à chaque image affichée, sinon
 	# le nain est emporté une image sur deux (secousses).
@@ -179,10 +185,8 @@ func _physics_process(delta: float) -> void:
 	_update_view(seat)
 	var busy: bool = seat != null or _interactor.get_rope() != null or _pullup_time >= 0.0 or _interactor.is_holding()
 	_update_emotes(delta, stick, busy)
-	if _emote_cam_active and not _emote_wheel.is_open():
-		_orbit_emote_camera(-stick * stick_look_speed * delta)
-	if _emote_wheel.is_open() or _emote_cam_active:
-		stick = Vector2.ZERO   # le stick droit sert à la roue / la vue ne bouge pas pendant une emote
+	if _emote_wheel.is_open():
+		stick = Vector2.ZERO   # le stick droit sert à choisir dans la roue
 	if seat != null:
 		_stay_seated(seat, Vector2(stick.x, -stick.y) * stick_look_speed * delta)
 		return
@@ -395,38 +399,12 @@ func _update_emotes(delta: float, stick: Vector2, busy: bool) -> void:
 		# Un geste s'arrête tout seul ; la danse s'arrête dès qu'on bouge.
 		if busy or _emote_time <= 0.0 or (Emotes.is_loop(anim_emote) and moving):
 			anim_emote = Emotes.NONE
-	_set_emote_camera(anim_emote != Emotes.NONE)
 
 
 func _play_emote(index: int) -> void:
 	anim_emote = index
 	anim_emote_count += 1
 	_emote_time = INF if Emotes.is_loop(index) else float(Emotes.LIST[index]["duration"])
-
-
-## Pendant une emote, la caméra passe devant le nain pour qu'on se voie (puis revient).
-func _set_emote_camera(active: bool) -> void:
-	if active == _emote_cam_active:
-		return
-	_emote_cam_active = active
-	_emote_orbit = Vector2.ZERO
-	_orbit_emote_camera(Vector2.ZERO)
-	if active:
-		_emote_camera.current = true
-	elif _interactor.get_seat() == null:
-		_camera.current = true
-	_crosshair.visible = not active
-	var shadow_mode: GeometryInstance3D.ShadowCastingSetting = GeometryInstance3D.SHADOW_CASTING_SETTING_ON \
-		if active else GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-	for mesh: MeshInstance3D in _model_meshes():
-		mesh.cast_shadow = shadow_mode
-
-
-## Fait tourner la caméra d'emote autour du nain (x = autour de lui, y = plus haut / plus bas).
-func _orbit_emote_camera(change: Vector2) -> void:
-	_emote_orbit.x += change.x
-	_emote_orbit.y = clampf(_emote_orbit.y + change.y, -0.6, 0.5)
-	_emote_arm.basis = Basis(Vector3.UP, PI + _emote_orbit.x) * Basis(Vector3.RIGHT, deg_to_rad(-15.0) + _emote_orbit.y)
 
 
 ## Levier tenu : la vue tourne exactement du même angle que le levier, en même temps
@@ -478,8 +456,11 @@ func _update_name_label() -> void:
 
 
 func _model_meshes() -> Array[MeshInstance3D]:
+	return _meshes_of(_body_model) + _meshes_of(_head_model)
+
+
+func _meshes_of(model: Node3D) -> Array[MeshInstance3D]:
 	var meshes: Array[MeshInstance3D] = []
-	for model: Node3D in [_body_model, _head_model]:
-		for node: Node in model.find_children("*", "MeshInstance3D", true, false):
-			meshes.append(node as MeshInstance3D)
+	for node: Node in model.find_children("*", "MeshInstance3D", true, false):
+		meshes.append(node as MeshInstance3D)
 	return meshes
