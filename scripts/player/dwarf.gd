@@ -12,6 +12,8 @@ const SLOT_COLORS: Array[Color] = [
 	Color(0.95, 0.75, 0.2),
 ]
 const MAX_PITCH: float = deg_to_rad(85.0)
+## Assis sur un simple siège : rotation max du buste de chaque côté.
+const MAX_SEAT_YAW: float = deg_to_rad(75.0)
 ## Nom du matériau Blender qui prend la couleur du joueur.
 const TUNIC_MATERIAL: String = "Tunic"
 ## En dessous de cette hauteur locale, le nain est tombé du cockpit : on le replace.
@@ -89,6 +91,8 @@ var _spawn_position: Vector3 = Vector3.ZERO
 ## Regard accumulé pendant qu'on est assis (envoyé à la station à chaque frame physique).
 var _seat_look: Vector2 = Vector2.ZERO
 var _pov_active: bool = false
+## Assis sur un simple siège (canapé) : on tourne la tête / le buste de cet angle (rad).
+var _seat_yaw: float = 0.0
 ## Temps passé sans toucher le sol (évite l'animation de saut sur une marche ou un cahot).
 var _air_time: float = 0.0
 ## Levier tenu : décalage de vue déjà appliqué (rad) et position du levier au moment de l'attraper.
@@ -179,7 +183,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Levier tenu : elle bouge le levier. Pendant une emote : elle tourne autour du nain.
 		if _emote_wheel.is_open():
 			_emote_wheel.push_mouse(motion.relative)
-		elif _interactor.get_seat() != null:
+		elif _interactor.get_seat() != null and _interactor.get_seat().has_screen:
 			_seat_look += Vector2(motion.relative.x, -motion.relative.y) * mouse_sensitivity
 		elif _interactor.is_holding():
 			_interactor.drive_mouse(Vector2(motion.relative.x, -motion.relative.y))
@@ -296,12 +300,20 @@ func _on_button_pressed() -> void:
 	anim_press_count += 1
 
 
-## Assis : le nain reste sur le siège et ses entrées partent vers la station (hôte).
+## Assis : le nain reste sur le siège. À une station (écran), ses entrées partent vers
+## la station (hôte) ; sur un simple siège (canapé), il regarde autour de lui.
 func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
-	global_transform = seat.get_sit_transform()
 	velocity = Vector3.ZERO
-	# Tête droite face à l'écran (sinon elle garde l'inclinaison prise en visant le siège).
-	_head.rotation.x = 0.0
+	if seat.has_screen:
+		global_transform = seat.get_sit_transform()
+		# Tête droite face à l'écran (sinon elle garde l'inclinaison prise en visant le siège).
+		_head.rotation.x = 0.0
+		var move: Vector2 = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
+		seat.submit_controls.rpc_id(1, move, _seat_look + stick_look)
+		_seat_look = Vector2.ZERO
+	else:
+		_look(Vector2(-stick_look.x, stick_look.y))
+		global_transform = seat.get_sit_transform() * Transform3D(Basis(Vector3.UP, _seat_yaw), Vector3.ZERO)
 	anim_seated = true
 	anim_speed = 0.0
 	anim_airborne = false
@@ -309,14 +321,13 @@ func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 	anim_floating = false
 	anim_climbing = false
 	anim_crouching = false
-	var move: Vector2 = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
-	seat.submit_controls.rpc_id(1, move, _seat_look + stick_look)
-	_seat_look = Vector2.ZERO
 
 
 ## Plein écran sur la caméra de la station quand on est assis, sinon caméra du nain.
 func _update_view(seat: Seat) -> void:
-	var want_pov: bool = seat != null
+	if seat == null:
+		_seat_yaw = 0.0   # prochain siège : on part face à l'avant du siège
+	var want_pov: bool = seat != null and seat.get_pov_camera() != null
 	if want_pov == _pov_active:
 		return
 	_pov_active = want_pov
@@ -479,7 +490,10 @@ func _follow_held_lever() -> void:
 
 ## delta.x = lacet (corps), delta.y = tangage (tête), en radians.
 func _look(delta: Vector2) -> void:
-	if _was_outside:
+	if _interactor.get_seat() != null:
+		# Assis sur le canapé : on tourne le buste, sans pouvoir se retourner complètement.
+		_seat_yaw = clampf(_seat_yaw + delta.x, -MAX_SEAT_YAW, MAX_SEAT_YAW)
+	elif _was_outside:
 		# Dehors, l'orientation du nain est mémorisée dans le monde (le mécha ne le tourne plus).
 		_world_yaw += delta.x
 		_apply_world_place()

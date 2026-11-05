@@ -1,9 +1,11 @@
 class_name Seat
 extends Interactable
-## Station assise avec écran (grappin) : seule exception aux commandes libres.
-## On s'installe avec E : le nain ne bouge plus, le joueur voit en plein écran par une
-## caméra placée sur `camera_anchor` (ex. la main du grappin) et ses entrées sont
-## envoyées à la station. L'écran de la cabine montre cette caméra à tout le monde.
+## Place assise. Deux usages :
+## - station avec écran (grappin) : seule exception aux commandes libres. On s'installe avec E :
+##   le nain ne bouge plus, le joueur voit en plein écran par une caméra placée sur
+##   `camera_anchor` (ex. la main du grappin) et ses entrées sont envoyées à la station.
+##   L'écran de la cabine montre cette caméra à tout le monde ;
+## - simple siège (`has_screen` = false, ex. le canapé) : on s'assoit et on regarde autour de soi.
 ##
 ## Réseau : l'hôte est autoritaire sur `occupant_peer_id` (répliqué). Les entrées de
 ## l'occupant arrivent en unreliable_ordered ; l'hôte ignore celles des autres.
@@ -11,6 +13,8 @@ extends Interactable
 ## Point suivi par les caméras (sera porté par le bras du grappin en M9).
 @export var camera_anchor: Node3D
 @export var feed_resolution: Vector2i = Vector2i(320, 240)
+## Faux = simple siège (canapé) : pas d'écran, pas de caméra, pas de commandes.
+@export var has_screen: bool = true
 
 ## Peer installé sur le siège (0 = libre). Autorité : hôte.
 var occupant_peer_id: int = 0
@@ -23,7 +27,6 @@ var control_look: Vector2 = Vector2.ZERO
 @onready var _feed_viewport: SubViewport = %FeedViewport
 @onready var _feed_camera: Camera3D = %FeedCamera
 @onready var _pov_camera: Camera3D = %PovCamera
-@onready var _chair_hint: MeshInstance3D = %ChairHint
 @onready var _debug_label: Label3D = %DebugLabel
 
 
@@ -31,6 +34,9 @@ func _ready() -> void:
 	super()
 	add_to_group(&"seats")
 	_feed_viewport.size = feed_resolution
+	if not has_screen:
+		_screen.visible = false
+		_feed_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	var material: StandardMaterial3D = StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.albedo_texture = _feed_viewport.get_texture()
@@ -42,7 +48,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	# Les caméras suivent le point d'ancrage (visuel, pas de gameplay).
-	if camera_anchor != null:
+	if has_screen and camera_anchor != null:
 		_feed_camera.global_transform = camera_anchor.global_transform
 		_pov_camera.global_transform = camera_anchor.global_transform
 	if show_debug:
@@ -67,8 +73,9 @@ func get_sit_transform() -> Transform3D:
 	return _sit_point.global_transform
 
 
+## Caméra plein écran de la station, null pour un simple siège.
 func get_pov_camera() -> Camera3D:
-	return _pov_camera
+	return _pov_camera if has_screen else null
 
 
 @rpc("any_peer", "call_local", "reliable")
@@ -98,7 +105,8 @@ func submit_controls(move: Vector2, look: Vector2) -> void:
 
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:
-	return [_chair_hint]
+	# Pas de surbrillance sur le siège (un gros bloc lumineux, peu joli) : le texte suffit.
+	return []
 
 
 func _free_seat() -> void:

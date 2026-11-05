@@ -8,6 +8,15 @@
 [ext_resource type="PackedScene" path="res://scenes/mecha/controls/beam_switch.tscn" id="6_switch"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/controls/rope.tscn" id="7_rope"]
 [ext_resource type="Script" path="res://scripts/mecha/interior_volume.gd" id="8_interior"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/swinging_lamp.tscn" id="9_lamp"]
+[ext_resource type="Shader" path="res://scenes/mecha/props/tv_screen.gdshader" id="10_tv"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tv"]
+shader = ExtResource("10_tv")
+
+[sub_resource type="QuadMesh" id="QuadMesh_tv"]
+material = SubResource("ShaderMaterial_tv")
+size = Vector2(0.68, 0.48)
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_mecha"]
 properties/0/path = NodePath(".:position")
@@ -69,10 +78,34 @@ size = Vector3(0.8, 0.88, 0.4)
 size = Vector3(0.9, 0.5, 0.6)
 
 [sub_resource type="BoxShape3D" id="Shape_RailHatch"]
-size = Vector3(0.06, 0.95, 0.95)
+size = Vector3(0.95, 0.95, 0.06)
 
 [sub_resource type="BoxShape3D" id="Shape_RailBeam"]
 size = Vector3(0.9, 0.95, 0.06)
+
+[sub_resource type="BoxShape3D" id="Shape_Sofa"]
+size = Vector3(0.6, 0.33, 1.4)
+
+[sub_resource type="BoxShape3D" id="Shape_SofaBack"]
+size = Vector3(0.22, 0.52, 1.4)
+
+[sub_resource type="BoxShape3D" id="Shape_CoffeeTable"]
+size = Vector3(0.45, 0.34, 0.55)
+
+[sub_resource type="BoxShape3D" id="Shape_Crates"]
+size = Vector3(0.46, 0.68, 0.46)
+
+[sub_resource type="BoxShape3D" id="Shape_CornerCrate"]
+size = Vector3(0.4, 0.36, 0.4)
+
+[sub_resource type="BoxShape3D" id="Shape_Barrel"]
+size = Vector3(0.4, 0.57, 0.4)
+
+[sub_resource type="BoxShape3D" id="Shape_CoffeeCounter"]
+size = Vector3(0.42, 0.65, 0.95)
+
+[sub_resource type="BoxShape3D" id="Shape_HeadPot"]
+size = Vector3(0.26, 0.24, 0.26)
 
 [node name="Mecha" instance=ExtResource("1_glb")]
 
@@ -148,12 +181,44 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 5.85, -1.45)
 shape = SubResource("Shape_ArmConsoleR")
 
 [node name="RailHatch" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.23, 3.075, 1.425)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.725, 3.075, 0.93)
 shape = SubResource("Shape_RailHatch")
 
 [node name="RailBeam" type="CollisionShape3D" parent="Hull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75, 6.075, 1)
 shape = SubResource("Shape_RailBeam")
+
+[node name="Sofa" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 2.765, -0.05)
+shape = SubResource("Shape_Sofa")
+
+[node name="SofaBack" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.09, 3.19, -0.05)
+shape = SubResource("Shape_SofaBack")
+
+[node name="CoffeeTable" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.025, 2.77, -0.075)
+shape = SubResource("Shape_CoffeeTable")
+
+[node name="Crates" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 2.94, 1.65)
+shape = SubResource("Shape_Crates")
+
+[node name="CornerCrate" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.92, 2.78, -1.5)
+shape = SubResource("Shape_CornerCrate")
+
+[node name="Barrel" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9, 2.885, -1.55)
+shape = SubResource("Shape_Barrel")
+
+[node name="CoffeeCounter" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.99, 5.925, 0.175)
+shape = SubResource("Shape_CoffeeCounter")
+
+[node name="HeadPot" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 5.72, -1.65)
+shape = SubResource("Shape_HeadPot")
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 
@@ -270,10 +335,36 @@ beam = NodePath("../../TractorBeam")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7, 4.41, 1.4)
 length = 4.31
 floor_height = -1.81
-exit_point = Vector3(0, -1.79, -0.95)
+exit_point = Vector3(0.85, -1.79, 0)
+
+[node name="Sofa_Left" parent="Controls" instance=ExtResource("4_seat")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.72, 2.67, 0.2)
+display_name = "Canapé"
+has_screen = false
+show_debug = false
+
+[node name="Sofa_Right" parent="Controls" instance=ExtResource("4_seat")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.72, 2.67, -0.4)
+display_name = "Canapé"
+has_screen = false
+show_debug = false
 
 [node name="TractorBeam" parent="." instance=ExtResource("5_beam")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75, 2.6, 1.45)
+
+[node name="TvScreen" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 2.044, 3.86, -0.26)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_tv")
+
+[node name="TvGlow" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 3.86, -0.26)
+light_color = Color(0.55, 0.7, 1, 1)
+light_energy = 0.35
+omni_range = 2.2
+
+[node name="SwingingLamp" parent="." instance=ExtResource("9_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 5.4, -0.1)
 
 [node name="Interior" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.35, 0)

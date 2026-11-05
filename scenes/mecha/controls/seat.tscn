@@ -8,14 +8,6 @@ size = Vector3(0.6, 0.9, 0.6)
 [sub_resource type="QuadMesh" id="QuadMesh_screen"]
 size = Vector2(0.48, 0.34)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hint"]
-transparency = 1
-albedo_color = Color(1, 1, 1, 0)
-
-[sub_resource type="BoxMesh" id="BoxMesh_hint"]
-material = SubResource("StandardMaterial3D_hint")
-size = Vector3(0.54, 0.58, 0.54)
-
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_seat"]
 properties/0/path = NodePath(".:occupant_peer_id")
 properties/0/spawn = true
@@ -27,12 +19,6 @@ script = ExtResource("1_seat")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("BoxShape3D_seat")
-
-[node name="ChairHint" type="MeshInstance3D" parent="."]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
-cast_shadow = 0
-mesh = SubResource("BoxMesh_hint")
 
 [node name="SitPoint" type="Marker3D" parent="."]
 unique_name_in_owner = true
