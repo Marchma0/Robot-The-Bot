@@ -70,6 +70,15 @@ D'autres idées en réserve :
   - Des compétences qui donnent un rôle à chaque nain sans enfermer personne dans un poste.
 - **Rejouer les missions** pour faire de meilleurs scores, ou finir des défis (une étoile par objectif).
 
+## Fléchettes jouables dans le salon du ventre (proposé le 2026-11-05)
+
+La cible et l'ardoise des scores sont déjà au mur du fond du ventre (décor).
+- **Lancer :** on vise la cible et on clique. Une fléchette part de la main (animation `throw`) et se plante là où on visait, avec un peu d'imprécision (plus si on bouge ou si le robot marche).
+- **Les fléchettes plantées** restent visibles pour tout le monde, puis on les retire en appuyant sur E sur la cible.
+- **Le score** est calculé selon la zone touchée (centre, anneaux, double, triple) et écrit sur l'ardoise à côté de la cible, par joueur.
+- **Variante :** une partie de « 301 » à plusieurs pendant les trajets, les gages du perdant en emote.
+- **Réseau :** le lancer est une demande envoyée à l'hôte. L'hôte calcule l'impact et le score, et les fléchettes plantées sont synchronisées.
+
 ## Synchro réseau et physique (proposé le 2026-11-05)
 
 Constat : la synchro marche mais elle est « brute ». Chaque nain et le mécha envoient leur position environ 60 fois par seconde, sans lissage. Chez les autres, les positions arrivent donc par à-coups. Un nain dehors tremble aussi un peu vu par les autres.
