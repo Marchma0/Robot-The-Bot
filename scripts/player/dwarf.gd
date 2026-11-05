@@ -56,6 +56,10 @@ var _seat_look: Vector2 = Vector2.ZERO
 var _pov_active: bool = false
 ## Temps passé sans toucher le sol (évite l'animation de saut sur une marche ou un cahot).
 var _air_time: float = 0.0
+## Levier tenu : décalage de vue déjà appliqué (rad) et position du levier au moment de l'attraper.
+var _hold_look: Vector2 = Vector2.ZERO
+var _hold_origin: Vector2 = Vector2.ZERO
+var _was_holding: bool = false
 
 @onready var _head: Node3D = %Head
 @onready var _camera: Camera3D = %Camera
@@ -132,7 +136,9 @@ func _physics_process(delta: float) -> void:
 		return
 	if _interactor.is_holding():
 		_interactor.drive_stick(Vector2(stick.x, -stick.y), delta)
+		_follow_held_lever()
 	else:
+		_was_holding = false
 		_look(-stick * stick_look_speed * delta)
 
 	# "Haut" du cockpit : la gravité et le saut suivent l'inclinaison du mécha.
@@ -207,6 +213,21 @@ func _update_view(seat: Seat) -> void:
 	else:
 		_camera.current = true
 	_crosshair.visible = not want_pov
+
+
+## Levier tenu : la vue tourne exactement du même angle que le levier, en même temps
+## (relatif à sa position quand on l'a attrapé). Au lâcher, la vue reste où elle est.
+func _follow_held_lever() -> void:
+	var tilt: Vector2 = _interactor.get_held_tilt()
+	if not _was_holding:
+		_was_holding = true
+		_hold_origin = tilt
+		_hold_look = Vector2.ZERO
+	var target: Vector2 = tilt - _hold_origin
+	var change: Vector2 = target - _hold_look
+	_hold_look = target
+	# Levier à droite = regarder à droite (lacet négatif), levier en avant = regarder en haut.
+	_look(Vector2(-change.x, change.y))
 
 
 ## delta.x = lacet (corps), delta.y = tangage (tête), en radians.

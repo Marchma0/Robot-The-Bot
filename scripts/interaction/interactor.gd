@@ -64,6 +64,13 @@ func get_seat() -> Seat:
 	return null
 
 
+## Inclinaison affichée du levier tenu, en radians (x = côté, y = avant/arrière), ZERO si on ne tient rien.
+func get_held_tilt() -> Vector2:
+	if not is_holding():
+		return Vector2.ZERO
+	return _wanted * deg_to_rad(_held.max_angle_degrees)
+
+
 ## Mouvement de souris en pixels (x droite, y haut) pendant qu'on tient un levier.
 func drive_mouse(motion: Vector2) -> void:
 	_drive(motion * mouse_lever_sensitivity)
