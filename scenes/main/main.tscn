@@ -1,18 +1,18 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://c3ykdpqo0yqbf"]
 
-[ext_resource type="Script" path="res://scripts/network/lobby_menu.gd" id="1_lobby"]
-[ext_resource type="Script" path="res://scripts/network/player_spawner.gd" id="2_spawner"]
+[ext_resource type="Script" uid="uid://ciec6v40oaog0" path="res://scripts/network/lobby_menu.gd" id="1_lobby"]
+[ext_resource type="Script" uid="uid://bhtfpmu8ia6hg" path="res://scripts/network/player_spawner.gd" id="2_spawner"]
 [ext_resource type="PackedScene" path="res://scenes/player/dwarf.tscn" id="3_dwarf"]
 [ext_resource type="PackedScene" path="res://scenes/levels/test_ground.tscn" id="4_ground"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="5_mecha"]
-[ext_resource type="Script" path="res://scripts/mecha/cockpit_test_motion.gd" id="6_motion"]
+[ext_resource type="Script" uid="uid://qklaqi227xxm" path="res://scripts/mecha/cockpit_test_motion.gd" id="6_motion"]
 
-[node name="Main" type="Node"]
+[node name="Main" type="Node" unique_id=708183551]
 
-[node name="LobbyMenu" type="CanvasLayer" parent="."]
+[node name="LobbyMenu" type="CanvasLayer" parent="." unique_id=1483567492]
 script = ExtResource("1_lobby")
 
-[node name="Center" type="CenterContainer" parent="LobbyMenu"]
+[node name="Center" type="CenterContainer" parent="LobbyMenu" unique_id=1635161312]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -20,33 +20,33 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Panel" type="PanelContainer" parent="LobbyMenu/Center"]
+[node name="Panel" type="PanelContainer" parent="LobbyMenu/Center" unique_id=254073337]
 custom_minimum_size = Vector2(380, 0)
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="LobbyMenu/Center/Panel"]
+[node name="Margin" type="MarginContainer" parent="LobbyMenu/Center/Panel" unique_id=2011100721]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="VBox" type="VBoxContainer" parent="LobbyMenu/Center/Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="LobbyMenu/Center/Panel/Margin" unique_id=1294034458]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+[node name="Title" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=609205429]
 layout_mode = 2
 text = "Mécha à Nains"
 horizontal_alignment = 1
 
-[node name="SteamTitle" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox"]
-theme_override_colors/font_color = Color(0.75, 0.85, 1, 1)
+[node name="SteamTitle" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=661280332]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.85, 1, 1)
 text = "— Steam (à distance) —"
 horizontal_alignment = 1
 
-[node name="SteamStatusLabel" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+[node name="SteamStatusLabel" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=1872374839]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
@@ -54,54 +54,54 @@ theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="SteamHostButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+[node name="SteamHostButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=1722114922]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Héberger (Steam, amis)"
 
-[node name="SteamCodeEdit" type="LineEdit" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+[node name="SteamCodeEdit" type="LineEdit" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=211729623]
 unique_name_in_owner = true
 layout_mode = 2
 placeholder_text = "Code du lobby Steam"
 
-[node name="SteamJoinButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+[node name="SteamJoinButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=493444681]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Rejoindre (code Steam)"
 
-[node name="Separator" type="HSeparator" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+[node name="Separator" type="HSeparator" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=362487858]
 layout_mode = 2
 
-[node name="LocalTitle" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox"]
-theme_override_colors/font_color = Color(0.75, 0.85, 1, 1)
+[node name="LocalTitle" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=479321413]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.85, 1, 1)
 text = "— Local / VPN (adresse IP) —"
 horizontal_alignment = 1
 
-[node name="HostButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+[node name="HostButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=844179705]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Héberger (local)"
 
-[node name="AddressEdit" type="LineEdit" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+[node name="AddressEdit" type="LineEdit" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=978757260]
 unique_name_in_owner = true
 layout_mode = 2
 text = "127.0.0.1"
 placeholder_text = "Adresse de l'hôte"
 
-[node name="JoinButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+[node name="JoinButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=606675003]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Rejoindre (adresse IP)"
 
-[node name="StatusLabel" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+[node name="StatusLabel" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=1432779429]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="SessionInfo" type="Label" parent="LobbyMenu"]
+[node name="SessionInfo" type="Label" parent="LobbyMenu" unique_id=541226293]
 unique_name_in_owner = true
 visible = false
 offset_left = 12.0
@@ -112,22 +112,23 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 5
 theme_override_font_sizes/font_size = 14
 
-[node name="World" type="Node3D" parent="."]
+[node name="World" type="Node3D" parent="." unique_id=1784168218]
 
-[node name="TestGround" parent="World" instance=ExtResource("4_ground")]
+[node name="TestGround" parent="World" unique_id=2147304120 instance=ExtResource("4_ground")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0059006214, -0.00799489, 0.008200645)
 
-[node name="MenuCamera" type="Camera3D" parent="World"]
+[node name="MenuCamera" type="Camera3D" parent="World" unique_id=344973914]
 transform = Transform3D(0.707107, 0.0467, -0.705, 0, 0.997, 0.066, 0.707107, -0.0467, 0.705, -1, 6, 16)
 current = true
 
-[node name="Mecha" parent="World" instance=ExtResource("5_mecha")]
+[node name="Mecha" parent="World" unique_id=757713693 instance=ExtResource("5_mecha")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 0)
 
-[node name="CockpitTestMotion" type="Node" parent="World" node_paths=PackedStringArray("target")]
+[node name="CockpitTestMotion" type="Node" parent="World" unique_id=895012465 node_paths=PackedStringArray("target")]
 script = ExtResource("6_motion")
 target = NodePath("../Mecha")
 
-[node name="PlayerSpawner" type="MultiplayerSpawner" parent="World" node_paths=PackedStringArray("spawn_points")]
+[node name="PlayerSpawner" type="MultiplayerSpawner" parent="World" unique_id=1793405204 node_paths=PackedStringArray("spawn_points")]
 spawn_path = NodePath("../Mecha/Players")
 spawn_limit = 4
 script = ExtResource("2_spawner")
