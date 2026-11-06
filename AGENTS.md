@@ -28,7 +28,7 @@ Objectif de base : amener le mécha d'un point A à un point B. Le game design e
   - En dev : `ENetMultiplayerPeer` en local (plusieurs instances).
   - En prod : `SteamMultiplayerPeer` via **GodotSteam** (GDExtension), App ID de test 480.
   - Le choix du peer est isolé dans `scripts/network/network_manager.gd` : le reste du code ne doit JAMAIS dépendre de Steam directement.
-- **Outils IA** : Claude Code (Marchma0) et Antigravity (collègue), chacun avec MCP Godot + MCP Blender.
+- **Outils IA** : Claude Code (Marchma0) et Antigravity (massyl12), chacun avec MCP Godot + MCP Blender.
 
 ## Arborescence
 ```
@@ -125,7 +125,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 **Branches et commits — procédure git (ce sont les IA qui font les commits et les push : suivre ces étapes à la lettre)**
 - `main` = toujours une version qui se lance. **Aucun commit directement sur `main`.**
 - **Pas de Pull Request, pas d'interface GitHub** : les humains ne passent pas par GitHub, c'est l'IA qui fusionne elle-même sa branche dans `main` et pousse (étape « Finir une tâche »).
-- Une branche **courte** par tâche (quelques jours au plus), nommée avec le **pseudo GitHub** de l'humain : `pseudo/sujet` (ex. `Marchma0/m7-jambes`). Pseudos connus : `Marchma0` (Claude Code) ; collègue (Antigravity) : à compléter ici. Si le pseudo n'est pas listé, le demander à l'humain et l'ajouter ici.
+- Une branche **courte** par tâche (quelques jours au plus), nommée avec le **pseudo GitHub** de l'humain : `pseudo/sujet` (ex. `Marchma0/m7-jambes`). Pseudos connus : `Marchma0` (Claude Code) ; `massyl12` (Antigravity).
 - Commencer une tâche :
   ```
   git status                      # doit être propre, sinon demander à l'humain quoi faire
