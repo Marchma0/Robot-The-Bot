@@ -122,10 +122,22 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - Avant de commencer un jalon ou une tâche, l'indiquer dans la roadmap avec le prénom (ex. `[en cours — Kamel]`) et pousser ce changement tout de suite, pour que l'autre le voie.
 - Ne pas travailler sur une tâche marquée par l'autre sans lui en parler.
 
-**Branches et commits**
-- Une branche par tâche : `prenom/sujet` (ex. `kamel/m7-jambes`). Fusion dans `main` par **Pull Request** sur GitHub, relue par l'autre si possible.
-- Petits commits, messages en français, au présent, qui disent ce que ça change pour le jeu (même style que l'historique).
-- Avant d'ouvrir une PR : `git pull origin main` dans sa branche (ou rebase), régler les conflits, relancer le jeu.
+**Branches et commits — procédure git (ce sont les IA qui font les commits et les push : suivre ces étapes à la lettre)**
+- `main` = toujours une version qui se lance. **Aucun commit directement sur `main`.**
+- Une branche **courte** par tâche (quelques jours au plus) : `prenom/sujet` (ex. `kamel/m7-jambes`, `collegue/m8-foreuse`).
+- Commencer une tâche :
+  ```
+  git status                      # doit être propre, sinon demander à l'humain quoi faire
+  git switch main
+  git pull
+  git switch -c prenom/sujet
+  ```
+- Pendant la tâche : commits petits et fréquents, `git add` **fichier par fichier** (relire `git status` avant, ne jamais ajouter `.godot/`, `addons/`, `build/`), puis `git push -u origin prenom/sujet`.
+- Récupérer le travail de l'autre dans sa branche : `git pull origin main` (**merge, jamais de rebase** sur une branche déjà poussée → donc jamais besoin de `--force`).
+- Finir une tâche : `git pull origin main`, régler les conflits, **relancer le jeu**, `git push`, puis l'humain ouvre la **Pull Request** sur GitHub (lien affiché par `git push`) et clique « Merge ». Ensuite : `git switch main`, `git pull`, `git branch -d prenom/sujet`.
+- Conflit sur un fichier binaire (`.blend`, `.glb`, image, son) ou sur une `.tscn` peu claire : **ne pas trancher seul**, demander à l'humain.
+- Changer de branche avec l'éditeur Godot ouvert : le fermer avant, ou recharger le projet après (sinon il réécrit les anciennes scènes).
+- Messages de commit en français, au présent, qui disent ce que ça change pour le jeu (même style que l'historique).
 
 **Fichiers qui se fusionnent mal**
 - `.blend`, `.glb`, images, sons : **impossibles à fusionner**. Une seule personne les modifie à la fois : le dire à l'autre avant.
