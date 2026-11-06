@@ -143,8 +143,8 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
   git pull
   git merge --no-ff pseudo/sujet  # ne doit plus y avoir de conflit, sinon s'arrêter et demander
   git push
+  git push origin --delete pseudo/sujet   # la branche distante d'abord, sinon -d refuse
   git branch -d pseudo/sujet
-  git push origin --delete pseudo/sujet
   ```
   Si `git push` sur `main` est refusé (l'autre a poussé entre-temps) : `git pull` puis `git push`, **jamais `--force`**.
 - Conflit sur un fichier binaire (`.blend`, `.glb`, image, son) ou sur une `.tscn` peu claire : **ne pas trancher seul**, demander à l'humain.
