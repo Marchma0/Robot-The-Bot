@@ -4,6 +4,9 @@
 [ext_resource type="PackedScene" path="res://assets/models/props/head_rug.glb" id="2_rug"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/props/tool_locker.tscn" id="3_locker"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/props/boiler.tscn" id="4_boiler"]
+[ext_resource type="PackedScene" path="res://assets/models/props/console_drill.glb" id="5_drill"]
+[ext_resource type="PackedScene" path="res://assets/models/props/grabber_chair.glb" id="6_chair"]
+[ext_resource type="PackedScene" path="res://assets/models/props/grabber_desk.glb" id="7_desk"]
 
 [node name="InteriorHead" type="Node3D"]
 
@@ -18,3 +21,12 @@ transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 1.93, 5.6, -0.52)
 
 [node name="Boiler" parent="." instance=ExtResource("4_boiler")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -1.975, 5.6, -0.85)
+
+[node name="ConsoleDrill" parent="." instance=ExtResource("5_drill")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 1.1, 5.6, -1.45)
+
+[node name="GrabberChair" parent="." instance=ExtResource("6_chair")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 5.6, -0.85)
+
+[node name="GrabberDesk" parent="." instance=ExtResource("7_desk")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.1, 5.6, -1.55)

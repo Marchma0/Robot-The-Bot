@@ -206,7 +206,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] M6.7 — Intérieur modulaire `[en cours — Marchma0]` (ne pas toucher à `blender/mecha.blend` ni `assets/models/mecha.glb` pendant ce temps) :
   - [x] Organisation : un fichier par objet (`blender/props/` → `assets/models/props/`), matériaux partagés, une sous-scène Godot par pièce
   - [x] Coque : murs en tôle peinte rivetée, montants, plafond (poutres, tuyaux), sol en plaques de métal, usure (rouille, éraflures)
-  - [x] Objets : cabine et porte des toilettes en tôle, mobilier de la tête (tapis, armoire à outils, chauffe-eau)
+  - [x] Objets : cabine et porte des toilettes en tôle, mobilier de la tête (tapis, armoire à outils, chauffe-eau), consoles des jambes et de la foreuse, fauteuil et bureau du grappin
   - [ ] Découpage progressif du reste du décor en objets (quand on y touche)
 - [ ] M7 — Marche du mécha (détail : `docs/design_jambes.md`). Tout est simulé par l'hôte : les clients n'envoient que leurs joysticks, l'état (pieds, curseurs, bassin, phase) est synchronisé et l'IK est calculée chez chacun
   - [ ] M7.1 — Squelette + IK + pas : jambes remodelées (cuisse, tibia, pied, os `leg_L_*`), **1 joystick + 1 pad à 4 flèches par jambe** sur les consoles du ventre (commandes déjà en place), curseur au sol (anneau lumineux + petit écran « vue des pieds » sur la console), pousser = pied levé, relâcher = pied posé, IK 2 os, bassin qui suit les pieds, recul et pivot (pas chassé). Remplace le mouvement de test
