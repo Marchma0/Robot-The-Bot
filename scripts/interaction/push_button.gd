@@ -19,6 +19,8 @@ const PRESS_DURATION: float = 0.15
 var press_count: int = 0
 ## État allumé (mode toggle). Autorité : hôte.
 var is_on: bool = false
+## Allumé pour signaler « appuie ici » (QTE). Purement visuel, réglé localement par chaque peer.
+var lit: bool = false
 
 var _press_timer: float = 0.0
 var _cap_rest_y: float = 0.0
@@ -45,7 +47,9 @@ func _process(delta: float) -> void:
 	_press_timer = maxf(_press_timer - delta, 0.0)
 	var down: bool = _press_timer > 0.0 or (toggle and is_on)
 	_cap.position.y = _cap_rest_y - (PRESS_DEPTH if down else 0.0)
-	_cap_material.emission_enabled = toggle and is_on
+	_cap_material.emission_enabled = (toggle and is_on) or lit
+	_cap_material.emission = Color(1.0, 0.55, 0.1) if lit else cap_color
+	_cap_material.emission_energy_multiplier = 4.0 if lit else 1.0
 	if show_debug:
 		var state: String = ("allumé" if is_on else "éteint") if toggle else "appuis : %d" % press_count
 		_debug_label.text = "%s\n%s" % [display_name, state]

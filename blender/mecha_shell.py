@@ -288,6 +288,8 @@ REPLACED = {
         ((0.8, 1.05, 0.0), (2.0, 1.4, 0.32)),
     ],
     "Int_Belly": [
+        # aiguilles fixes des cadrans des consoles de jambe -> aiguilles animées (jauge d'erreur, LegDashboard)
+        ((-1.006, 1.575, 3.26), (-0.994, 1.644, 3.293)), ((0.994, 1.575, 3.26), (1.006, 1.644, 3.293)),
         # consoles des jambes (gauche, droite) : caisson, rehausse arrière, plateau incliné -> props/console.py
         ((-1.5, 1.2, 2.6), (-0.5, 1.8, 3.1)), ((-1.5, 1.6, 3.1), (-0.5, 1.72, 3.18)), ((-1.52, 1.1813, 3.0378), (-0.48, 1.7187, 3.2822)),
         ((0.5, 1.2, 2.6), (1.5, 1.8, 3.1)), ((0.5, 1.6, 3.1), (1.5, 1.72, 3.18)), ((0.48, 1.1813, 3.0378), (1.52, 1.7187, 3.2822)),
