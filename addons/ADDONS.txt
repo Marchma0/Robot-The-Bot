@@ -1,4 +1,4 @@
-ADDONS REQUIS — Mécha à Nains
+ADDONS REQUIS — Robot-The-Bot
 ==============================
 
 Le contenu de addons/ n'est PAS versionné dans git (trop lourd).

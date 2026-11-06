@@ -38,7 +38,7 @@ theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=609205429]
 layout_mode = 2
-text = "Mécha à Nains"
+text = "Robot-The-Bot"
 horizontal_alignment = 1
 
 [node name="SteamTitle" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=661280332]

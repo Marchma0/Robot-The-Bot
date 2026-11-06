@@ -73,7 +73,7 @@ func _on_join_pressed() -> void:
 
 func _on_session_started() -> void:
 	var role: String = "hôte" if multiplayer.is_server() else "client %d" % multiplayer.get_unique_id()
-	get_window().title = "mecha-nains — %s" % role
+	get_window().title = "Robot-The-Bot — %s" % role
 	_center.visible = false
 	if NetworkManager.is_steam_session() and not multiplayer.is_server():
 		_lobby_code_label.visible = false
@@ -82,7 +82,7 @@ func _on_session_started() -> void:
 
 
 func _on_steam_lobby_created(code: String) -> void:
-	get_window().title = "mecha-nains — hôte Steam (code %s)" % code
+	get_window().title = "Robot-The-Bot — hôte Steam (code %s)" % code
 	# Le code reste écrit (il faut pouvoir le donner) ; il est aussi copié dans le presse-papiers.
 	_lobby_code_label.text = code
 	_lobby_code_label.visible = true
@@ -99,7 +99,7 @@ func _on_connection_failed(reason: String) -> void:
 
 
 func _show_menu(status: String) -> void:
-	get_window().title = "mecha-nains"
+	get_window().title = "Robot-The-Bot"
 	_center.visible = true
 	_session_info.visible = false
 	_set_buttons_disabled(false)
