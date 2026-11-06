@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://assets/models/props/console_leg.glb" id="1_console"]
+[ext_resource type="PackedScene" path="res://assets/models/props/sofa.glb" id="2_sofa"]
 
 [node name="InteriorBelly" type="Node3D"]
 
@@ -9,3 +10,6 @@ transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1, 2.6, -1.5)
 
 [node name="ConsoleLegR" parent="." instance=ExtResource("1_console")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 1, 2.6, -1.5)
+
+[node name="Sofa" parent="." instance=ExtResource("2_sofa")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.89, 2.6, -0.05)

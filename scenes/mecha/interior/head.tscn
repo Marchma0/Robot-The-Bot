@@ -17,10 +17,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.515, 5.6, 1.39)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 5.6, -0.1)
 
 [node name="ToolLocker" parent="." instance=ExtResource("3_locker")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 1.93, 5.6, -0.52)
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 1.93, 5.6, -0.52)
 
 [node name="Boiler" parent="." instance=ExtResource("4_boiler")]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -1.975, 5.6, -0.85)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.975, 5.6, -0.85)
 
 [node name="ConsoleDrill" parent="." instance=ExtResource("5_drill")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 1.1, 5.6, -1.45)
