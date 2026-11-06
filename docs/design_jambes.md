@@ -1,6 +1,20 @@
 # Design — Les jambes du mécha (M7)
 
-Statut : **validé** par le porteur du projet (2026-11-04). Implémentation découpée en M7.1 à M7.6 (voir `CLAUDE.md`).
+Statut : **validé** par le porteur du projet (2026-11-04), **révisé le 2026-11-06** (marche en rythme, voir ci-dessous). Implémentation découpée en M7.1 à M7.6 (voir `CLAUDE.md`).
+
+
+## Révision du 2026-11-06 : marche en rythme (remplace le curseur au sol)
+
+Décidée par le porteur du projet. Remplace « Lever / poser le pied » et « Voir son curseur » ci-dessous (gardés pour l'historique).
+
+- **Un coup de joystick = un pas de sa jambe.** On pousse vers la direction voulue : le pied se lève, fait son pas et se repose tout seul. Pour refaire un pas, revenir au centre et repousser.
+- **Directions (le robot regarde toujours où il va)** : haut = avance tout droit ; diagonale avant = avance en tournant de ce côté ; côté pur = pivote sur place ; bas = recule.
+- **Pas alternés = le robot avance.** Les deux joueurs poussent l'un après l'autre (petit décalage) dans la même direction. Plus ils enchaînent vite, plus il va vite (cadence, et foulée un peu plus longue à rythme soutenu).
+- **Un seul joueur** : son pied se place devant l'autre, le corps suit d'un demi-pas, puis il ne fait que piétiner (un pied ne peut pas s'éloigner de l'autre au-delà d'un pas) : le robot bouge à peine.
+- **Petit décalage toléré** : un pas demandé pendant que l'autre pied est en l'air attend une fraction de seconde puis part. Deux pieds en l'air en même temps : interdit (le second attend).
+- **Désaccord de direction** : deux pas successifs dans des directions trop différentes (au-delà d'environ 60°) = le robot trébuche. M7.1 : il vacille et s'arrête. M7.2/M7.3 : il tombe.
+- **Retour visuel** : une petite marque lumineuse au sol là où le pied va se poser. Plus de curseur ni d'écran « vue des pieds ».
+- **Gabarit** : jambes un peu plus longues (ventre à environ 2,85 m du sol au lieu de 2,3 m), pas d'environ 1,2 m.
 
 ## Description (texte du porteur du projet)
 
