@@ -18,7 +18,7 @@ const PICK_REACH: float = 2.2
 const LIFETIME: float = 120.0
 
 ## Vitesse de lancer (m/s) dans la direction du regard.
-@export var throw_speed: float = 6.0
+@export var throw_speed: float = 7.0
 ## Élan vers le haut ajouté au lancer (m/s) : donne la courbe en cloche.
 @export var throw_lift: float = 2.8
 ## Gravité pendant le vol (multiplie celle du monde) : plus haut = plus lourd.
