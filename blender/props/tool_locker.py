@@ -3,7 +3,7 @@
 Fiche
 - Taille : 0,80 m de large, 0,42 m de profondeur, 1,05 m de haut (+ caisse à outils de 0,15 m).
 - Origine : au sol, au centre ; l'avant (portes) regarde vers +Y.
-  Placée contre le mur droit, tournée de +90° : Blender (1.93, 0.52, 5.6), Godot (1.93, 5.6, -0.52).
+  Placée contre le mur droit, portes vers la gauche du mécha : Blender (1.93, 0.52, 5.6), Godot (1.93, 5.6, -0.52).
 - Budget : 1800 triangles.
 - Pièces : caisson (Paint), pieds, socle et cadre (IronDark), 2 portes avec ouïes d'aération, poignées en cuivre,
   rivets, étiquette jaune, caisse à outils (ButtonRed) avec poignée.

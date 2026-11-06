@@ -99,6 +99,12 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
   `blender -b --factory-startup --python blender/props/<nom>.py`
 - **Palette partagée** : `prop_kit.PALETTE` (mêmes noms que dans `mecha.blend` : `Copper`, `Paint`, `Iron`, `Wood`…). Toujours utiliser `kit.material("<nom>")` ; un nouveau matériau s'ajoute d'abord à la palette.
 - **Assemblage dans Godot**, jamais en fusionnant les maillages : une sous-scène par pièce (`scenes/mecha/interior/belly.tscn`, `head.tscn`) placée dans `mecha.tscn`. Un objet qui a besoin d'une collision ou d'un script a sa propre scène `scenes/mecha/props/<nom>.tscn`.
+- **Placer un objet à la main dans un `.tscn`** : position Godot = Blender (x, z, -y). Dans `Transform3D(a, b, c, d, e, f, g, h, i, x, y, z)`, les 9 premiers nombres sont les **lignes** de la matrice (pas les colonnes). Rotations toutes prêtes pour un objet dont l'avant (+Y Blender) doit regarder :
+  - vers l'avant du mécha (-Z Godot) : `Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, …)`
+  - vers l'arrière du mécha (+Z Godot) : `Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, …)`
+  - vers la droite du mécha (+X) : `Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, …)`
+  - vers la gauche du mécha (-X) : `Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, …)`
+  Toujours vérifier avec `interior_shots` que l'objet est dans le bon sens.
 - **Textures extraites par Godot** (`assets/models/<modèle>_<texture>.png` + `.import`) : générées à l'import du `.glb`, on les versionne.
 - **Vérifier l'intérieur dans le jeu** : `Godot --path . --resolution 1280x720 res://tests/tools/interior_shots.tscn` → 8 captures à hauteur de nain dans `build/views/interior_*.png` (ventre et tête, 4 directions). Après un réexport, lancer d'abord `Godot --headless --path . --import`.
 
@@ -203,11 +209,11 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] M6.6 — Synchro lissée et interface en icônes (fait le 2026-11-06) :
   - [x] Gravité et interactions entre joueurs : points **1 à 5** de « Synchro réseau et physique » dans `docs/ideas.md` (validés) : nain dehors synchronisé dans le monde, lissage des autres joueurs et du mécha, `physics_interpolation`, moins de trafic, ordre de calcul fixe (mécha avant nains)
   - [x] Interface : retirer les textes d'aide bruts à l'écran (consignes, noms d'état, invites d'interaction…) et les remplacer par des **icônes**, ou au pire de **petits mots** dans une police soignée (police Fredoka, dans `assets/fonts/`)
-- [ ] M6.7 — Intérieur modulaire `[en cours — Marchma0]` (ne pas toucher à `blender/mecha.blend` ni `assets/models/mecha.glb` pendant ce temps) :
+- [x] M6.7 — Intérieur modulaire (fait le 2026-11-06) :
   - [x] Organisation : un fichier par objet (`blender/props/` → `assets/models/props/`), matériaux partagés, une sous-scène Godot par pièce
   - [x] Coque : murs en tôle peinte rivetée, montants, plafond (poutres, tuyaux), sol en plaques de métal, usure (rouille, éraflures)
   - [x] Objets : cabine et porte des toilettes en tôle, mobilier de la tête (tapis, armoire à outils, chauffe-eau), consoles des jambes et de la foreuse, fauteuil et bureau du grappin
-  - [ ] Découpage progressif du reste du décor en objets (quand on y touche)
+  - [x] Canapé du salon ; le reste du vieux décor (table basse, caisses, tonneau, tableau, cible, télé…) sera découpé en objets au fil de l'eau, quand on y touchera
 - [ ] M7 — Marche du mécha (détail : `docs/design_jambes.md`). Tout est simulé par l'hôte : les clients n'envoient que leurs joysticks, l'état (pieds, curseurs, bassin, phase) est synchronisé et l'IK est calculée chez chacun
   - [ ] M7.1 — Squelette + IK + pas : jambes remodelées (cuisse, tibia, pied, os `leg_L_*`), **1 joystick + 1 pad à 4 flèches par jambe** sur les consoles du ventre (commandes déjà en place), curseur au sol (anneau lumineux + petit écran « vue des pieds » sur la console), pousser = pied levé, relâcher = pied posé, IK 2 os, bassin qui suit les pieds, recul et pivot (pas chassé). Remplace le mouvement de test
   - [ ] M7.2 — Équilibre : centre de gravité réel comparé à la zone d'appui des pieds, le robot penche (ressenti dans la cabine) jusqu'au point de non-retour
