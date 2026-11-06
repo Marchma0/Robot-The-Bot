@@ -278,6 +278,15 @@ def clean_wear():
 
 # Meubles remplacés par des objets (blender/props/) : boîtes englobantes exactes des anciennes pièces.
 REPLACED = {
+    "Ext_Details": [
+        # anciennes jambes fixes (gauche, droite) -> blender/mecha_legs.py (jambes articulées, M7.1)
+        ((-1.8, -0.4, 0.6), (-1.0, 0.4, 1.95)), ((-2.0, -0.75, 0.0), (-0.8, 1.05, 0.45)),
+        ((-1.9, -0.5, 1.22), (-0.9, 0.5, 1.38)), ((-1.85, -0.3, 0.265), (-0.95, 0.3, 0.835)),
+        ((-2.0, 1.05, 0.0), (-0.8, 1.4, 0.32)),
+        ((1.0, -0.4, 0.6), (1.8, 0.4, 1.95)), ((0.8, -0.75, 0.0), (2.0, 1.05, 0.45)),
+        ((0.9, -0.5, 1.22), (1.9, 0.5, 1.38)), ((0.95, -0.3, 0.265), (1.85, 0.3, 0.835)),
+        ((0.8, 1.05, 0.0), (2.0, 1.4, 0.32)),
+    ],
     "Int_Belly": [
         # consoles des jambes (gauche, droite) : caisson, rehausse arrière, plateau incliné -> props/console.py
         ((-1.5, 1.2, 2.6), (-0.5, 1.8, 3.1)), ((-1.5, 1.6, 3.1), (-0.5, 1.72, 3.18)), ((-1.52, 1.1813, 3.0378), (-0.48, 1.7187, 3.2822)),

@@ -17,10 +17,11 @@ const SHOTS: Array = [
 
 func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://build/views"))
-	await get_tree().create_timer(1.5).timeout
+	await get_tree().create_timer(2.0).timeout
 	for shot: Array in SHOTS:
-		_camera.global_position = shot[1]
-		_camera.look_at(shot[2], Vector3.UP)
+		var mecha: Node3D = $Mecha
+		_camera.global_position = mecha.global_transform * (shot[1] as Vector3)
+		_camera.look_at(mecha.global_transform * (shot[2] as Vector3), Vector3.UP)
 		_camera.reset_physics_interpolation()
 		for i: int in 8:
 			await get_tree().process_frame
