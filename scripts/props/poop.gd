@@ -1,26 +1,33 @@
 class_name Poop
 extends RigidBody3D
 ## Caca : se ramasse (E), se tient dans la main, se lance (clic) ou se pose (E).
-## Un nain touché par un caca lancé recule et a l'écran taché quelques secondes.
+## Lancé, il part en cloche (lourd) et disparaît dans un petit nuage de fumée dès qu'il touche
+## quelque chose. Un nain touché a l'écran taché quelques secondes. Posé, il reste au sol.
 ##
 ## Réseau : l'hôte est autoritaire. Il simule le vol (corps rigide), décide qui le tient
-## (`holder_peer_id`, répliqué) et détecte les nains touchés. Les clients ne simulent rien :
-## ils reçoivent la position, et placent eux-mêmes le caca dans la main de celui qui le tient.
+## (`holder_peer_id`, répliqué) et détecte les contacts. Au contact, il envoie `play_burst`
+## à tout le monde (chacun joue le nuage chez lui) puis supprime le caca (le spawner le retire
+## chez les clients). Les clients ne simulent rien : ils reçoivent la position, et placent
+## eux-mêmes le caca dans la main de celui qui le tient.
 ## Au repos (ou tenu), le corps est figé et suit le mécha (enfant de Mecha/Props).
 
-## Vitesse de lancer (m/s) et petit élan vers le haut.
-const THROW_SPEED: float = 9.0
-const THROW_LIFT: float = 1.2
+const PUFF_SCENE: PackedScene = preload("res://scenes/props/poop_puff.tscn")
 ## Portée max pour le ramasser (m).
 const PICK_REACH: float = 2.2
 ## Durée de vie au sol avant de disparaître (s).
 const LIFETIME: float = 120.0
 
+## Vitesse de lancer (m/s) dans la direction du regard.
+@export var throw_speed: float = 7.0
+## Élan vers le haut ajouté au lancer (m/s) : donne la courbe en cloche.
+@export var throw_lift: float = 2.8
+## Gravité pendant le vol (multiplie celle du monde) : plus haut = plus lourd.
+@export var flight_gravity_scale: float = 1.4
+
 ## Peer qui le tient (0 = personne). Autorité : hôte.
 var holder_peer_id: int = 0
-## Écrasé (après avoir touché quelqu'un) : il s'aplatit.
-var splatted: bool = false
-## Caca légendaire (doré, brillant, ne disparaît jamais). Fixé à la création.
+## Caca légendaire (doré, brillant, ne disparaît pas au sol). Fixé à la création.
+## Lancé, il disparaît comme les autres (provisoire, voir docs/decisions.md).
 var golden: bool = false:
 	set(value):
 		golden = value
@@ -29,6 +36,8 @@ var golden: bool = false:
 
 var _thrower: int = 0
 var _flying: bool = false
+## Vraiment lancé (pas simplement posé) : disparaît au premier contact.
+var _thrown: bool = false
 var _slow_time: float = 0.0
 var _age: float = 0.0
 var _gold_material: StandardMaterial3D
@@ -72,7 +81,6 @@ func _process(_delta: float) -> void:
 		var dwarf: Dwarf = _find_dwarf(holder_peer_id)
 		if dwarf != null:
 			global_transform = dwarf.get_hold_transform()
-	_model.scale = Vector3(1.4, 0.45, 1.4) if splatted else Vector3.ONE
 	if _gold_material != null:
 		# Scintillement du caca doré.
 		var shine: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.006)
@@ -98,7 +106,6 @@ func request_pick() -> void:
 		if (node as Poop).holder_peer_id == sender:
 			return   # un seul caca à la fois
 	holder_peer_id = sender
-	splatted = false
 	freeze = true
 	_age = 0.0
 
@@ -120,20 +127,38 @@ func request_throw(direction: Vector3) -> void:
 	_slow_time = 0.0
 	freeze = false
 	if direction.length() > 0.1:
-		linear_velocity = direction.normalized() * THROW_SPEED + Vector3.UP * THROW_LIFT
+		_thrown = true
+		gravity_scale = flight_gravity_scale
+		continuous_cd = true
+		if dwarf != null:
+			add_collision_exception_with(dwarf)   # ne pas se cogner dans la main du lanceur
+		linear_velocity = direction.normalized() * throw_speed + Vector3.UP * throw_lift
 		angular_velocity = Vector3(randf_range(-8.0, 8.0), randf_range(-8.0, 8.0), randf_range(-8.0, 8.0))
 	else:
 		linear_velocity = Vector3.ZERO
 
 
+## Joué chez chaque peer quand un caca lancé touche quelque chose : petit nuage de fumée.
+@rpc("authority", "call_local", "reliable")
+func play_burst(at: Vector3, is_golden: bool) -> void:
+	var puff: PoopPuff = PUFF_SCENE.instantiate() as PoopPuff
+	puff.golden = is_golden
+	# Le nuage reste là où était le caca et suit le mécha (même parent que le caca).
+	get_parent().add_child(puff)
+	puff.global_position = at
+
+
 func _on_body_entered(body: Node) -> void:
-	if not multiplayer.is_server() or not _flying:
+	if not multiplayer.is_server() or not _thrown:
 		return
 	var dwarf: Dwarf = body as Dwarf
-	if dwarf != null and dwarf.peer_id != _thrower:
+	if dwarf != null:
+		if dwarf.peer_id == _thrower:
+			return
 		dwarf.receive_splat.rpc()
-		splatted = true
-		linear_velocity *= 0.15
+	_thrown = false
+	play_burst.rpc(global_position, golden)
+	queue_free()
 
 
 ## Matériau doré + petite lumière pour le caca légendaire.
