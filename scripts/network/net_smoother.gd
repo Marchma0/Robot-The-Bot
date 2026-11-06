@@ -17,6 +17,9 @@ extends Node
 const DELAY: float = 0.1
 ## Au-delà de cet écart entre deux états, on saute directement (téléportation, réapparition).
 const SNAP_DISTANCE: float = 3.0
+## Vitesse de recalage de l'horloge (s par s) et écart au-delà duquel on saute directement (s).
+const CLOCK_CATCH_UP: float = 0.05
+const MAX_CLOCK_DRIFT: float = 0.25
 ## Nombre max d'états gardés en mémoire.
 const MAX_BUFFER: int = 20
 
@@ -37,8 +40,10 @@ var net_state: PackedFloat64Array:
 
 ## États reçus, du plus ancien au plus récent.
 var _buffer: Array[PackedFloat64Array] = []
-## Écart estimé entre notre horloge et celle de l'expéditeur (s).
+## Écart entre notre horloge et celle de l'expéditeur (s) : estimé (`_target_offset`) et
+## utilisé (`_clock_offset`, qui rejoint l'estimation en douceur pour ne pas faire d'à-coup).
 var _clock_offset: float = 0.0
+var _target_offset: float = 0.0
 var _has_offset: bool = false
 var _applied_once: bool = false
 
@@ -46,6 +51,11 @@ var _applied_once: bool = false
 func _physics_process(_delta: float) -> void:
 	if is_multiplayer_authority() or _buffer.is_empty() or target == null:
 		return
+	# Recalage doux de l'horloge (au plus 5 % de vitesse en plus ou en moins) ; saut direct si très loin.
+	if absf(_target_offset - _clock_offset) > MAX_CLOCK_DRIFT:
+		_clock_offset = _target_offset
+	else:
+		_clock_offset = move_toward(_clock_offset, _target_offset, CLOCK_CATCH_UP * _delta)
 	var render_time: float = _now() - _clock_offset - DELAY
 	# On jette les états trop vieux, en gardant celui juste avant render_time.
 	while _buffer.size() >= 2 and _buffer[1][0] <= render_time:
@@ -82,13 +92,16 @@ func _push_state(state: PackedFloat64Array) -> void:
 	if state.size() < 10 or (is_inside_tree() and is_multiplayer_authority()):
 		return
 	var sample: float = _now() - state[0]
-	if not _has_offset or sample < _clock_offset:
-		# Paquet arrivé plus vite que prévu : on recale l'horloge dessus.
+	if not _has_offset:
+		_target_offset = sample
 		_clock_offset = sample
 		_has_offset = true
+	elif sample < _target_offset:
+		# Paquet arrivé plus vite que prévu : l'estimation se cale dessus.
+		_target_offset = sample
 	else:
 		# Le réseau ralentit : on laisse lentement plus de marge.
-		_clock_offset = lerpf(_clock_offset, sample, 0.02)
+		_target_offset = lerpf(_target_offset, sample, 0.02)
 	if not _buffer.is_empty() and state[0] <= _buffer.back()[0]:
 		return   # vieux paquet arrivé en retard
 	_buffer.append(state)
