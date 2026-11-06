@@ -206,6 +206,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
   - [x] S'accroupir (Ctrl / B) : jambes rentrées dans la tunique, collision réduite
   - [x] Intérieur décoré (salon du ventre, tête encombrée, hublots, usure), canapé où s'asseoir
   - [x] Toilettes : porte manuelle, mini-jeu « Poussée », caca à ramasser / lancer (touché = recul + écran taché), caca légendaire doré
+  - [x] Lancer de caca en cloche (plus lourd) : il disparaît au premier contact dans un petit nuage de fumée marron (doré pour le légendaire), tache l'écran du nain touché
 - [x] M6.6 — Synchro lissée et interface en icônes (fait le 2026-11-06) :
   - [x] Gravité et interactions entre joueurs : points **1 à 5** de « Synchro réseau et physique » dans `docs/ideas.md` (validés) : nain dehors synchronisé dans le monde, lissage des autres joueurs et du mécha, `physics_interpolation`, moins de trafic, ordre de calcul fixe (mécha avant nains)
   - [x] Interface : retirer les textes d'aide bruts à l'écran (consignes, noms d'état, invites d'interaction…) et les remplacer par des **icônes**, ou au pire de **petits mots** dans une police soignée (police Fredoka, dans `assets/fonts/`)
