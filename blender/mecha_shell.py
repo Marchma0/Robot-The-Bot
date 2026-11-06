@@ -276,6 +276,58 @@ def clean_wear():
     print("mecha_shell : usure, %d sommets de traits fins retirés" % len(set(doomed)))
 
 
+# Meubles remplacés par des objets (blender/props/) : boîtes englobantes exactes des anciennes pièces.
+REPLACED = {
+    "Int_Belly": [
+        # consoles des jambes (gauche, droite) : caisson, rehausse arrière, plateau incliné -> props/console.py
+        ((-1.5, 1.2, 2.6), (-0.5, 1.8, 3.1)), ((-1.5, 1.6, 3.1), (-0.5, 1.72, 3.18)), ((-1.52, 1.1813, 3.0378), (-0.48, 1.7187, 3.2822)),
+        ((0.5, 1.2, 2.6), (1.5, 1.8, 3.1)), ((0.5, 1.6, 3.1), (1.5, 1.72, 3.18)), ((0.48, 1.1813, 3.0378), (1.52, 1.7187, 3.2822)),
+    ],
+    "Int_Head": [
+        # console de la foreuse -> props/console.py
+        ((0.65, 1.15, 5.6), (1.55, 1.75, 6.1)), ((0.65, 1.55, 6.1), (1.55, 1.67, 6.18)), ((0.63, 1.1313, 6.0378), (1.57, 1.6687, 6.2822)),
+        # siège du grappin -> props/grabber_chair.py
+        ((-1.32, 0.63, 5.6), (-0.88, 1.07, 5.63)), ((-1.15, 0.8, 5.62), (-1.05, 0.9, 5.92)), ((-1.35, 0.62, 5.91), (-0.85, 1.08, 5.99)),
+        ((-1.35, 0.58, 5.99), (-0.85, 0.64, 6.45)), ((-0.88, 0.66, 6.12), (-0.82, 1.0, 6.16)), ((-1.38, 0.66, 6.12), (-1.32, 1.0, 6.16)),
+        ((-0.87, 0.95, 5.99), (-0.83, 0.99, 6.12)), ((-1.37, 0.95, 5.99), (-1.33, 0.99, 6.12)),
+        # bureau du grappin (le cadre de l'écran reste) -> props/grabber_desk.py
+        ((-1.5, 1.35, 5.6), (-0.7, 1.75, 6.02)), ((-1.52, 1.33, 6.02), (-0.68, 1.77, 6.06)),
+    ],
+}
+
+
+def remove_replaced_furniture():
+    for name, boxes in REPLACED.items():
+        obj = bpy.data.objects[name]
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        mw = obj.matrix_world
+        seen, doomed, hits = set(), [], 0
+        for v in bm.verts:
+            if v in seen:
+                continue
+            stack, comp = [v], []
+            while stack:
+                x = stack.pop()
+                if x in seen:
+                    continue
+                seen.add(x)
+                comp.append(x)
+                stack += [e.other_vert(x) for e in x.link_edges]
+            pts = [mw @ p.co for p in comp]
+            lo = Vector([min(p[i] for p in pts) for i in range(3)])
+            hi = Vector([max(p[i] for p in pts) for i in range(3)])
+            for blo, bhi in boxes:
+                if all(abs(lo[i] - blo[i]) < 0.006 and abs(hi[i] - bhi[i]) < 0.006 for i in range(3)):
+                    doomed += comp
+                    hits += 1
+                    break
+        bmesh.ops.delete(bm, geom=list(set(doomed)), context="VERTS")
+        bm.to_mesh(obj.data)
+        bm.free()
+        print("mecha_shell : %s, %d anciens meubles retirés" % (name, hits))
+
+
 def remove_toilet_planks():
     """Retire les cloisons en planches de la cabine des toilettes (remplacées par l'objet toilet_cabin)."""
     obj = bpy.data.objects["Int_Toilet"]
@@ -441,6 +493,7 @@ def main():
         world_uvs(bpy.data.objects[name])
     clean_wear()
     remove_toilet_planks()
+    remove_replaced_furniture()
     build_structure()
     bpy.ops.wm.save_mainfile()
     kit.export_glb(os.path.join(kit.ROOT, "assets", "models", "mecha.glb"))

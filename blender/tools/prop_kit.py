@@ -109,6 +109,26 @@ class Builder:
         result = bmesh.ops.create_cube(self.bm, size=1.0, matrix=matrix)
         self._tag(result["verts"], mat_name)
 
+    def tilted_box(self, center, size, tilt_x: float, mat_name: str) -> None:
+        """Boîte de dimensions size, centrée sur center, tournée de tilt_x radians autour de l'axe X."""
+        matrix = Matrix.Translation(Vector(center)) @ Matrix.Rotation(tilt_x, 4, "X") @ Matrix.Diagonal((*size, 1.0))
+        result = bmesh.ops.create_cube(self.bm, size=1.0, matrix=matrix)
+        self._tag(result["verts"], mat_name)
+
+    def prism_x(self, profile_yz, x0: float, x1: float, mat_name: str) -> None:
+        """Prisme : profil convexe (liste de points (y, z) dans l'ordre) extrudé de x0 à x1."""
+        left = [self.bm.verts.new((x0, y, z)) for y, z in profile_yz]
+        right = [self.bm.verts.new((x1, y, z)) for y, z in profile_yz]
+        faces = [self.bm.faces.new(left[::-1]), self.bm.faces.new(right)]
+        n = len(profile_yz)
+        for i in range(n):
+            j = (i + 1) % n
+            faces.append(self.bm.faces.new((left[i], left[j], right[j], right[i])))
+        bmesh.ops.recalc_face_normals(self.bm, faces=faces)
+        index = self._index(mat_name)
+        for face in faces:
+            face.material_index = index
+
     def cylinder(self, p0, p1, radius: float, mat_name: str, segments: int = 10, radius_end: float = -1.0) -> None:
         """Cylindre (ou cône si radius_end >= 0) du point p0 au point p1."""
         p0, p1 = Vector(p0), Vector(p1)
