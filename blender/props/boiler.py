@@ -1,9 +1,11 @@
-"""Chauffe-eau étroit (tête du mécha, mur du fond) relié au tuyau en fer du plafond.
+"""Chauffe-eau étroit (tête du mécha, mur gauche) dont le tuyau monte dans le plafond.
 
 Fiche
-- Taille : cuve de 0,31 m de diamètre, 1,35 m de haut ; tuyau jusqu'au plafond (2,5 m au-dessus du sol de la tête).
+- Taille : cuve de 0,31 m de diamètre, 1,35 m de haut ; tuyau jusqu'au plafond (2,7 m au-dessus du sol de la tête).
 - Origine : au sol, au centre de la cuve ; l'avant (manomètre) regarde vers +Y.
-  Placé en Blender (1.11, -1.72, 5.6) = Godot (1.11, 5.6, 1.72), sans rotation.
+  Placé contre le mur gauche, entre le meuble bas et le pot de l'angle, tourné de -90° (manomètre vers la pièce) :
+  Blender (-1.975, 0.85, 5.6) = Godot (-1.975, 5.6, -0.85). Hors du passage à la sortie du rayon tracteur.
+  Le tuyau se décale de 0,2 m (vers l'arrière du mécha) pour éviter la poutre du plafond.
 - Budget : 1800 triangles.
 - Pièces : 3 pieds, cuve (Paint) avec cerclages en cuivre et dôme, manomètre, tuyau de sortie vers le plafond
   avec vanne rouge, tuyau d'arrivée qui rentre dans le mur.
@@ -20,7 +22,8 @@ import prop_kit as kit  # noqa: E402
 
 R = 0.155
 Z0, Z1 = 0.12, 1.30
-CEILING_PIPE = (-0.12, 2.53)   # tuyau en fer du plafond : y local, z local (rayon 0,035)
+CEILING = 2.70           # hauteur du plafond de la tête au-dessus de son sol
+PIPE_SHIFT = 0.20        # décalage du tuyau (x local) pour passer à côté de la poutre
 
 
 def main():
@@ -43,13 +46,12 @@ def main():
     b.cylinder((0, R + 0.065, 0.95), (0, R + 0.07, 0.95), 0.042, "Paper", segments=14)
     b.box((-0.003, R + 0.07, 0.95), (0.003, R + 0.073, 0.985), "ButtonRed")                 # aiguille
     # sortie vers le plafond, avec une vanne
-    y_pipe, z_pipe = CEILING_PIPE
     top = Z1 + 0.09
-    b.pipe([(0, 0, top), (0, 0, 1.75), (0, y_pipe, 1.75), (0, y_pipe, z_pipe - 0.03)], 0.025, "Copper", "IronDark")
-    b.cylinder((0, 0, 1.55), (0.07, 0, 1.55), 0.008, "IronDark", segments=6)
-    b.cylinder((0.07, 0, 1.55), (0.085, 0, 1.55), 0.06, "ButtonRed", segments=12)          # volant de vanne
-    b.cylinder((0, y_pipe, z_pipe - 0.07), (0, y_pipe, z_pipe - 0.03), 0.045, "IronDark", segments=10)  # raccord
-    # arrivée d'eau qui rentre dans le mur du fond
+    b.pipe([(0, 0, top), (0, 0, 1.75), (PIPE_SHIFT, 0, 1.75), (PIPE_SHIFT, 0, CEILING)], 0.025, "Copper", "IronDark")
+    b.cylinder((0, 0, 1.55), (0, 0.07, 1.55), 0.008, "IronDark", segments=6)
+    b.cylinder((0, 0.07, 1.55), (0, 0.085, 1.55), 0.06, "ButtonRed", segments=12)          # volant de vanne
+    b.cylinder((PIPE_SHIFT, 0, CEILING - 0.03), (PIPE_SHIFT, 0, CEILING), 0.06, "IronDark", segments=12)  # collerette
+    # arrivée d'eau qui rentre dans le mur
     b.pipe([(R - 0.02, 0, 0.35), (R + 0.06, 0, 0.35), (R + 0.06, -0.17, 0.35)], 0.02, "Iron", "IronDark")
     b.finish()
     kit.save_and_export("boiler", budget_tris=1800)
