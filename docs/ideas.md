@@ -124,7 +124,7 @@ Recommandation : faire **1 à 5 ensemble**, en une étape. Le **6** attend qu'on
 ## Mieux modéliser en 3D avec l'IA (proposé le 2026-11-06, à rediscuter)
 Recherche sur ce qui se fait (forums, GitHub, articles). Constat commun : une IA qui écrit un script Blender « à l'aveugle » donne des résultats médiocres ; il lui faut des mesures, des références et des contrôles automatiques à chaque étape.
 
-1. **Boucle script → rendu multi-vues → correction.**
+1. **Boucle script → rendu multi-vues → correction.** *(validé et fait le 2026-11-06 : `blender/tools/render_views.py` + règle dans `AGENTS.md`)*
    - L'IA écrit le script, fait une planche de 5 vues (face, profil, dos, 3/4, dessus), compare à la demande, corrige. Environ 3 tours.
    - Base des travaux de recherche SceneCraft, LL3M, BlenderAlchemy, BlenderGym.
 2. **Budget + recette par pièces** (inspiré de `ozanzeng/blender-LPM-skill`).
