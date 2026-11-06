@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/levels/test_ground.tscn" id="4_ground"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="5_mecha"]
 [ext_resource type="Script" uid="uid://qklaqi227xxm" path="res://scripts/mecha/cockpit_test_motion.gd" id="6_motion"]
+[ext_resource type="Script" path="res://scripts/ui/hint_bar.gd" id="7_hintbar"]
 
 [node name="Main" type="Node" unique_id=708183551]
 
@@ -101,16 +102,28 @@ layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="SessionInfo" type="Label" parent="LobbyMenu" unique_id=541226293]
+[node name="SessionInfo" type="HBoxContainer" parent="LobbyMenu" unique_id=541226293]
 unique_name_in_owner = true
 visible = false
 offset_left = 12.0
 offset_top = 10.0
 offset_right = 700.0
-offset_bottom = 34.0
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 14
+offset_bottom = 62.0
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="LobbyCodeLabel" type="Label" parent="LobbyMenu/SessionInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0.11, 0.08, 0.06, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 22
+
+[node name="SessionHints" type="HBoxContainer" parent="LobbyMenu/SessionInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("7_hintbar")
 
 [node name="World" type="Node3D" parent="." unique_id=1784168218]
 

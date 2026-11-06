@@ -54,12 +54,12 @@ func _process(delta: float) -> void:
 		_debug_label.text = "%s\n%s" % [display_name, "libre" if holder_peer_id == 0 else "tenue par %d" % holder_peer_id]
 
 
-func get_prompt() -> String:
+func get_hints() -> Array[InputHint]:
 	if is_held_locally():
-		return "Avancer / reculer : monter / descendre — relâche ou saute pour lâcher"
+		return [InputHint.make(InputHint.MOVE_VERTICAL, &"climb"), InputHint.make(&"jump", &"jump_off")]
 	if holder_peer_id != 0:
-		return "%s — quelqu'un grimpe déjà" % display_name
-	return "[maintenir clic / RT] attraper — %s" % display_name
+		return [InputHint.state(&"locked")]
+	return [InputHint.make(&"grab", &"climb")]
 
 
 func is_held_locally() -> bool:

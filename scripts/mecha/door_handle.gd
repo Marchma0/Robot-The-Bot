@@ -5,8 +5,8 @@ extends Interactable
 @export var door: ToiletDoor
 
 
-func get_prompt() -> String:
-	return "[E / clic] %s — %s" % ["fermer" if door.is_open else "ouvrir", display_name]
+func get_hints() -> Array[InputHint]:
+	return [InputHint.make(&"interact", &"door_close" if door.is_open else &"door_open")]
 
 
 @rpc("any_peer", "call_local", "reliable")

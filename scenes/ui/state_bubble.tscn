@@ -82,15 +82,3 @@ bone_name = "head"
 unique_name_in_owner = true
 script = ExtResource("4_animator")
 body_model = NodePath("../PuppetModel")
-
-[node name="StateLabel" type="Label" parent="."]
-unique_name_in_owner = true
-layout_mode = 0
-offset_top = 150.0
-offset_right = 158.0
-offset_bottom = 180.0
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 18
-text = "Au repos"
-horizontal_alignment = 1

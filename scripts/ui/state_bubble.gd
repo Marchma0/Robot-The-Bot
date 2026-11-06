@@ -2,7 +2,7 @@ class_name StateBubble
 extends Control
 ## Bulle d'état en haut à droite de l'écran (joueur local uniquement) : un mini-portrait
 ## animé de son propre nain, qui joue la même animation que lui (repos, marche, emote…),
-## et le nom de l'état en dessous.
+## sans texte : l'animation suffit à montrer l'état.
 ## Le portrait est une petite scène 3D à part (SubViewport avec son propre monde) :
 ## une copie du modèle du nain, pilotée par un DwarfAnimator branché sur le vrai nain.
 
@@ -13,7 +13,6 @@ const RING_WIDTH: float = 5.0
 @onready var _portrait: SubViewportContainer = %Portrait
 @onready var _puppet_model: Node3D = %PuppetModel
 @onready var _puppet_animator: DwarfAnimator = %PuppetAnimator
-@onready var _label: Label = %StateLabel
 
 
 ## Branche le portrait sur le nain local (appelé par le nain).
@@ -30,7 +29,6 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	_label.text = _puppet_animator.state_label
 	queue_redraw()
 
 

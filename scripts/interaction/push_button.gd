@@ -51,10 +51,10 @@ func _process(delta: float) -> void:
 		_debug_label.text = "%s\n%s" % [display_name, state]
 
 
-func get_prompt() -> String:
+func get_hints() -> Array[InputHint]:
 	if toggle:
-		return "[E / clic] %s — %s" % ["éteindre" if is_on else "allumer", display_name]
-	return "[E / clic] appuyer — %s" % display_name
+		return [InputHint.make(&"interact", &"power_off" if is_on else &"power_on")]
+	return [InputHint.make(&"interact", &"press")]
 
 
 @rpc("any_peer", "call_local", "reliable")

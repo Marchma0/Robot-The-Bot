@@ -12,7 +12,9 @@ extends CanvasLayer
 @onready var _join_button: Button = %JoinButton
 @onready var _address_edit: LineEdit = %AddressEdit
 @onready var _status_label: Label = %StatusLabel
-@onready var _session_info: Label = %SessionInfo
+@onready var _session_info: Control = %SessionInfo
+@onready var _lobby_code_label: Label = %LobbyCodeLabel
+@onready var _session_hints: HintBar = %SessionHints
 
 
 func _ready() -> void:
@@ -74,13 +76,17 @@ func _on_session_started() -> void:
 	get_window().title = "mecha-nains — %s" % role
 	_center.visible = false
 	if NetworkManager.is_steam_session() and not multiplayer.is_server():
-		_session_info.text = "Partie Steam — Échap : quitter"
+		_lobby_code_label.visible = false
+		_session_hints.show_hints([InputHint.make(&"pause", &"exit")])
 		_session_info.visible = true
 
 
 func _on_steam_lobby_created(code: String) -> void:
 	get_window().title = "mecha-nains — hôte Steam (code %s)" % code
-	_session_info.text = "Lobby Steam : %s (copié dans le presse-papiers) — F2 / Select : inviter des amis — Échap : quitter" % code
+	# Le code reste écrit (il faut pouvoir le donner) ; il est aussi copié dans le presse-papiers.
+	_lobby_code_label.text = code
+	_lobby_code_label.visible = true
+	_session_hints.show_hints([InputHint.make(&"invite_friends", &"invite"), InputHint.make(&"pause", &"exit")])
 	_session_info.visible = true
 
 

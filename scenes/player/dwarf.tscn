@@ -9,6 +9,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/state_bubble.tscn" id="7_bubble"]
 [ext_resource type="Script" path="res://scripts/ui/splat_overlay.gd" id="8_splat"]
 [ext_resource type="Script" path="res://scripts/network/net_smoother.gd" id="10_smoother"]
+[ext_resource type="Script" path="res://scripts/ui/hint_bar.gd" id="11_hintbar"]
+[ext_resource type="FontVariation" path="res://assets/fonts/fredoka.tres" id="12_font"]
 [ext_resource type="Script" path="res://scripts/ui/poop_minigame.gd" id="9_poopgame"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
@@ -107,7 +109,7 @@ layout_mode = 2
 mouse_filter = 2
 color = Color(1, 1, 1, 0.85)
 
-[node name="PromptLabel" type="Label" parent="Hud"]
+[node name="HintBar" type="HBoxContainer" parent="Hud"]
 unique_name_in_owner = true
 anchors_preset = 7
 anchor_left = 0.5
@@ -115,16 +117,14 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -320.0
-offset_top = -110.0
+offset_top = -118.0
 offset_right = 320.0
-offset_bottom = -70.0
+offset_bottom = -66.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 20
-horizontal_alignment = 1
-vertical_alignment = 1
+mouse_filter = 2
+alignment = 1
+script = ExtResource("11_hintbar")
 
 [node name="EmoteWheel" parent="Hud" instance=ExtResource("6_wheel")]
 unique_name_in_owner = true
@@ -161,6 +161,7 @@ billboard = 1
 no_depth_test = true
 pixel_size = 0.004
 text = "Joueur"
+font = ExtResource("12_font")
 font_size = 48
 outline_size = 12
 

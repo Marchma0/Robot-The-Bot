@@ -155,7 +155,7 @@ var _emote_time: float = 0.0
 @onready var _name_label: Label3D = %NameLabel
 @onready var _interactor: Interactor = %Interactor
 @onready var _hud: CanvasLayer = %Hud
-@onready var _prompt_label: Label = %PromptLabel
+@onready var _hint_bar: HintBar = %HintBar
 @onready var _crosshair: Control = %Crosshair
 @onready var _emote_wheel: EmoteWheel = %EmoteWheel
 @onready var _head_pitch: Node3D = %HeadPitch
@@ -201,7 +201,7 @@ func _ready() -> void:
 		player_name = NetworkManager.get_local_player_name()
 		_interactor.add_exception(self)
 		_interactor.set_active(true)
-		_interactor.prompt_changed.connect(_on_prompt_changed)
+		_interactor.hints_changed.connect(_on_hints_changed)
 		_interactor.button_pressed.connect(_on_button_pressed)
 		_interactor.thrown.connect(_on_thrown)
 		_poop_game.finished.connect(_on_poop_game_finished)
@@ -340,8 +340,8 @@ func setup(p_peer_id: int, p_slot: int) -> void:
 	name = str(p_peer_id)
 
 
-func _on_prompt_changed(text: String) -> void:
-	_prompt_label.text = text
+func _on_hints_changed(hints: Array[InputHint]) -> void:
+	_hint_bar.show_hints(hints)
 
 
 func _on_button_pressed() -> void:

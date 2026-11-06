@@ -69,12 +69,12 @@ func _process(_delta: float) -> void:
 		_debug_label.text = "%s\n%s\n(%.2f, %.2f)" % [display_name, holder, value.x, value.y]
 
 
-func get_prompt() -> String:
+func get_hints() -> Array[InputHint]:
 	if is_held_locally():
-		return "Bouge la souris / le stick — relâche pour lâcher"
+		return [InputHint.make(InputHint.LOOK, &"move"), InputHint.make(&"grab", &"hand_open")]
 	if holder_peer_id != 0:
-		return "%s — déjà tenu" % display_name
-	return "[maintenir clic / RT] attraper — %s" % display_name
+		return [InputHint.state(&"locked")]
+	return [InputHint.make(&"grab", &"hand_grab")]
 
 
 func is_held_locally() -> bool:

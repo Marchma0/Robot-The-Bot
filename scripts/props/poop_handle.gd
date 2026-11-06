@@ -5,10 +5,10 @@ extends Interactable
 @export var poop: Poop
 
 
-func get_prompt() -> String:
+func get_hints() -> Array[InputHint]:
 	if poop.holder_peer_id != 0:
-		return ""
-	return "[E / clic] ramasser — %s" % ("Caca LÉGENDAIRE" if poop.golden else display_name)
+		return []
+	return [InputHint.make(&"interact", &"poop_gold" if poop.golden else &"poop")]
 
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:

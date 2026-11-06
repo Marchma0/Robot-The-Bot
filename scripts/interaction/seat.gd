@@ -60,12 +60,12 @@ func _process(_delta: float) -> void:
 		_debug_label.text = "%s\n%s\nmove %s look %s" % [display_name, who, control_move.snapped(Vector2.ONE * 0.01), control_look.snapped(Vector2.ONE * 0.01)]
 
 
-func get_prompt() -> String:
+func get_hints() -> Array[InputHint]:
 	if is_seated_locally():
-		return "[E] se lever — %s" % display_name
+		return [InputHint.make(&"interact", &"stand_up")]
 	if occupant_peer_id != 0:
-		return "%s — occupé" % display_name
-	return "[E / clic] s'installer — %s" % display_name
+		return [InputHint.state(&"locked")]
+	return [InputHint.make(&"interact", &"sit")]
 
 
 func is_seated_locally() -> bool:

@@ -57,12 +57,12 @@ func _physics_process(delta: float) -> void:
 			start_round.rpc_id(occupant_peer_id, _round_id, _round_golden)
 
 
-func get_prompt() -> String:
+func get_hints() -> Array[InputHint]:
 	if is_seated_locally():
-		return "[E] se lever"
+		return [InputHint.make(&"interact", &"stand_up")]
 	if occupant_peer_id != 0:
-		return "%s — occupé" % display_name
-	return "[E / clic] faire caca — %s" % display_name
+		return [InputHint.state(&"locked")]
+	return [InputHint.make(&"interact", &"toilet")]
 
 
 ## Hôte -> joueur assis : une nouvelle partie commence.

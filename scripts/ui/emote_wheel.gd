@@ -102,7 +102,5 @@ func _draw() -> void:
 			HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 5, Color.BLACK)
 		draw_string(font, pos + Vector2(-text_size.x / 2.0, font_size / 3.0), label,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.WHITE)
-	var hint: String = "relâche pour jouer" if _selected != Emotes.NONE else "choisis une emote"
-	var hint_size: Vector2 = font.get_string_size(hint, HORIZONTAL_ALIGNMENT_CENTER, -1, 13)
-	draw_string(font, center + Vector2(-hint_size.x / 2.0, 5.0), hint,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(1, 1, 1, 0.8))
+	# Centre : un point de visée cuivré (plus de consigne écrite).
+	draw_circle(center, 6.0, Color("d9894a"))

@@ -38,8 +38,8 @@ func _process(delta: float) -> void:
 		_debug_label.text = "%s\n%s" % [display_name, "monte" if beam.going_up else "descend"]
 
 
-func get_prompt() -> String:
-	return "[E / clic] faire %s le rayon — %s" % ["descendre" if beam.going_up else "monter", display_name]
+func get_hints() -> Array[InputHint]:
+	return [InputHint.make(&"interact", &"beam_down" if beam.going_up else &"beam_up")]
 
 
 @rpc("any_peer", "call_local", "reliable")

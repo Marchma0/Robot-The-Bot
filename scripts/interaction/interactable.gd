@@ -11,7 +11,7 @@ const HIGHLIGHT_COLOR: Color = Color(1.0, 0.95, 0.6, 0.35)
 ## Distance max (en m) entre le nain et la commande pour l'utiliser.
 @export var reach: float = 2.5
 ## Affiche une étiquette de debug au-dessus de la commande.
-@export var show_debug: bool = true
+@export var show_debug: bool = false
 
 static var _highlight_material: StandardMaterial3D
 
@@ -28,9 +28,9 @@ func _ready() -> void:
 		_highlight_material.albedo_color = HIGHLIGHT_COLOR
 
 
-## Texte affiché quand le joueur vise la commande.
-func get_prompt() -> String:
-	return display_name
+## Indices (touche → icône) affichés quand le joueur vise la commande. À surcharger.
+func get_hints() -> Array[InputHint]:
+	return [InputHint.make(&"interact", &"press")]
 
 
 func set_highlighted(highlighted: bool) -> void:

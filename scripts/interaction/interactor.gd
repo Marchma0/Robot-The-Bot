@@ -6,8 +6,8 @@ extends RayCast3D
 ## et pilote le levier tenu.
 ## Actif uniquement pour le joueur local.
 
-## Le message à afficher a changé ("" = rien à afficher).
-signal prompt_changed(text: String)
+## Les indices à afficher (touche → icône) ont changé (liste vide = rien à afficher).
+signal hints_changed(hints: Array[InputHint])
 ## Le joueur vient d'appuyer sur un bouton (sert à l'animation "press").
 signal button_pressed
 ## Le joueur vient de lancer un objet (sert à l'animation "throw").
@@ -34,7 +34,7 @@ var _rope_pending: bool = false
 var _rope_wait: float = 0.0
 var _poop: Poop = null
 var _poop_wait: float = 0.0
-var _prompt: String = ""
+var _hints_key: String = ""
 
 
 func _ready() -> void:
@@ -261,17 +261,18 @@ func _update_poop(delta: float) -> void:
 
 
 func _update_prompt() -> void:
-	var text: String = ""
+	var hints: Array[InputHint] = []
 	if is_holding_poop():
-		text = "[clic / RT] lancer le caca — [E] le poser"
+		hints = [InputHint.make(&"grab", &"throw"), InputHint.make(&"interact", &"drop")]
 	elif _seat != null and not _seat_pending:
-		text = _seat.get_prompt()
+		hints = _seat.get_hints()
 	elif _rope != null and not _rope_pending:
-		text = _rope.get_prompt()
+		hints = _rope.get_hints()
 	elif _held != null and not _grab_pending:
-		text = _held.get_prompt()
+		hints = _held.get_hints()
 	elif _target != null:
-		text = _target.get_prompt()
-	if text != _prompt:
-		_prompt = text
-		prompt_changed.emit(text)
+		hints = _target.get_hints()
+	var key: String = InputHint.key_of(hints)
+	if key != _hints_key:
+		_hints_key = key
+		hints_changed.emit(hints)
