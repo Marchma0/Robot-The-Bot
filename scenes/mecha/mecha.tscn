@@ -17,6 +17,8 @@
 [ext_resource type="PackedScene" path="res://scenes/mecha/interior/belly.tscn" id="15_belly"]
 [ext_resource type="Script" path="res://scripts/mecha/mecha_walker.gd" id="16_walker"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/legs.tscn" id="17_legs"]
+[ext_resource type="Script" path="res://scripts/mecha/qte_sequence.gd" id="18_qte"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/controls/leg_dashboard.tscn" id="19_dash"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tv"]
 shader = ExtResource("10_tv")
@@ -139,6 +141,29 @@ properties/4/replication_mode = 2
 properties/5/path = NodePath(".:swinging_right")
 properties/5/spawn = true
 properties/5/replication_mode = 2
+properties/6/path = NodePath(".:error_gauge")
+properties/6/spawn = true
+properties/6/replication_mode = 1
+properties/7/path = NodePath(".:phase")
+properties/7/spawn = true
+properties/7/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_qte"]
+properties/0/path = NodePath(".:active")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:step_index")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:step_count")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:current_leg")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:current_arrow")
+properties/4/spawn = true
+properties/4/replication_mode = 2
 
 [node name="Mecha" instance=ExtResource("1_glb")]
 
@@ -456,12 +481,13 @@ process_physics_priority = -10
 script = ExtResource("13_smoother")
 target = NodePath("..")
 
-[node name="Walker" type="Node" parent="." node_paths=PackedStringArray("body", "stick_left", "stick_right")]
+[node name="Walker" type="Node" parent="." node_paths=PackedStringArray("body", "stick_left", "stick_right", "recovery_qte")]
 process_physics_priority = -10
 script = ExtResource("16_walker")
 body = NodePath("..")
 stick_left = NodePath("../Controls/LegL_Stick")
 stick_right = NodePath("../Controls/LegR_Stick")
+recovery_qte = NodePath("../RecoveryQte")
 
 [node name="FootL" type="Node3D" parent="Walker"]
 
@@ -483,3 +509,25 @@ replication_interval = 0.033
 
 [node name="Legs" parent="." node_paths=PackedStringArray("walker") instance=ExtResource("17_legs")]
 walker = NodePath("../Walker")
+
+[node name="RecoveryQte" type="Node" parent="." node_paths=PackedStringArray("pads_left", "pads_right")]
+script = ExtResource("18_qte")
+pads_left = [NodePath("../Controls/LegL_PadUp"), NodePath("../Controls/LegL_PadDown"), NodePath("../Controls/LegL_PadLeft"), NodePath("../Controls/LegL_PadRight")]
+pads_right = [NodePath("../Controls/LegR_PadUp"), NodePath("../Controls/LegR_PadDown"), NodePath("../Controls/LegR_PadLeft"), NodePath("../Controls/LegR_PadRight")]
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="RecoveryQte"]
+replication_config = SubResource("SceneReplicationConfig_qte")
+
+[node name="DashboardL" parent="Controls" node_paths=PackedStringArray("walker", "qte", "pads") instance=ExtResource("19_dash")]
+transform = Transform3D(1, 0, 0, 0, 0.9397, -0.342, 0, 0.342, 0.9397, -1, 3.1882, -1.4397)
+leg = 0
+walker = NodePath("../../Walker")
+qte = NodePath("../../RecoveryQte")
+pads = [NodePath("../LegL_PadUp"), NodePath("../LegL_PadDown"), NodePath("../LegL_PadLeft"), NodePath("../LegL_PadRight")]
+
+[node name="DashboardR" parent="Controls" node_paths=PackedStringArray("walker", "qte", "pads") instance=ExtResource("19_dash")]
+transform = Transform3D(1, 0, 0, 0, 0.9397, -0.342, 0, 0.342, 0.9397, 1, 3.1882, -1.4397)
+leg = 1
+walker = NodePath("../../Walker")
+qte = NodePath("../../RecoveryQte")
+pads = [NodePath("../LegR_PadUp"), NodePath("../LegR_PadDown"), NodePath("../LegR_PadLeft"), NodePath("../LegR_PadRight")]

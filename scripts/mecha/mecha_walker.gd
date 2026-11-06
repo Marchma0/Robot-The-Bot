@@ -11,8 +11,13 @@ extends Node
 
 signal stepped(leg: int)
 signal stumbled
+signal fell
+signal got_up
 
 enum Leg { LEFT, RIGHT }
+## WALKING : on marche. FALLING / FALLEN : jauge d'erreur pleine, il s'effondre puis attend le QTE.
+## GETTING_UP : QTE réussi, il se relève.
+enum Phase { WALKING, FALLING, FALLEN, GETTING_UP }
 
 ## Hanches dans le repère du mécha (Godot), hauteur des hanches au-dessus du sol debout,
 ## et longueur max hanche -> cheville (jambes jamais tout à fait tendues).
@@ -42,11 +47,33 @@ const RELEASE: float = 0.3
 ## Un pas demandé pendant que l'autre pied est en l'air attend au plus ce temps (s).
 @export var buffer_time: float = 0.35
 
+@export_group("Jauge d'erreur et chute (M7.2)")
+## QTE à faire pour relever le robot après une chute.
+@export var recovery_qte: QteSequence
+## Nombre de tours (joueur 1, joueur 2, …) du QTE de relèvement.
+@export var recovery_turns: int = 4
+## Écart de direction toléré sans remplir la jauge (degrés).
+@export var error_free_degrees: float = 20.0
+## Remplissage pour un pas dans la direction opposée (180°) ; proportionnel en dessous.
+@export var error_per_opposite_step: float = 0.4
+## Vidange par seconde quand on marche bien (après error_calm_time sans erreur).
+@export var error_decay: float = 0.05
+@export var error_calm_time: float = 2.0
+## Durées de l'effondrement et du relèvement (s).
+@export var fall_time: float = 0.9
+@export var get_up_time: float = 1.6
+
 ## Où le pied va se poser, et s'il est en l'air (pour la marque lumineuse). Autorité : hôte.
 var landing_left: Vector3 = Vector3.ZERO
 var landing_right: Vector3 = Vector3.ZERO
 var swinging_left: bool = false
 var swinging_right: bool = false
+## Jauge d'erreur (0 = tout va bien, 1 = chute) et phase. Autorité : hôte (synchronisés).
+var error_gauge: float = 0.0
+var phase: int = Phase.WALKING
+
+var _phase_time: float = 0.0
+var _last_error_time: float = -10.0
 
 var _feet: Array[Dictionary] = []
 var _armed: Array[bool] = [true, true]
@@ -69,6 +96,8 @@ func _ready() -> void:
 		node.top_level = true
 		(node.get_node("NetSmoother") as NetSmoother).world_space = true   # les pieds restent dans le monde
 	_pending = [NAN, NAN]
+	if recovery_qte != null:
+		recovery_qte.completed.connect(_on_recovery_completed)
 	# Les pieds se posent au sol une fois le mécha placé (après le premier tour de physique).
 	_init_feet.call_deferred()
 
@@ -77,14 +106,39 @@ func _physics_process(delta: float) -> void:
 	if not multiplayer.is_server() or not _ready_done:
 		return
 	_time += delta
+	_phase_time += delta
 	_stumble = maxf(0.0, _stumble - delta)
-	_read_stick(Leg.LEFT, stick_left)
-	_read_stick(Leg.RIGHT, stick_right)
+	match phase:
+		Phase.WALKING:
+			_read_stick(Leg.LEFT, stick_left)
+			_read_stick(Leg.RIGHT, stick_right)
+			for leg: int in 2:
+				_try_pending(leg)
+			if _time - _last_error_time > error_calm_time:
+				error_gauge = maxf(0.0, error_gauge - error_decay * delta)
+		Phase.FALLING:
+			if _phase_time >= fall_time:
+				_set_phase(Phase.FALLEN)
+				if recovery_qte != null:
+					recovery_qte.start_random(recovery_turns)
+		Phase.GETTING_UP:
+			if _phase_time >= get_up_time:
+				_set_phase(Phase.WALKING)
+				got_up.emit()
 	for leg: int in 2:
-		_try_pending(leg)
 		_advance_swing(leg, delta)
 	_place_body(delta)
 	_publish()
+
+
+## Hôte : fait tomber le robot tout de suite (utilisé par la jauge pleine, et pour les tests).
+func fall() -> void:
+	if phase != Phase.WALKING:
+		return
+	error_gauge = 1.0
+	_pending = [NAN, NAN]
+	_set_phase(Phase.FALLING)
+	fell.emit()
 
 
 ## Pied (contact au sol) et orientation, en global, tels qu'affichés (lissés chez les clients).
@@ -132,13 +186,22 @@ func _try_pending(leg: int) -> void:
 		return   # deux pieds en l'air : interdit, on attend
 	var angle: float = _pending[leg]
 	_pending[leg] = NAN
-	# Désaccord avec le pas précédent de l'autre jambe : il trébuche.
-	if _last_step_leg == other and _time - _last_step_time < 1.5 \
-			and absf(angle_difference(angle, _last_step_angle)) > deg_to_rad(mismatch_degrees):
-		_stumble = 0.9
-		_last_step_leg = -1
-		stumbled.emit()
-		return
+	# Décalage avec le pas précédent de l'autre jambe : la jauge d'erreur monte selon l'écart.
+	if _last_step_leg == other and _time - _last_step_time < 1.5:
+		var gap: float = rad_to_deg(absf(angle_difference(angle, _last_step_angle)))
+		if gap > error_free_degrees:
+			error_gauge = minf(1.0, error_gauge
+				+ (gap - error_free_degrees) / (180.0 - error_free_degrees) * error_per_opposite_step)
+			_last_error_time = _time
+			if error_gauge >= 1.0:
+				fall()
+				return
+		# Gros désaccord : il trébuche (le pas est perdu).
+		if gap > mismatch_degrees:
+			_stumble = 0.9
+			_last_step_leg = -1
+			stumbled.emit()
+			return
 	_start_step(leg, angle)
 
 
@@ -230,16 +293,57 @@ func _place_body(delta: float) -> void:
 		var ankle: Vector3 = (_feet[leg]["pos"] as Vector3) + Vector3.UP * ANKLE_HEIGHT
 		var flat: float = Vector2(hip.x - ankle.x, hip.z - ankle.z).length()
 		hip_y = minf(hip_y, ankle.y + sqrt(maxf(0.0, MAX_REACH * MAX_REACH - flat * flat)))
+	# Effondrement (M7.2) : il tombe à genoux, penché vers l'avant, et se relève après le QTE.
+	var slump: float = _slump_amount()
+	var pitch: float = -deg_to_rad(22.0) * slump
+	roll += deg_to_rad(4.0) * slump
+	hip_y = lerpf(hip_y, ground_y + 1.35, slump)
+	mid += basis * Vector3(0.0, 0.0, -0.45 * slump)
+	if phase == Phase.FALLEN:
+		pitch += sin(_time * 2.3) * deg_to_rad(0.6)   # il grince un peu par terre
 	var wanted: Vector3 = Vector3(mid.x, hip_y, mid.z)
-	_hip_center = _hip_center.lerp(wanted, k) if delta < 1.0 else wanted
+	var follow: float = 1.0 - exp(-(18.0 if phase == Phase.FALLING else 10.0) * delta)
+	_hip_center = _hip_center.lerp(wanted, follow) if delta < 1.0 else wanted
 	# Trébuche : le robot vacille.
-	var pitch: float = 0.0
 	if _stumble > 0.0:
 		var shake: float = _stumble / 0.9
 		roll += sin(_time * 18.0) * deg_to_rad(5.0) * shake
 		pitch += sin(_time * 13.0) * deg_to_rad(3.0) * shake
 	var full: Basis = Basis.from_euler(Vector3(pitch, _yaw, roll))
 	body.global_transform = Transform3D(full, _hip_center - full * Vector3(0.0, HIP_LOCAL[0].y, 0.0))
+
+
+## 0 = debout, 1 = effondré à genoux. Petit rebond à l'impact, relèvement en douceur.
+func _slump_amount() -> float:
+	match phase:
+		Phase.FALLING:
+			var t: float = clampf(_phase_time / fall_time, 0.0, 1.0)
+			return minf(1.0, t * t * 1.15) - 0.08 * sin(PI * clampf((t - 0.75) / 0.25, 0.0, 1.0))
+		Phase.FALLEN:
+			return 1.0
+		Phase.GETTING_UP:
+			var u: float = clampf(_phase_time / get_up_time, 0.0, 1.0)
+			return 1.0 - u * u * (3.0 - 2.0 * u)
+	return 0.0
+
+
+func _set_phase(new_phase: int) -> void:
+	phase = new_phase
+	_phase_time = 0.0
+	if new_phase == Phase.FALLING:
+		# Un pied en l'air se repose là où il est.
+		for foot: Dictionary in _feet:
+			if foot["swing"]:
+				foot["to"] = _ground_at(foot["pos"])
+				foot["from"] = foot["pos"]
+				foot["t"] = 0.5
+
+
+func _on_recovery_completed() -> void:
+	if phase != Phase.FALLEN:
+		return
+	error_gauge = 0.0
+	_set_phase(Phase.GETTING_UP)
 
 
 func _publish() -> void:
