@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/props/toilet_cabin.glb" id="1_cabin"]
+[ext_resource type="PackedScene" path="res://assets/models/props/head_rug.glb" id="2_rug"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/tool_locker.tscn" id="3_locker"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/boiler.tscn" id="4_boiler"]
+
+[node name="InteriorHead" type="Node3D"]
+
+[node name="ToiletCabin" parent="." instance=ExtResource("1_cabin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.515, 5.6, 1.39)
+
+[node name="HeadRug" parent="." instance=ExtResource("2_rug")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 5.6, -0.1)
+
+[node name="ToolLocker" parent="." instance=ExtResource("3_locker")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 1.93, 5.6, -0.52)
+
+[node name="Boiler" parent="." instance=ExtResource("4_boiler")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -1.975, 5.6, -0.85)
