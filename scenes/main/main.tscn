@@ -127,6 +127,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 0)
 [node name="CockpitTestMotion" type="Node" parent="World" unique_id=895012465 node_paths=PackedStringArray("target")]
 script = ExtResource("6_motion")
 target = NodePath("../Mecha")
+process_physics_priority = -10
 
 [node name="PlayerSpawner" type="MultiplayerSpawner" parent="World" unique_id=1793405204 node_paths=PackedStringArray("spawn_points")]
 spawn_path = NodePath("../Mecha/Players")

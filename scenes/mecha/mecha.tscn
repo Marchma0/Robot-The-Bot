@@ -12,6 +12,7 @@
 [ext_resource type="Shader" path="res://scenes/mecha/props/tv_screen.gdshader" id="10_tv"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/controls/toilet.tscn" id="11_toilet"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/props/toilet_door.tscn" id="12_door"]
+[ext_resource type="Script" path="res://scripts/network/net_smoother.gd" id="13_smoother"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tv"]
 shader = ExtResource("10_tv")
@@ -21,12 +22,9 @@ material = SubResource("ShaderMaterial_tv")
 size = Vector2(0.68, 0.48)
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_mecha"]
-properties/0/path = NodePath(".:position")
+properties/0/path = NodePath("NetSmoother:net_state")
 properties/0/spawn = true
 properties/0/replication_mode = 1
-properties/1/path = NodePath(".:rotation")
-properties/1/spawn = true
-properties/1/replication_mode = 1
 
 [sub_resource type="BoxShape3D" id="Shape_BellyFloor"]
 size = Vector3(3.45, 0.2, 3.8)
@@ -423,3 +421,9 @@ omni_range = 5.5
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_mecha")
+replication_interval = 0.033
+
+[node name="NetSmoother" type="Node" parent="." node_paths=PackedStringArray("target")]
+process_physics_priority = -10
+script = ExtResource("13_smoother")
+target = NodePath("..")

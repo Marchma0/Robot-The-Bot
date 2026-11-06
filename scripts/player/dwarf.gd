@@ -2,8 +2,9 @@ class_name Dwarf
 extends CharacterBody3D
 ## Nain contrôlé par un joueur, en vue première personne.
 ## Le nœud porte le peer id de son joueur comme nom, ce qui donne l'autorité.
-## Seul le propriétaire simule le déplacement ; le MultiplayerSynchronizer réplique
-## la position LOCALE (le nain est enfant du cockpit, donc il suit le mécha partout).
+## Seul le propriétaire simule le déplacement. Sa place est envoyée par le NetSmoother
+## (lissée chez les autres) : dans le repère du cockpit tant qu'il est dedans (il suit le
+## mécha partout), dans le monde quand il est dehors.
 
 const SLOT_COLORS: Array[Color] = [
 	Color(0.85, 0.25, 0.2),
@@ -41,6 +42,14 @@ const EYE_HEIGHT: float = 0.95
 ## Position d'un objet tenu en main, par rapport aux yeux (m).
 const HOLD_OFFSET: Vector3 = Vector3(0.2, -0.22, -0.4)
 const CROUCH_EYE_HEIGHT: float = 0.7
+## Bits de `anim_flags` (états d'animation envoyés ensemble, en un seul nombre).
+const FLAG_AIRBORNE: int = 1
+const FLAG_HOLDING: int = 2
+const FLAG_SEATED: int = 4
+const FLAG_FLOATING: int = 8
+const FLAG_CLIMBING: int = 16
+const FLAG_CROUCHING: int = 32
+const FLAG_POOPING: int = 64
 
 @export var walk_speed: float = 3.5
 @export var ground_acceleration: float = 30.0
@@ -96,6 +105,22 @@ var anim_crouching: bool = false:
 		anim_crouching = value
 		if is_node_ready():
 			_apply_crouch_shape()
+## Tous les états oui / non ci-dessus en un seul nombre : c'est lui qui est répliqué.
+## Le propriétaire le calcule à la lecture, les autres le décodent à la réception.
+var anim_flags: int:
+	get:
+		return (FLAG_AIRBORNE if anim_airborne else 0) | (FLAG_HOLDING if anim_holding else 0) \
+			| (FLAG_SEATED if anim_seated else 0) | (FLAG_FLOATING if anim_floating else 0) \
+			| (FLAG_CLIMBING if anim_climbing else 0) | (FLAG_CROUCHING if anim_crouching else 0) \
+			| (FLAG_POOPING if anim_pooping else 0)
+	set(value):
+		anim_airborne = value & FLAG_AIRBORNE != 0
+		anim_holding = value & FLAG_HOLDING != 0
+		anim_seated = value & FLAG_SEATED != 0
+		anim_floating = value & FLAG_FLOATING != 0
+		anim_climbing = value & FLAG_CLIMBING != 0
+		anim_crouching = value & FLAG_CROUCHING != 0
+		anim_pooping = value & FLAG_POOPING != 0
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3 = Vector3.ZERO
@@ -138,6 +163,7 @@ var _emote_time: float = 0.0
 @onready var _state_bubble: StateBubble = %StateBubble
 @onready var _splat_overlay: SplatOverlay = %SplatOverlay
 @onready var _poop_game: PoopMinigame = %PoopMinigame
+@onready var _smoother: NetSmoother = %NetSmoother
 
 
 func _enter_tree() -> void:
@@ -164,6 +190,8 @@ func _ready() -> void:
 	set_physics_process(is_local)
 	set_process_unhandled_input(is_local)
 	_camera.current = is_local
+	# La caméra est replacée à chaque image (voir _process) : pas de lissage physique sur elle.
+	_camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_hud.visible = is_local
 	if not is_local:
 		# La bulle d'état (portrait 3D) ne sert qu'au joueur local : inutile de la rendre ailleurs.
@@ -219,11 +247,9 @@ func _process(_delta: float) -> void:
 		# Les yeux descendent / remontent en douceur quand on s'accroupit / se relève.
 		var eye_height: float = CROUCH_EYE_HEIGHT if anim_crouching else EYE_HEIGHT
 		_head.position.y = move_toward(_head.position.y, eye_height, _delta * 2.5)
-	# Dehors : le mécha a pu bouger depuis la dernière frame physique (son script, ou la
-	# synchronisation réseau chez un client). On se replace à chaque image affichée, sinon
-	# le nain est emporté une image sur deux (secousses).
-	if _was_outside and is_multiplayer_authority() and _pullup_time < 0.0 and _interactor.get_rope() == null:
-		_apply_world_place()
+		# Le corps est affiché lissé entre deux étapes physiques ; la caméra suit cette
+		# position lissée, mais garde l'orientation la plus récente (souris sans retard).
+		_camera.global_transform = _view_transform()
 
 
 func _physics_process(delta: float) -> void:
@@ -295,6 +321,7 @@ func _physics_process(delta: float) -> void:
 		position = _spawn_position
 		velocity = Vector3.ZERO
 		_was_outside = false
+		reset_physics_interpolation()   # téléportation : pas de glissé à l'écran
 
 	_air_time = 0.0 if is_on_floor() or anim_floating else _air_time + delta
 	anim_speed = horizontal.length()
@@ -303,6 +330,7 @@ func _physics_process(delta: float) -> void:
 	anim_seated = false
 	anim_pooping = false
 	anim_climbing = false
+	_smoother.world_space = _was_outside
 
 
 ## Appelé par le spawner avant add_child, avec les mêmes données sur tous les peers.
@@ -338,7 +366,7 @@ func _on_thrown() -> void:
 ## Où se trouve un objet tenu en main (devant soi, en bas à droite de la vue), en global.
 ## Suit l'inclinaison du regard, pour que l'objet reste visible.
 func get_hold_transform() -> Transform3D:
-	return _head.global_transform * Transform3D(Basis.IDENTITY, HOLD_OFFSET)
+	return _view_transform() * Transform3D(Basis.IDENTITY, HOLD_OFFSET)
 
 
 ## Envoyé par l'hôte quand un caca lancé touche ce nain : écran taché + animation "hit".
@@ -364,6 +392,7 @@ func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 	else:
 		_look(Vector2(-stick_look.x, stick_look.y))
 		global_transform = seat.get_sit_transform() * Transform3D(Basis(Vector3.UP, _seat_yaw), Vector3.ZERO)
+	_smoother.world_space = false
 	anim_seated = true
 	anim_pooping = seat is Toilet
 	if seat is Toilet:
@@ -408,6 +437,7 @@ func _climb(rope: Rope, delta: float) -> void:
 	var back: Vector3 = global_basis.z - rope_up * global_basis.z.dot(rope_up)
 	global_position = rope.point_at(rope_height) + back.normalized() * CLIMB_DISTANCE
 	velocity = Vector3.ZERO
+	_smoother.world_space = false
 	anim_climbing = true
 	anim_crouching = false
 	anim_speed = absf(climb_input) * climb_speed
@@ -451,6 +481,12 @@ func _update_outside() -> void:
 		# De retour dedans : debout par rapport au mécha.
 		rotation = Vector3(0.0, rotation.y, 0.0)
 	_was_outside = outside
+
+
+## Point de vue (les yeux) tel qu'il est affiché : position lissée par le lissage physique,
+## orientation la plus récente. Sert à la caméra et aux objets tenus en main.
+func _view_transform() -> Transform3D:
+	return Transform3D(global_basis * _head.basis, get_global_transform_interpolated() * _head.position)
 
 
 ## Dehors : place le nain à sa position mémorisée dans le monde, debout, tourné de `_world_yaw`.

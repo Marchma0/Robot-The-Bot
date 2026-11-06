@@ -26,7 +26,8 @@ func _ready() -> void:
 	_last_position = global_position
 
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	# En étape physique : le mécha y bouge aussi, et le lissage physique affiche le balancement en douceur.
 	if delta <= 0.0:
 		return
 	var velocity: Vector3 = (global_position - _last_position) / delta

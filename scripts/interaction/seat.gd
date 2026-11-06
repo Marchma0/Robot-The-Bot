@@ -42,15 +42,19 @@ func _ready() -> void:
 	material.albedo_texture = _feed_viewport.get_texture()
 	_screen.material_override = material
 	_debug_label.visible = show_debug
+	# Les caméras sont replacées à chaque image (voir _process) : pas de lissage physique sur elles.
+	_feed_camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	_pov_camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	NetworkManager.player_left.connect(_on_player_left)
 	NetworkManager.session_ended.connect(_on_session_ended)
 
 
 func _process(_delta: float) -> void:
-	# Les caméras suivent le point d'ancrage (visuel, pas de gameplay).
+	# Les caméras suivent le point d'ancrage tel qu'il est affiché (lissé), pas de gameplay.
 	if has_screen and camera_anchor != null:
-		_feed_camera.global_transform = camera_anchor.global_transform
-		_pov_camera.global_transform = camera_anchor.global_transform
+		var anchor: Transform3D = camera_anchor.get_global_transform_interpolated()
+		_feed_camera.global_transform = anchor
+		_pov_camera.global_transform = anchor
 	if show_debug:
 		var who: String = "libre" if occupant_peer_id == 0 else "occupé par %d" % occupant_peer_id
 		_debug_label.text = "%s\n%s\nmove %s look %s" % [display_name, who, control_move.snapped(Vector2.ONE * 0.01), control_look.snapped(Vector2.ONE * 0.01)]

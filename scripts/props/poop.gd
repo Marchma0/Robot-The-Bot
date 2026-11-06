@@ -61,7 +61,13 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(_delta: float) -> void:
-	# Tenu : chaque peer le place lui-même dans la main du porteur (fluide, pas de réseau).
+	# Tenu : chaque peer le place lui-même dans la main du porteur (fluide, pas de réseau),
+	# à chaque image : le lissage physique ne doit pas s'en mêler.
+	var held_mode: Node.PhysicsInterpolationMode = Node.PHYSICS_INTERPOLATION_MODE_OFF if holder_peer_id != 0 \
+		else Node.PHYSICS_INTERPOLATION_MODE_INHERIT
+	if physics_interpolation_mode != held_mode:
+		physics_interpolation_mode = held_mode
+		reset_physics_interpolation()
 	if holder_peer_id != 0:
 		var dwarf: Dwarf = _find_dwarf(holder_peer_id)
 		if dwarf != null:
