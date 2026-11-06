@@ -15,6 +15,8 @@
 [ext_resource type="Script" path="res://scripts/network/net_smoother.gd" id="13_smoother"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/interior/head.tscn" id="14_head"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/interior/belly.tscn" id="15_belly"]
+[ext_resource type="Script" path="res://scripts/mecha/mecha_walker.gd" id="16_walker"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/legs.tscn" id="17_legs"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tv"]
 shader = ExtResource("10_tv")
@@ -117,6 +119,26 @@ size = Vector3(0.06, 1.6, 0.12)
 
 [sub_resource type="BoxShape3D" id="Shape_ToiletBowl"]
 size = Vector3(0.46, 0.37, 0.36)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_walker"]
+properties/0/path = NodePath("FootL/NetSmoother:net_state")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath("FootR/NetSmoother:net_state")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:landing_left")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:landing_right")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:swinging_left")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:swinging_right")
+properties/5/spawn = true
+properties/5/replication_mode = 2
 
 [node name="Mecha" instance=ExtResource("1_glb")]
 
@@ -356,7 +378,7 @@ beam = NodePath("../../TractorBeam")
 
 [node name="Rope" parent="Controls" instance=ExtResource("7_rope")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7, 4.41, 1.4)
-length = 4.31
+length = 4.86
 floor_height = -1.81
 exit_point = Vector3(0.85, -1.79, 0)
 
@@ -433,3 +455,31 @@ replication_interval = 0.033
 process_physics_priority = -10
 script = ExtResource("13_smoother")
 target = NodePath("..")
+
+[node name="Walker" type="Node" parent="." node_paths=PackedStringArray("body", "stick_left", "stick_right")]
+process_physics_priority = -10
+script = ExtResource("16_walker")
+body = NodePath("..")
+stick_left = NodePath("../Controls/LegL_Stick")
+stick_right = NodePath("../Controls/LegR_Stick")
+
+[node name="FootL" type="Node3D" parent="Walker"]
+
+[node name="NetSmoother" type="Node" parent="Walker/FootL" node_paths=PackedStringArray("target")]
+process_physics_priority = -10
+script = ExtResource("13_smoother")
+target = NodePath("..")
+
+[node name="FootR" type="Node3D" parent="Walker"]
+
+[node name="NetSmoother" type="Node" parent="Walker/FootR" node_paths=PackedStringArray("target")]
+process_physics_priority = -10
+script = ExtResource("13_smoother")
+target = NodePath("..")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="Walker"]
+replication_config = SubResource("SceneReplicationConfig_walker")
+replication_interval = 0.033
+
+[node name="Legs" parent="." node_paths=PackedStringArray("walker") instance=ExtResource("17_legs")]
+walker = NodePath("../Walker")

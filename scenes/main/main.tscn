@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" path="res://scenes/player/dwarf.tscn" id="3_dwarf"]
 [ext_resource type="PackedScene" path="res://scenes/levels/test_ground.tscn" id="4_ground"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="5_mecha"]
-[ext_resource type="Script" uid="uid://qklaqi227xxm" path="res://scripts/mecha/cockpit_test_motion.gd" id="6_motion"]
 [ext_resource type="Script" path="res://scripts/ui/hint_bar.gd" id="7_hintbar"]
 
 [node name="Main" type="Node" unique_id=708183551]
@@ -136,11 +135,6 @@ current = true
 
 [node name="Mecha" parent="World" unique_id=757713693 instance=ExtResource("5_mecha")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 0)
-
-[node name="CockpitTestMotion" type="Node" parent="World" unique_id=895012465 node_paths=PackedStringArray("target")]
-script = ExtResource("6_motion")
-target = NodePath("../Mecha")
-process_physics_priority = -10
 
 [node name="PlayerSpawner" type="MultiplayerSpawner" parent="World" unique_id=1793405204 node_paths=PackedStringArray("spawn_points")]
 spawn_path = NodePath("../Mecha/Players")

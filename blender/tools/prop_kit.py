@@ -118,6 +118,23 @@ class Builder:
         result = bmesh.ops.create_cube(self.bm, size=1.0, matrix=matrix)
         self._tag(result["verts"], mat_name)
 
+    def frustum(self, center_xy, z0: float, z1: float, half_bottom, half_top, mat_name: str) -> None:
+        """Boîte qui s'affine (ou s'évase) de z0 à z1 : demi-tailles (x, y) en bas et en haut."""
+        cx, cy = center_xy
+        rings = []
+        for z, (hx, hy) in ((z0, half_bottom), (z1, half_top)):
+            rings.append([self.bm.verts.new((cx + sx * hx, cy + sy * hy, z))
+                          for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1))])
+        bottom, top = rings
+        faces = [self.bm.faces.new(bottom[::-1]), self.bm.faces.new(top)]
+        for i in range(4):
+            j = (i + 1) % 4
+            faces.append(self.bm.faces.new((bottom[i], bottom[j], top[j], top[i])))
+        bmesh.ops.recalc_face_normals(self.bm, faces=faces)
+        index = self._index(mat_name)
+        for face in faces:
+            face.material_index = index
+
     def prism_x(self, profile_yz, x0: float, x1: float, mat_name: str) -> None:
         """Prisme : profil convexe (liste de points (y, z) dans l'ordre) extrudé de x0 à x1."""
         left = [self.bm.verts.new((x0, y, z)) for y, z in profile_yz]
