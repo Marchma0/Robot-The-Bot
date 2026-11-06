@@ -145,3 +145,8 @@ Recherche sur ce qui se fait (forums, GitHub, articles). Constat commun : une IA
 **Proposition :** faire 1 + 2 + 3 sous forme de **scripts Python versionnés** dans `blender/tools/` (`render_views.py`, `check_asset.py`, `roundtrip_glb.py`) + règles de style low poly dans `AGENTS.md`, pour que les deux IA (Claude Code et Antigravity) s'en servent. Pas de skill propre à une seule IA.
 
 Sources : github.com/ozanzeng/blender-LPM-skill, github.com/majidmanzarpour/blender-game-skills, github.com/colinurbs/claude-modeling-skills, github.com/ahujasid/blender-mcp, arxiv.org/abs/2403.01248 (SceneCraft), arxiv.org/abs/2508.08228 (LL3M), BlenderGym (CVPR 2025).
+
+## Chute physique du mécha (ex-M7.3 et M7.5, retirés de la roadmap le 2026-11-06)
+Le porteur du projet préfère pour l'instant l'effondrement à genoux de M7.2. Gardé ici pour plus tard.
+- **Ragdoll** : remplacer l'effondrement simple par des os physiques simulés sur l'hôte, pose synchronisée ; les nains dégringolent dans la cabine (gravité du monde au-delà d'une certaine inclinaison). Garder les consoles accessibles pour le QTE.
+- **Se relever après une vraie chute** : transition de la pose ragdoll vers l'animation de relèvement de M7.2.

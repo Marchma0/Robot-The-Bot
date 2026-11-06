@@ -61,7 +61,10 @@ func _physics_process(delta: float) -> void:
 func _play_qte() -> void:
 	if not _qte.active or _time < _qte_next:
 		return
-	_qte_next = _time + 0.4
+	# Après le 4e appui, les joueurs hésitent 3 s : la jauge se vide et ils perdent une étape.
+	_qte_next = _time + (3.0 if _qte_presses == 4 else 0.4)
+	if _qte_presses == 4:
+		print("   QTE : hésitation de 3 s (avancement %d/%d)" % [_qte.step_index, _qte.step_count])
 	_qte_presses += 1
 	var pads: Array[PushButton] = _qte.pads_left if _qte.current_leg == 0 else _qte.pads_right
 	if _qte_presses == 3 and not _mistake_done:

@@ -25,7 +25,7 @@ Décidée par le porteur du projet. Remplace l'équilibre par centre de gravité
 - **Jauge pleine = le robot tombe.** M7.2 : il s'effondre à genoux, penché vers l'avant (les nains restent debout à leurs consoles). M7.3 : vraie chute physique (ragdoll).
 - **QTE de relèvement sur les pads à 4 flèches**, à tour de rôle : la séquence alterne les joueurs, 1 ou 2 flèches par tour (ex. J1 gauche droite, puis J2 haut, puis J1 bas, puis J2 haut haut). Tirée au hasard à chaque chute.
 - **Voir le QTE** : sur la console de celui dont c'est le tour, la flèche à presser s'allume sur le pad et un voyant « à toi » clignote. Rien à l'écran : tout est dans le cockpit.
-- **Jauge de QTE** sur chaque console : suit l'avancement de la séquence. Mauvaise flèche ou appui hors de son tour = la jauge recule un peu (on perd une étape), on continue.
+- **Jauge de QTE** sur chaque console : suit l'avancement de la séquence. Mauvaise flèche ou appui hors de son tour = la jauge recule un peu (on perd une étape), on continue. Elle **se vide aussi avec le temps** (une étape perdue toutes les 2 s environ si on traîne) : il faut enchaîner vite.
 - **QTE réussi** : le robot se relève (animation), la jauge d'erreur repart de zéro, les joysticks marchent de nouveau.
 - **Système de QTE générique** : d'autres QTE viendront (panneaux muraux M7.4, saut M7.6…), même principe (séquence d'étapes attribuées à un joueur, validée par l'hôte, jauge d'avancement).
 
