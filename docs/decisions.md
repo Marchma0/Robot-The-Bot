@@ -74,3 +74,5 @@ Format : date - decision - raison
 - 2026-11-06 - Jambes un peu plus longues (ventre à environ 2,85 m du sol au lieu de 2,3 m) - compromis entre le gabarit trapu et des pas d'environ 1,2 m
 - 2026-11-06 - M7.2 : jauge d'erreur (pas décalés) sur les consoles des jambes, jauge pleine = chute, relèvement par QTE à tour de rôle sur les pads à flèches (flèche allumée sur la console du joueur dont c'est le tour, jauge de QTE, erreur = elle recule un peu) ; système de QTE générique pour les QTE suivants - choix du porteur du projet, remplace l'équilibre par centre de gravité
 - 2026-11-06 - Chute de M7.2 = effondrement à genoux penché vers l'avant (pas couché) - les nains doivent rester debout à leurs consoles pour faire le QTE ; la vraie chute physique reste pour M7.3
+- 2026-11-06 - M7.3 (ragdoll) et M7.5 (se relever après une vraie chute) retirés de la roadmap, gardés dans docs/ideas.md - le porteur du projet aime l'effondrement à genoux de M7.2
+- 2026-11-06 - La jauge de QTE se vide avec le temps (une étape perdue si on traîne) - forcer les joueurs à enchaîner vite
