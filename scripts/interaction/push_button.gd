@@ -53,8 +53,8 @@ func _process(delta: float) -> void:
 
 func get_hints() -> Array[InputHint]:
 	if toggle:
-		return [InputHint.make(&"interact", &"power_off" if is_on else &"power_on")]
-	return [InputHint.make(&"interact", &"press")]
+		return [InputHint.make(&"grab", &"power_off" if is_on else &"power_on")]
+	return [InputHint.make(&"grab", &"press")]
 
 
 @rpc("any_peer", "call_local", "reliable")

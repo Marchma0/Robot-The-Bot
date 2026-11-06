@@ -65,7 +65,7 @@ func get_hints() -> Array[InputHint]:
 		return [InputHint.make(&"interact", &"stand_up")]
 	if occupant_peer_id != 0:
 		return [InputHint.state(&"locked")]
-	return [InputHint.make(&"interact", &"sit")]
+	return [InputHint.make(&"grab", &"sit")]
 
 
 func is_seated_locally() -> bool:

@@ -30,7 +30,7 @@ func _ready() -> void:
 
 ## Indices (touche → icône) affichés quand le joueur vise la commande. À surcharger.
 func get_hints() -> Array[InputHint]:
-	return [InputHint.make(&"interact", &"press")]
+	return [InputHint.make(&"grab", &"press")]
 
 
 func set_highlighted(highlighted: bool) -> void:

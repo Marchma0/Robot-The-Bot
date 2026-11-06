@@ -8,7 +8,7 @@ extends Interactable
 func get_hints() -> Array[InputHint]:
 	if poop.holder_peer_id != 0:
 		return []
-	return [InputHint.make(&"interact", &"poop_gold" if poop.golden else &"poop")]
+	return [InputHint.make(&"grab", &"poop_gold" if poop.golden else &"poop")]
 
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:

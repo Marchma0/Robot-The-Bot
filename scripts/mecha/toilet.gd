@@ -62,7 +62,7 @@ func get_hints() -> Array[InputHint]:
 		return [InputHint.make(&"interact", &"stand_up")]
 	if occupant_peer_id != 0:
 		return [InputHint.state(&"locked")]
-	return [InputHint.make(&"interact", &"toilet")]
+	return [InputHint.make(&"grab", &"toilet")]
 
 
 ## Hôte -> joueur assis : une nouvelle partie commence.

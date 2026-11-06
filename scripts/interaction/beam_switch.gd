@@ -39,7 +39,7 @@ func _process(delta: float) -> void:
 
 
 func get_hints() -> Array[InputHint]:
-	return [InputHint.make(&"interact", &"beam_down" if beam.going_up else &"beam_up")]
+	return [InputHint.make(&"grab", &"beam_down" if beam.going_up else &"beam_up")]
 
 
 @rpc("any_peer", "call_local", "reliable")

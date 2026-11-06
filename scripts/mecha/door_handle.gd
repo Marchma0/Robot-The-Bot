@@ -6,7 +6,7 @@ extends Interactable
 
 
 func get_hints() -> Array[InputHint]:
-	return [InputHint.make(&"interact", &"door_close" if door.is_open else &"door_open")]
+	return [InputHint.make(&"grab", &"door_close" if door.is_open else &"door_open")]
 
 
 @rpc("any_peer", "call_local", "reliable")
