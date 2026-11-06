@@ -1,6 +1,6 @@
 # Design — Les jambes du mécha (M7)
 
-Statut : **validé** par le porteur du projet (2026-11-04), **révisé le 2026-11-06** (marche en rythme, voir ci-dessous). Implémentation découpée en M7.1 à M7.6 (voir `CLAUDE.md`).
+Statut : **validé** par le porteur du projet (2026-11-04), **révisé le 2026-11-06** (marche en rythme, voir ci-dessous). Implémentation découpée en M7.1, M7.2, M7.4 et M7.5 (saut ; la chute physique est partie dans docs/ideas.md) (voir `CLAUDE.md`).
 
 
 ## Révision du 2026-11-06 : marche en rythme (remplace le curseur au sol)
@@ -12,7 +12,7 @@ Décidée par le porteur du projet. Remplace « Lever / poser le pied » et « V
 - **Pas alternés = le robot avance.** Les deux joueurs poussent l'un après l'autre (petit décalage) dans la même direction. Plus ils enchaînent vite, plus il va vite (cadence, et foulée un peu plus longue à rythme soutenu).
 - **Un seul joueur** : son pied se place devant l'autre, le corps suit d'un demi-pas, puis il ne fait que piétiner (un pied ne peut pas s'éloigner de l'autre au-delà d'un pas) : le robot bouge à peine.
 - **Petit décalage toléré** : un pas demandé pendant que l'autre pied est en l'air attend une fraction de seconde puis part. Deux pieds en l'air en même temps : interdit (le second attend).
-- **Désaccord de direction** : deux pas successifs dans des directions trop différentes (au-delà d'environ 60°) = le robot trébuche. M7.1 : il vacille et s'arrête. M7.2/M7.3 : il tombe.
+- **Désaccord de direction** : deux pas successifs dans des directions trop différentes (au-delà d'environ 60°) = le robot trébuche. M7.1 : il vacille et s'arrête. M7.2 : la jauge d'erreur monte, et il tombe quand elle est pleine.
 - **Retour visuel** : une petite marque lumineuse au sol là où le pied va se poser. Plus de curseur ni d'écran « vue des pieds ».
 - **Gabarit** : jambes un peu plus longues (ventre à environ 2,85 m du sol au lieu de 2,3 m), pas d'environ 1,2 m.
 
@@ -22,12 +22,12 @@ Décidée par le porteur du projet. Remplace « Lever / poser le pied » et « V
 Décidée par le porteur du projet. Remplace l'équilibre par centre de gravité.
 
 - **Jauge d'erreur** sur le tableau de bord de chaque console de jambe (les deux affichent la même valeur). Elle monte à chaque pas décalé par rapport au pas précédent de l'autre jambe, selon l'écart : petit écart = un peu, direction opposée = beaucoup (environ 3-4 gros désaccords rapprochés pour tomber). Elle redescend lentement quand on marche bien en rythme.
-- **Jauge pleine = le robot tombe.** M7.2 : il s'effondre à genoux, penché vers l'avant (les nains restent debout à leurs consoles). M7.3 : vraie chute physique (ragdoll).
+- **Jauge pleine = le robot tombe.** M7.2 : il s'effondre à genoux, penché vers l'avant (les nains restent debout à leurs consoles). Chute physique (ragdoll) : idée pour plus tard, voir `docs/ideas.md`.
 - **QTE de relèvement sur les pads à 4 flèches**, à tour de rôle : la séquence alterne les joueurs, 1 ou 2 flèches par tour (ex. J1 gauche droite, puis J2 haut, puis J1 bas, puis J2 haut haut). Tirée au hasard à chaque chute.
 - **Voir le QTE** : sur la console de celui dont c'est le tour, la flèche à presser s'allume sur le pad et un voyant « à toi » clignote. Rien à l'écran : tout est dans le cockpit.
 - **Jauge de QTE** sur chaque console : suit l'avancement de la séquence. Mauvaise flèche ou appui hors de son tour = la jauge recule un peu (on perd une étape), on continue. Elle **se vide aussi avec le temps** (une étape perdue toutes les 2 s environ si on traîne) : il faut enchaîner vite.
 - **QTE réussi** : le robot se relève (animation), la jauge d'erreur repart de zéro, les joysticks marchent de nouveau.
-- **Système de QTE générique** : d'autres QTE viendront (panneaux muraux M7.4, saut M7.6…), même principe (séquence d'étapes attribuées à un joueur, validée par l'hôte, jauge d'avancement).
+- **Système de QTE générique** : d'autres QTE viendront (panneaux muraux M7.4, saut M7.5…), même principe (séquence d'étapes attribuées à un joueur, validée par l'hôte, jauge d'avancement).
 
 ## Description (texte du porteur du projet)
 

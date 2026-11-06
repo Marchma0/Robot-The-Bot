@@ -89,6 +89,8 @@ func _place_cameras() -> void:
 func _maybe_shoot() -> void:
 	if _walker.error_gauge > 0.5 and _walker.phase == MechaWalker.Phase.WALKING:
 		_shoot("1_jauge", _cam_inside)
+	if _time > 0.6 and _walker.error_gauge == 0.0 and _walker.phase == MechaWalker.Phase.WALKING:
+		_shoot("0_jauge_vide", _cam_inside)
 	if _qte.active and _qte.step_index >= 1 and _qte.current_leg == 0 and fmod(Time.get_ticks_msec() / 1000.0, 0.5) < 0.25:
 		_shoot("2_qte_console", _cam_inside)
 	if _qte.active and _qte.step_index >= 2:
