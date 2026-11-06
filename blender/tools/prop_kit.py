@@ -80,6 +80,9 @@ def material(name: str) -> bpy.types.Material:
         bsdf.inputs["Emission Color"].default_value = (*rgb, 1.0)
         bsdf.inputs["Emission Strength"].default_value = emission
     mat.diffuse_color = (*rgb, 1.0)
+    # Faces arrière masquées (export glTF « simple face ») : les objets sont des volumes fermés,
+    # et deux faces dos à dos ne peuvent plus clignoter.
+    mat.use_backface_culling = True
     return mat
 
 
@@ -102,8 +105,8 @@ class Builder:
             face.material_index = index
 
     def box(self, lo, hi, mat_name: str) -> None:
-        """Boîte alignée sur les axes, entre les coins lo et hi (mètres)."""
-        lo, hi = Vector(lo), Vector(hi)
+        """Boîte alignée sur les axes, entre les coins lo et hi (mètres, dans n'importe quel ordre)."""
+        lo, hi = Vector(map(min, lo, hi)), Vector(map(max, lo, hi))   # sinon faces retournées
         size = hi - lo
         matrix = Matrix.Translation((lo + hi) / 2) @ Matrix.Diagonal((*size, 1.0))
         result = bmesh.ops.create_cube(self.bm, size=1.0, matrix=matrix)
@@ -216,8 +219,80 @@ def export_glb(path: str) -> None:
     )
 
 
+def _clip(subject, clip):
+    """Intersection de deux polygones convexes 2D (sens trigo), Sutherland-Hodgman."""
+    out = subject
+    for i in range(len(clip)):
+        a, b = clip[i], clip[(i + 1) % len(clip)]
+        inp, out = out, []
+        if not inp:
+            break
+        for j in range(len(inp)):
+            p, q = inp[j], inp[(j + 1) % len(inp)]
+            side_p = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])
+            side_q = (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0])
+            if side_p >= 0:
+                out.append(p)
+            if (side_p >= 0) != (side_q >= 0):
+                t = side_p / (side_p - side_q)
+                out.append((p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t))
+    return out
+
+
+def _area(poly):
+    return 0.5 * sum(poly[i][0] * poly[(i + 1) % len(poly)][1] - poly[(i + 1) % len(poly)][0] * poly[i][1]
+                     for i in range(len(poly)))
+
+
+def find_z_fighting(obj, min_area: float = 2e-6):
+    """Faces superposées (même plan, même sens, matériaux différents) : elles clignotent en jeu.
+
+    Deux faces dos à dos (sens opposés) ne sont pas signalées : ce sont deux pièces qui se touchent,
+    leurs faces sont cachées l'une par l'autre. Renvoie une liste de (matériau A, matériau B, centre, aire, normale, face A, face B).
+    """
+    mesh = obj.data
+    names = [m.name if m else "" for m in mesh.materials]
+    mw = obj.matrix_world
+    groups = {}
+    for poly in mesh.polygons:
+        n = (mw.to_3x3() @ poly.normal).normalized()
+        pts = [mw @ mesh.vertices[i].co for i in poly.vertices]
+        key = (round(n.x, 3), round(n.y, 3), round(n.z, 3), round(n.dot(pts[0]) * 2000))
+        groups.setdefault(key, []).append((poly, n, pts))
+    issues = []
+    for faces in groups.values():
+        if len(faces) < 2:
+            continue
+        n = faces[0][1]
+        u = n.orthogonal().normalized()
+        v = n.cross(u)
+        depth = n.dot(faces[0][2][0])
+        flat = []
+        for poly, _, pts in faces:
+            p2 = [(p.dot(u), p.dot(v)) for p in pts]
+            if _area(p2) < 0:
+                p2.reverse()
+            flat.append((poly, p2))
+        for i in range(len(flat)):
+            for j in range(i + 1, len(flat)):
+                pa, a2 = flat[i]
+                pb, b2 = flat[j]
+                ma, mb = names[pa.material_index], names[pb.material_index]
+                if ma == mb:
+                    continue
+                inter = _clip(a2, b2)
+                if len(inter) >= 3 and abs(_area(inter)) > min_area:
+                    # centre de la zone superposée (point qui appartient aux deux faces), en coordonnées monde
+                    cx = sum(p[0] for p in inter) / len(inter)
+                    cy = sum(p[1] for p in inter) / len(inter)
+                    c = u * cx + v * cy + n * depth
+                    issues.append((ma, mb, tuple(round(x, 4) for x in c), abs(_area(inter)), tuple(n), pa.index, pb.index))
+    return issues
+
+
 def save_and_export(name: str, budget_tris: int, folder: str = "props") -> None:
-    """Sauvegarde blender/<folder>/<name>.blend, exporte assets/models/<folder>/<name>.glb, vérifie le budget."""
+    """Sauvegarde blender/<folder>/<name>.blend, exporte assets/models/<folder>/<name>.glb.
+    Refuse l'export si l'échelle n'est pas appliquée, si le budget est dépassé ou si des faces clignotent."""
     objects = [o for o in bpy.data.objects if o.type == "MESH" and not o.hide_render]
     tris = count_tris(objects)
     for obj in objects:
@@ -225,6 +300,12 @@ def save_and_export(name: str, budget_tris: int, folder: str = "props") -> None:
             raise RuntimeError("%s : échelle non appliquée (%s)" % (obj.name, tuple(obj.scale)))
     if tris > budget_tris:
         raise RuntimeError("%s : %d triangles, budget %d dépassé" % (name, tris, budget_tris))
+    issues = [i for obj in objects for i in find_z_fighting(obj)]
+    if issues:
+        for ma, mb, at, area, *_rest in issues[:20]:
+            print("prop_kit : faces superposées %s / %s vers %s (%.1f cm²)" % (ma, mb, at, area * 1e4))
+        raise RuntimeError("%s : %d paires de faces superposées (z-fighting), décaler une des pièces de 1-2 mm"
+                           % (name, len(issues)))
     blend = os.path.join(ROOT, "blender", folder, name + ".blend")
     os.makedirs(os.path.dirname(blend), exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=blend)

@@ -47,7 +47,7 @@ def main():
     b.box((-0.003, R + 0.07, 0.95), (0.003, R + 0.073, 0.985), "ButtonRed")                 # aiguille
     # sortie vers le plafond, avec une vanne
     top = Z1 + 0.09
-    b.pipe([(0, 0, top), (0, 0, 1.75), (PIPE_SHIFT, 0, 1.75), (PIPE_SHIFT, 0, CEILING)], 0.025, "Copper", "IronDark")
+    b.pipe([(0, 0, top), (0, 0, 1.75), (PIPE_SHIFT, 0, 1.75), (PIPE_SHIFT, 0, CEILING - 0.002)], 0.025, "Copper", "IronDark")
     b.cylinder((0, 0, 1.55), (0, 0.07, 1.55), 0.008, "IronDark", segments=6)
     b.cylinder((0, 0.07, 1.55), (0, 0.085, 1.55), 0.06, "ButtonRed", segments=12)          # volant de vanne
     b.cylinder((PIPE_SHIFT, 0, CEILING - 0.03), (PIPE_SHIFT, 0, CEILING), 0.06, "IronDark", segments=12)  # collerette

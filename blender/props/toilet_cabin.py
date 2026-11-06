@@ -29,7 +29,7 @@ P = 0.006                   # relief des lisses
 
 def front_wall(b):
     y0, y1 = Y1 - T, Y1
-    b.box((X0, y0 + 0.004, 0.0), (X1 - T, y1 - 0.004, H), "Paint")              # âme
+    b.box((X0 + 0.002, y0 + 0.004, 0.002), (X1 - T - 0.002, y1 - 0.004, H - 0.002), "Paint")   # âme, rentrée de 2 mm sous le cadre
     b.box((X0, y0 - 0.008, 0.0), (X1 - T, y1 + 0.008, 0.12), "IronDark")        # plinthe
     b.box((X0, y0 - P, H - 0.06), (X1 - T, y1 + P, H), "IronDark")              # lisse haute
     b.box((X0, y0 - P, 0.78), (X1 - T, y1 + P, 0.83), "IronDark")               # lisse du milieu
@@ -49,13 +49,13 @@ def front_wall(b):
 def side_wall(b):
     x0, x1 = X1 - T, X1
     # poteau d'angle avant-droit
-    b.box((x0 - 0.03, Y1 - T - 0.03, 0.0), (x1 + 0.004, Y1 + 0.004, H + 0.025), "IronDark")
+    b.box((x0 - 0.03, Y1 - T - 0.03, 0.0), (x1 + 0.004, Y1 + 0.004, H + 0.028), "IronDark")
     # morceau de cloison au fond, à droite de la porte
-    b.box((x0 + 0.004, Y0, 0.0), (x1 - 0.004, DOOR_Y0, LINTEL_Z), "Paint")
+    b.box((x0 + 0.004, Y0 + 0.002, 0.002), (x1 - 0.004, DOOR_Y0 - 0.002, LINTEL_Z), "Paint")
     b.box((x0 - 0.008, Y0, 0.0), (x1 + 0.008, DOOR_Y0, 0.12), "IronDark")
-    b.box((x0 - P, DOOR_Y0 - 0.04, 0.0), (x1 + P, DOOR_Y0, LINTEL_Z), "IronDark")   # montant de la porte (butée)
+    b.box((x0 - P, DOOR_Y0 - 0.04, 0.0), (x1 + P, DOOR_Y0, LINTEL_Z + 0.002), "IronDark")   # montant de la porte (butée)
     # linteau au-dessus de la porte
-    b.box((x0 + 0.004, Y0, LINTEL_Z), (x1 - 0.004, Y1 - T, H), "Paint")
+    b.box((x0 + 0.004, Y0 + 0.002, LINTEL_Z + 0.002), (x1 - 0.004, Y1 - T - 0.002, H - 0.002), "Paint")
     b.box((x0 - P, Y0, LINTEL_Z), (x1 + P, Y1 - T, LINTEL_Z + 0.04), "IronDark")
     b.box((x0 - P, Y0, H - 0.06), (x1 + P, Y1 - T, H), "IronDark")
     b.box((x0 - 0.012, Y0, H), (x1 + 0.012, Y1, H + 0.025), "Copper")
