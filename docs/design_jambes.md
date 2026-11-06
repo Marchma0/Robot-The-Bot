@@ -16,6 +16,19 @@ Décidée par le porteur du projet. Remplace « Lever / poser le pied » et « V
 - **Retour visuel** : une petite marque lumineuse au sol là où le pied va se poser. Plus de curseur ni d'écran « vue des pieds ».
 - **Gabarit** : jambes un peu plus longues (ventre à environ 2,85 m du sol au lieu de 2,3 m), pas d'environ 1,2 m.
 
+
+## Révision du 2026-11-06 (2) : jauge d'erreur, chute et QTE de relèvement (M7.2)
+
+Décidée par le porteur du projet. Remplace l'équilibre par centre de gravité.
+
+- **Jauge d'erreur** sur le tableau de bord de chaque console de jambe (les deux affichent la même valeur). Elle monte à chaque pas décalé par rapport au pas précédent de l'autre jambe, selon l'écart : petit écart = un peu, direction opposée = beaucoup (environ 3-4 gros désaccords rapprochés pour tomber). Elle redescend lentement quand on marche bien en rythme.
+- **Jauge pleine = le robot tombe.** M7.2 : il s'effondre à genoux, penché vers l'avant (les nains restent debout à leurs consoles). M7.3 : vraie chute physique (ragdoll).
+- **QTE de relèvement sur les pads à 4 flèches**, à tour de rôle : la séquence alterne les joueurs, 1 ou 2 flèches par tour (ex. J1 gauche droite, puis J2 haut, puis J1 bas, puis J2 haut haut). Tirée au hasard à chaque chute.
+- **Voir le QTE** : sur la console de celui dont c'est le tour, la flèche à presser s'allume sur le pad et un voyant « à toi » clignote. Rien à l'écran : tout est dans le cockpit.
+- **Jauge de QTE** sur chaque console : suit l'avancement de la séquence. Mauvaise flèche ou appui hors de son tour = la jauge recule un peu (on perd une étape), on continue.
+- **QTE réussi** : le robot se relève (animation), la jauge d'erreur repart de zéro, les joysticks marchent de nouveau.
+- **Système de QTE générique** : d'autres QTE viendront (panneaux muraux M7.4, saut M7.6…), même principe (séquence d'étapes attribuées à un joueur, validée par l'hôte, jauge d'avancement).
+
 ## Description (texte du porteur du projet)
 
 - **Déplacement (Joystick & IK)** : chaque joueur déplace un curseur virtuel au sol avec son joystick. L'IK (cinématique inverse) plie automatiquement le genou pour poser le pied à cet endroit.
