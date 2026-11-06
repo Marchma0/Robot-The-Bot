@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://tests/tools/interior_shots.gd" id="1_shots"]
+[ext_resource type="PackedScene" path="res://scenes/levels/test_ground.tscn" id="2_ground"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="3_mecha"]
+
+[node name="InteriorShots" type="Node3D"]
+script = ExtResource("1_shots")
+
+[node name="Ground" parent="." instance=ExtResource("2_ground")]
+
+[node name="Mecha" parent="." instance=ExtResource("3_mecha")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+fov = 80.0
+current = true

@@ -3,7 +3,8 @@
 /android/
 
 # Exports
-/build/
+/build/*
+!/build/.gdignore
 /export/
 
 # Blender : sauvegardes auto
@@ -22,3 +23,6 @@ Thumbs.db
 /addons/*
 !/addons/ADDONS.txt
 !/addons/.gitkeep
+
+# Python (scripts Blender)
+__pycache__/
