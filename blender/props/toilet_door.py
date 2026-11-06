@@ -27,7 +27,7 @@ def main():
     b = kit.Builder("ToiletDoor")
     x0, x1 = -T / 2, T / 2
     y0, y1 = -W, 0.0
-    b.box((x0, y0, 0.0), (x1, y1, H), "Paint")
+    b.box((x0, y0 + 0.002, 0.002), (x1, y1 - 0.002, H - 0.002), "Paint")   # âme rentrée de 2 mm sous le cadre
     # cadre des deux côtés
     for (ya, yb, za, zb) in (
         (y0, y1, 0.0, F), (y0, y1, H - F, H),           # traverses basse / haute
@@ -41,7 +41,7 @@ def main():
             b.rivet_row((face_x, y0 + 0.07, z), (face_x, y1 - 0.07, z), normal, spacing=0.1, size=0.014)
     # lune : disque sombre + disque de tôle décalé qui en cache une partie (croissant)
     b.cylinder((x1, -0.43, 1.15), (x1 + 0.006, -0.43, 1.15), 0.07, "DartBlack", segments=16)
-    b.cylinder((x1, -0.46, 1.17), (x1 + 0.009, -0.46, 1.17), 0.064, "Paint", segments=16)
+    b.cylinder((x1 + 0.001, -0.46, 1.17), (x1 + 0.009, -0.46, 1.17), 0.064, "Paint", segments=16)
     # poignées des deux côtés
     for side in (1, -1):
         b.cylinder((side * x1, -0.78, 0.75), (side * (x1 + 0.03), -0.78, 0.75), 0.008, "IronDark", segments=8)

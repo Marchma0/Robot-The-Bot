@@ -49,7 +49,7 @@ def build(name, width):
     # caisson à dessus en pente (suit le dessous du plateau, 3 mm plus bas)
     top_front = slab_bottom_z(y_front) - 0.003
     top_back = slab_bottom_z(y_back) - 0.003
-    b.prism_x([(y_front, 0.09), (y_front, top_front), (y_back, top_back), (y_back, 0.09)], -hw, hw, "Paint")
+    b.prism_x([(y_front, 0.092), (y_front, top_front), (y_back, top_back), (y_back, 0.092)], -hw, hw, "Paint")
     # montants d'angle
     for sx in (-1, 1):
         x0, x1 = sorted((sx * hw, sx * (hw - 0.035)))
@@ -77,8 +77,8 @@ def build(name, width):
     b.tilted_box((0.0, cy, cz), (width + 0.04, SLAB_DEPTH, SLAB_T), -TILT, "Paint")
     # liseré sombre sur le bord haut du plateau
     top_back_edge = (cy - math.cos(TILT) * SLAB_DEPTH / 2, cz + math.sin(TILT) * SLAB_DEPTH / 2)
-    b.box((-hw - 0.02, top_back_edge[0] - 0.02, top_back_edge[1] - 0.06),
-          (hw + 0.02, top_back_edge[0] + 0.01, top_back_edge[1] + 0.012), "IronDark")
+    b.box((-hw - 0.022, top_back_edge[0] - 0.02, top_back_edge[1] - 0.06),
+          (hw + 0.022, top_back_edge[0] + 0.01, top_back_edge[1] + 0.012), "IronDark")
     # barre d'appui en cuivre devant le plateau, sur deux supports
     front_edge = (cy + math.cos(TILT) * SLAB_DEPTH / 2, cz - math.sin(TILT) * SLAB_DEPTH / 2)
     bar_y, bar_z = front_edge[0] + 0.05, front_edge[1] - 0.02

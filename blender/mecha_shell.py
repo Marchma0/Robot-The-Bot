@@ -338,6 +338,117 @@ def remove_replaced_furniture():
         print("mecha_shell : %s, %d anciens meubles retirés" % (name, hits))
 
 
+def fix_z_fighting(obj, step=0.0015, passes=6):
+    """Faces superposées dans l'ancien décor (sans script) : la plus petite pièce est avancée de 1,5 mm
+    dans le sens de la face (elle passe devant, comme un autocollant). Relançable : ne bouge plus rien ensuite."""
+    moved_total = 0
+    for _ in range(passes):
+        mesh = obj.data
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+        bm.faces.ensure_lookup_table()
+        comp_of, comps, seen = {}, [], set()
+        for v in bm.verts:
+            if v in seen:
+                continue
+            stack, comp = [v], []
+            while stack:
+                x = stack.pop()
+                if x in seen:
+                    continue
+                seen.add(x)
+                comp.append(x)
+                stack += [e.other_vert(x) for e in x.link_edges]
+            lo = Vector([min(p.co[i] for p in comp) for i in range(3)])
+            hi = Vector([max(p.co[i] for p in comp) for i in range(3)])
+            for p in comp:
+                comp_of[p.index] = len(comps)
+            comps.append((comp, (hi - lo).length))
+        tmp = bpy.data.objects.new("_zf", mesh)
+        tmp.matrix_world = obj.matrix_world
+        issues = kit.find_z_fighting(tmp)
+        bpy.data.objects.remove(tmp)
+        if not issues and obj.modifiers:
+            # Avec un booléen, les faces sont recalculées à l'export : on cherche sur le résultat,
+            # puis on déplace la plus petite pièce d'origine qui contient le point fautif.
+            moved = _fix_after_modifiers(obj, bm, comps, step)
+            bm.to_mesh(mesh)
+            bm.free()
+            moved_total += moved
+            if not moved:
+                break
+            continue
+        if not issues:
+            bm.free()
+            break
+        # pour chaque paire : la plus petite des deux pièces doit bouger dans le sens de sa face
+        wanted = {}
+        same_piece = 0
+        for *_info, face_a, face_b in issues:
+            fa, fb = bm.faces[face_a], bm.faces[face_b]
+            ca, cb = comp_of[fa.verts[0].index], comp_of[fb.verts[0].index]
+            if ca == cb:
+                same_piece += 1
+                continue
+            small, face = (ca, fa) if comps[ca][1] <= comps[cb][1] else (cb, fb)
+            wanted.setdefault(small, []).append(face.normal.copy())
+        for ci, normals in wanted.items():
+            verts = comps[ci][0]
+            total = sum(normals, Vector())
+            if total.length > 0.5:
+                # avancer la pièce devant (autocollant, anneau, baguette)
+                for v in verts:
+                    v.co += total * step
+            else:
+                # prise en sandwich (sens opposés) : la rétrécir de 1,5 mm de chaque côté
+                lo = Vector([min(v.co[i] for v in verts) for i in range(3)])
+                hi = Vector([max(v.co[i] for v in verts) for i in range(3)])
+                c, half = (lo + hi) / 2, (hi - lo) / 2
+                k = [max(0.0, (h - step) / h) if h > step * 3 else 1.0 for h in half]
+                for v in verts:
+                    v.co = Vector([c[i] + (v.co[i] - c[i]) * k[i] for i in range(3)])
+        bm.to_mesh(mesh)
+        bm.free()
+        moved_total += len(wanted)
+        if not wanted:
+            if same_piece:
+                print("mecha_shell : %s, %d faces superposées dans une même pièce (non corrigées)" % (obj.name, same_piece))
+            break
+    if moved_total:
+        print("mecha_shell : %s, %d petites pièces décalées de 1,5 mm (faces superposées)" % (obj.name, moved_total))
+
+
+def _fix_after_modifiers(obj, bm, comps, step):
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    evaluated = bpy.data.meshes.new_from_object(obj.evaluated_get(depsgraph))
+    tmp = bpy.data.objects.new("_zf", evaluated)
+    tmp.matrix_world = obj.matrix_world
+    issues = kit.find_z_fighting(tmp)
+    bpy.data.objects.remove(tmp)
+    bpy.data.meshes.remove(evaluated)
+    names = [m.name if m else "" for m in obj.data.materials]
+    mw_inv = obj.matrix_world.inverted()
+    moved = set()
+    for ma, mb, at, _area, normal, *_faces in issues:
+        point = mw_inv @ Vector(at)
+        best = None
+        for ci, (verts, size) in enumerate(comps):
+            mats = {names[f.material_index] for v in verts for f in v.link_faces}
+            if not mats & {ma, mb} or size > 3.0:
+                continue
+            lo = Vector([min(v.co[i] for v in verts) for i in range(3)])
+            hi = Vector([max(v.co[i] for v in verts) for i in range(3)])
+            if all(lo[i] - 0.002 <= point[i] <= hi[i] + 0.002 for i in range(3)) and (best is None or size < best[1]):
+                best = (ci, size)
+        if best is None or best[0] in moved:
+            continue
+        moved.add(best[0])
+        offset = (mw_inv.to_3x3() @ Vector(normal)).normalized() * step
+        for v in comps[best[0]][0]:
+            v.co += offset
+    return len(moved)
+
+
 def remove_toilet_planks():
     """Retire les cloisons en planches de la cabine des toilettes (remplacées par l'objet toilet_cabin)."""
     obj = bpy.data.objects["Int_Toilet"]
@@ -504,7 +615,12 @@ def main():
     clean_wear()
     remove_toilet_planks()
     remove_replaced_furniture()
+    for obj in [o for o in bpy.data.objects if o.type == "MESH" and not o.hide_render and not o.name.startswith("Shell_")]:
+        fix_z_fighting(obj)
     build_structure()
+    for obj in [o for o in bpy.data.objects if o.name.startswith("Shell_")]:
+        for ma, mb, at, area, *_rest in kit.find_z_fighting(obj):
+            print("mecha_shell : ATTENTION faces superposées %s / %s vers %s" % (ma, mb, at))
     bpy.ops.wm.save_mainfile()
     kit.export_glb(os.path.join(kit.ROOT, "assets", "models", "mecha.glb"))
     print("mecha_shell : mecha.blend sauvegardé, mecha.glb exporté")
