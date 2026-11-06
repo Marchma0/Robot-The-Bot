@@ -120,3 +120,28 @@ Recommandation : faire **1 à 5 ensemble**, en une étape. Le **6** attend qu'on
 7. **(M7.3) Chute du robot.**
    - Seul l'hôte simule la physique du robot. La pose des os est envoyée environ 20 fois par seconde et lissée chez les autres (point 2).
    - Les jambes du robot ont des collisions, pour pousser correctement un nain dehors.
+
+## Mieux modéliser en 3D avec l'IA (proposé le 2026-11-06, à rediscuter)
+Recherche sur ce qui se fait (forums, GitHub, articles). Constat commun : une IA qui écrit un script Blender « à l'aveugle » donne des résultats médiocres ; il lui faut des mesures, des références et des contrôles automatiques à chaque étape.
+
+1. **Boucle script → rendu multi-vues → correction.**
+   - L'IA écrit le script, fait une planche de 5 vues (face, profil, dos, 3/4, dessus), compare à la demande, corrige. Environ 3 tours.
+   - Base des travaux de recherche SceneCraft, LL3M, BlenderAlchemy, BlenderGym.
+2. **Budget + recette par pièces** (inspiré de `ozanzeng/blender-LPM-skill`).
+   - Avant de modéliser : taille réelle, budget de triangles, palette.
+   - Objet découpé en 4 à 12 pièces simples (boîte, prisme, tour, extrusion, plaque) + plier / effiler / symétrie.
+   - Règles de style low poly écrites : ombrage plat, silhouette avant les détails, base à z = 0, pas de faces superposées.
+   - Une seule texture « palette » par objet, sans normal map.
+3. **Contrôles automatiques PASS / FAIL avant export** (inspiré de `majidmanzarpour/blender-game-skills`, MIT).
+   - Budget, transforms appliqués, objet au sol, UV, faces cassées, sommets isolés, nommage (`-col`, os `leg_L_*`).
+   - Réimport du `.glb` dans une scène vide : nombre d'os, animations, hauteur à 1 % près.
+4. **Références à l'échelle.**
+   - Croquis face + profil posés comme plans à l'échelle dans le `.blend`, avec repères (capsule du nain, hauteur de porte).
+   - Comparaison de silhouette chiffrée (recouvrement ≥ 85 % au blockout, ≥ 90 % au final).
+5. **Génération IA puis retravail** (Meshy, Tripo, Hunyuan3D, TRELLIS.2, Rodin ; `generate_3d` / `search_assets` du MCP Blender).
+   - Bien pour décors et petits objets ; pas pour le mécha ni les nains (rig précis). Toujours retopologie, UV, collisions, test dans Godot.
+6. **Geometry Nodes** pour les objets répétés avec variantes (rochers, caisses, tuyaux, blocs minables), figés en maillage avant export.
+
+**Proposition :** faire 1 + 2 + 3 sous forme de **scripts Python versionnés** dans `blender/tools/` (`render_views.py`, `check_asset.py`, `roundtrip_glb.py`) + règles de style low poly dans `AGENTS.md`, pour que les deux IA (Claude Code et Antigravity) s'en servent. Pas de skill propre à une seule IA.
+
+Sources : github.com/ozanzeng/blender-LPM-skill, github.com/majidmanzarpour/blender-game-skills, github.com/colinurbs/claude-modeling-skills, github.com/ahujasid/blender-mcp, arxiv.org/abs/2403.01248 (SceneCraft), arxiv.org/abs/2508.08228 (LL3M), BlenderGym (CVPR 2025).
