@@ -28,7 +28,7 @@ Objectif de base : amener le mécha d'un point A à un point B. Le game design e
   - En dev : `ENetMultiplayerPeer` en local (plusieurs instances).
   - En prod : `SteamMultiplayerPeer` via **GodotSteam** (GDExtension), App ID de test 480.
   - Le choix du peer est isolé dans `scripts/network/network_manager.gd` : le reste du code ne doit JAMAIS dépendre de Steam directement.
-- **Outils IA** : Claude Code (Kamel) et Antigravity (collègue), chacun avec MCP Godot + MCP Blender.
+- **Outils IA** : Claude Code (Marchma0) et Antigravity (collègue), chacun avec MCP Godot + MCP Blender.
 
 ## Arborescence
 ```
@@ -93,7 +93,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 - Ne jamais toucher à `.godot/`, aux fichiers `*.import`, ni à `addons/` (sauf demande explicite).
 - Ne pas ajouter de plugin/addon sans demander. Tout addon ajouté doit être inscrit dans `addons/ADDONS.txt` (version, source, dossier, rôle, installation).
 - Ne pas implémenter une idée de `docs/ideas.md` sans qu'elle ait été validée par un humain.
-- Ne jamais pousser directement sur `main`, ni faire `git push --force` sur une branche partagée.
+- Ne jamais commiter directement sur `main` (on y fusionne seulement une branche terminée), ni faire `git push --force`.
 - Ne pas faire de gros refactors non demandés. Petits pas, testables.
 - Pas de dépendance à Steam dans le gameplay (le jeu doit tourner en ENet local).
 
@@ -119,18 +119,42 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - Avancement → cocher la roadmap.
 
 **Qui fait quoi**
-- Avant de commencer un jalon ou une tâche, l'indiquer dans la roadmap avec le prénom (ex. `[en cours — Kamel]`) et pousser ce changement tout de suite, pour que l'autre le voie.
+- Avant de commencer un jalon ou une tâche, l'indiquer dans la roadmap avec le pseudo GitHub (ex. `[en cours — Marchma0]`) et pousser ce changement tout de suite, pour que l'autre le voie.
 - Ne pas travailler sur une tâche marquée par l'autre sans lui en parler.
 
-**Branches et commits**
-- Une branche par tâche : `prenom/sujet` (ex. `kamel/m7-jambes`). Fusion dans `main` par **Pull Request** sur GitHub, relue par l'autre si possible.
-- Petits commits, messages en français, au présent, qui disent ce que ça change pour le jeu (même style que l'historique).
-- Avant d'ouvrir une PR : `git pull origin main` dans sa branche (ou rebase), régler les conflits, relancer le jeu.
+**Branches et commits — procédure git (ce sont les IA qui font les commits et les push : suivre ces étapes à la lettre)**
+- `main` = toujours une version qui se lance. **Aucun commit directement sur `main`.**
+- **Pas de Pull Request, pas d'interface GitHub** : les humains ne passent pas par GitHub, c'est l'IA qui fusionne elle-même sa branche dans `main` et pousse (étape « Finir une tâche »).
+- Une branche **courte** par tâche (quelques jours au plus), nommée avec le **pseudo GitHub** de l'humain : `pseudo/sujet` (ex. `Marchma0/m7-jambes`). Pseudos connus : `Marchma0` (Claude Code) ; collègue (Antigravity) : à compléter ici. Si le pseudo n'est pas listé, le demander à l'humain et l'ajouter ici.
+- Commencer une tâche :
+  ```
+  git status                      # doit être propre, sinon demander à l'humain quoi faire
+  git switch main
+  git pull
+  git switch -c pseudo/sujet
+  ```
+- Pendant la tâche : commits petits et fréquents, `git add` **fichier par fichier** (relire `git status` avant, ne jamais ajouter `.godot/`, `addons/`, `build/`), puis `git push -u origin pseudo/sujet`.
+- Récupérer le travail de l'autre dans sa branche : `git pull origin main` (**merge, jamais de rebase** sur une branche déjà poussée → donc jamais besoin de `--force`).
+- Finir une tâche (quand l'humain dit que c'est bon) :
+  ```
+  git pull origin main            # dans sa branche : récupérer le travail de l'autre, régler les conflits
+  # relancer le jeu et vérifier la sortie : main doit toujours se lancer
+  git switch main
+  git pull
+  git merge --no-ff pseudo/sujet  # ne doit plus y avoir de conflit, sinon s'arrêter et demander
+  git push
+  git branch -d pseudo/sujet
+  git push origin --delete pseudo/sujet
+  ```
+  Si `git push` sur `main` est refusé (l'autre a poussé entre-temps) : `git pull` puis `git push`, **jamais `--force`**.
+- Conflit sur un fichier binaire (`.blend`, `.glb`, image, son) ou sur une `.tscn` peu claire : **ne pas trancher seul**, demander à l'humain.
+- Changer de branche avec l'éditeur Godot ouvert : le fermer avant, ou recharger le projet après (sinon il réécrit les anciennes scènes).
+- Messages de commit en français, au présent, qui disent ce que ça change pour le jeu (même style que l'historique).
 
 **Fichiers qui se fusionnent mal**
 - `.blend`, `.glb`, images, sons : **impossibles à fusionner**. Une seule personne les modifie à la fois : le dire à l'autre avant.
 - `.tscn` / `.tres` : du texte, mais les conflits sont pénibles (ids). Éviter de modifier la même scène en parallèle ; préférer des sous-scènes séparées.
-- `project.godot` (Input Map, autoloads) : modifications petites et ciblées, à signaler dans la PR.
+- `project.godot` (Input Map, autoloads) : modifications petites et ciblées, à signaler à l'autre humain.
 
 **Machine de chacun**
 - Godot **4.7.2** pour les deux (même version, sinon les fichiers d'import changent).

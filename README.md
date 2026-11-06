@@ -43,7 +43,7 @@ Consignes complètes du projet (pour les humains et les IA) : [AGENTS.md](AGENTS
 
 ## Travailler à deux
 Résumé (détail dans la section « Travail à deux » d'[AGENTS.md](AGENTS.md)) :
-- `git pull` avant de commencer ; une branche `prenom/sujet` par tâche ; fusion dans `main` par Pull Request.
+- `git pull` avant de commencer ; une branche `pseudo-github/sujet` par tâche ; l'IA la fusionne elle-même dans `main` (pas de Pull Request).
 - Marquer dans la roadmap la tâche qu'on prend.
 - Ne jamais modifier le même `.blend` / `.glb` / `.tscn` que l'autre en même temps.
 
