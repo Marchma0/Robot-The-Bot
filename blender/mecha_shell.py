@@ -276,6 +276,40 @@ def clean_wear():
     print("mecha_shell : usure, %d sommets de traits fins retirés" % len(set(doomed)))
 
 
+def remove_toilet_planks():
+    """Retire les cloisons en planches de la cabine des toilettes (remplacées par l'objet toilet_cabin)."""
+    obj = bpy.data.objects["Int_Toilet"]
+    mesh = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    names = [m.name if m else "" for m in mesh.materials]
+    mw = obj.matrix_world
+    seen, doomed = set(), []
+    for v in bm.verts:
+        if v in seen:
+            continue
+        stack, comp = [v], []
+        while stack:
+            x = stack.pop()
+            if x in seen:
+                continue
+            seen.add(x)
+            comp.append(x)
+            stack += [e.other_vert(x) for e in x.link_edges]
+        pts = [mw @ p.co for p in comp]
+        lo = Vector([min(p[i] for p in pts) for i in range(3)])
+        hi = Vector([max(p[i] for p in pts) for i in range(3)])
+        mats = {names[f.material_index] for p in comp for f in p.link_faces}
+        in_side = lo.x >= -0.89 and hi.x <= -0.82        # cloison droite (porte)
+        in_front = lo.y >= -0.94 and hi.y <= -0.87       # cloison avant
+        if mats <= {"Wood", "Cushion", "IronDark"} and (in_side or in_front) and hi.z - lo.z > 0.05:
+            doomed += comp
+    bmesh.ops.delete(bm, geom=list(set(doomed)), context="VERTS")
+    bm.to_mesh(mesh)
+    bm.free()
+    print("mecha_shell : toilettes, %d sommets de planches retirés" % len(set(doomed)))
+
+
 # ---------------------------------------------------------------- structure
 
 class Obstacles:
@@ -406,6 +440,7 @@ def main():
     for name in ("Int_Belly", "Int_Head", "Int_HeadFront", "Int_Slab"):
         world_uvs(bpy.data.objects[name])
     clean_wear()
+    remove_toilet_planks()
     build_structure()
     bpy.ops.wm.save_mainfile()
     kit.export_glb(os.path.join(kit.ROOT, "assets", "models", "mecha.glb"))

@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://scenes/mecha/controls/toilet.tscn" id="11_toilet"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/props/toilet_door.tscn" id="12_door"]
 [ext_resource type="Script" path="res://scripts/network/net_smoother.gd" id="13_smoother"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/interior/head.tscn" id="14_head"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tv"]
 shader = ExtResource("10_tv")
@@ -393,6 +394,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 5.4, -0.1)
 
 [node name="ToiletDoor" parent="." instance=ExtResource("12_door")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 5.6, 0.93)
+
+[node name="InteriorHead" parent="." instance=ExtResource("14_head")]
 
 [node name="Props" type="Node3D" parent="."]
 

@@ -135,6 +135,19 @@ class Builder:
         for p in points[1:-1]:
             self.sphere(p, radius * 1.25, joint_mat or mat_name, segments)
 
+    def rivet_row(self, start, end, normal, spacing: float = 0.1, size: float = 0.016,
+                  depth: float = 0.006, mat_name: str = "Copper") -> None:
+        """Rangée de rivets (petits cubes) posés sur une surface : de start à end, dépassant selon normal."""
+        start, end, normal = Vector(start), Vector(end), Vector(normal).normalized()
+        count = max(1, int(round((end - start).length / spacing)))
+        half = Vector((size / 2,) * 3)
+        for i in range(count + 1):
+            center = start + (end - start) * (i / count) + normal * (depth / 2)
+            extent = Vector((half.x if abs(normal.x) < 0.5 else depth / 2,
+                             half.y if abs(normal.y) < 0.5 else depth / 2,
+                             half.z if abs(normal.z) < 0.5 else depth / 2))
+            self.box(center - extent, center + extent, mat_name)
+
     def finish(self, collection=None) -> bpy.types.Object:
         mesh = bpy.data.meshes.new(self.name)
         self.bm.to_mesh(mesh)
