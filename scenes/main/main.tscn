@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/levels/test_ground.tscn" id="4_ground"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="5_mecha"]
 [ext_resource type="Script" path="res://scripts/ui/hint_bar.gd" id="7_hintbar"]
+[ext_resource type="PackedScene" path="res://scenes/ui/net_debug.tscn" id="8_netdebug"]
 
 [node name="Main" type="Node" unique_id=708183551]
 
@@ -142,3 +143,5 @@ spawn_limit = 4
 script = ExtResource("2_spawner")
 dwarf_scene = ExtResource("3_dwarf")
 spawn_points = NodePath("../Mecha/SpawnPoints")
+
+[node name="NetDebug" parent="." instance=ExtResource("8_netdebug")]

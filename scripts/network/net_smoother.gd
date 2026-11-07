@@ -46,6 +46,9 @@ var _clock_offset: float = 0.0
 var _target_offset: float = 0.0
 var _has_offset: bool = false
 var _applied_once: bool = false
+## Diagnostic réseau (panneau F9) : nombre d'états reçus et heure du dernier (ms).
+var received_count: int = 0
+var last_received_msec: int = 0
 
 
 func _physics_process(_delta: float) -> void:
@@ -92,6 +95,8 @@ func _push_state(state: PackedFloat64Array) -> void:
 	if state.size() < 10 or (is_inside_tree() and is_multiplayer_authority()):
 		return
 	var sample: float = _now() - state[0]
+	received_count += 1
+	last_received_msec = Time.get_ticks_msec()
 	if not _has_offset:
 		_target_offset = sample
 		_clock_offset = sample
