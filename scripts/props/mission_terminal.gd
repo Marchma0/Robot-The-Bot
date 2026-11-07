@@ -1,37 +1,38 @@
 class_name MissionTerminal
 extends StaticBody3D
-## Terminal de mission devant le robot, au camp (M12).
-## Tirer le grand levier arme la mission : un compte à rebours démarre, l'écran dit « montez à bord »
-## et le gyrophare clignote. Dès que tous les nains sont dans le robot, la mission part
-## (MissionDirector.start_mission). Si le compte à rebours se termine avant, la mission est annulée.
+## Terminal de mission devant le robot, au camp (M12.1).
+## Les deux flèches choisissent la mission (écran : titre, « ◄ 1 / 3 ► »), le gros bouton vert la lance :
+## un compte à rebours démarre, l'écran dit « montez à bord » et le gyrophare clignote. Dès que tous les nains
+## sont dans le robot, la mission part (MissionDirector.start_mission). Si le compte à rebours se termine
+## avant, elle est annulée ; un second appui sur le bouton vert l'annule aussi.
 ##
-## Réseau : le levier est un Lever (déjà synchronisé, l'hôte valide qui le tient). L'hôte est autoritaire
-## sur `countdown` (répliqué). L'écran et le gyrophare sont calculés localement par chaque peer
+## Réseau : les boutons sont des PushButton (l'hôte valide l'appui et émet `pressed`). L'hôte est autoritaire
+## sur `selected` et `countdown` (répliqués). L'écran et le gyrophare sont calculés localement par chaque peer
 ## (le nombre de nains à bord se déduit de leurs places, déjà synchronisées).
 
-## Temps laissé pour monter à bord après avoir tiré le levier (s).
+## Temps laissé pour monter à bord après avoir lancé (s).
 const ARM_TIME: float = 20.0
-## Le levier compte comme tiré au-delà de cette inclinaison (dans un sens ou dans l'autre).
-const PULL_THRESHOLD: float = 0.85
-const SCREEN_SIZE: Vector2i = Vector2i(512, 344)
+const SCREEN_SIZE: Vector2i = Vector2i(512, 336)
 const FONT: FontVariation = preload("res://assets/fonts/fredoka.tres")
 const SCREEN_SHADER: Shader = preload("res://scenes/mecha/controls/camera_feed_screen.gdshader")
 const COLOR_IDLE: Color = Color(0.55, 1.0, 0.75)
 const COLOR_ARMED: Color = Color(1.0, 0.72, 0.3)
+const COLOR_LOCKED: Color = Color(0.55, 0.62, 0.58)
 
-@export var mission_id: StringName = &"test_ground"
-@export var mission_title: String = "Terrain d'essai"
-
-## Temps restant pour monter à bord (0 = mission pas armée). Autorité : hôte.
+## Mission choisie (indice dans MissionDirector.MISSIONS). Autorité : hôte.
+var selected: int = 0
+## Temps restant pour monter à bord (0 = mission pas lancée). Autorité : hôte.
 var countdown: float = 0.0
 
-var _was_pulled: bool = false
 var _title: Label
+var _pager: Label
 var _status: Label
 var _crew: Label
 var _blink: float = 0.0
 
-@onready var _lever: Lever = %Lever
+@onready var _prev: PushButton = %Prev
+@onready var _next: PushButton = %Next
+@onready var _launch: PushButton = %Launch
 @onready var _screen: MeshInstance3D = %Screen
 @onready var _viewport: SubViewport = %ScreenViewport
 @onready var _beacon: OmniLight3D = %Beacon
@@ -39,30 +40,33 @@ var _blink: float = 0.0
 
 func _ready() -> void:
 	_build_screen()
+	_prev.pressed.connect(func(_peer_id: int) -> void: _browse(-1))
+	_next.pressed.connect(func(_peer_id: int) -> void: _browse(1))
+	_launch.pressed.connect(func(_peer_id: int) -> void: _on_launch())
 	NetworkManager.session_ended.connect(func(_reason: String) -> void: countdown = 0.0)
 
 
 func _physics_process(delta: float) -> void:
-	if not multiplayer.is_server():
+	if not multiplayer.is_server() or countdown <= 0.0:
 		return
 	var director: MissionDirector = _director()
 	if director == null or not director.in_lobby():
 		countdown = 0.0
 		return
-	var pulled: bool = absf(_lever.value.y) > PULL_THRESHOLD
-	if pulled and not _was_pulled and countdown <= 0.0:
-		countdown = ARM_TIME
-	_was_pulled = pulled
-	if countdown > 0.0:
-		countdown = maxf(countdown - delta, 0.0)
-		if director.everyone_aboard() and director.start_mission(mission_id):
-			countdown = 0.0
+	countdown = maxf(countdown - delta, 0.0)
+	if director.everyone_aboard() and director.start_mission(_mission()["id"]):
+		countdown = 0.0
 
 
 func _process(delta: float) -> void:
 	var director: MissionDirector = _director()
 	if director == null:
 		return
+	var mission: Dictionary = _mission()
+	var locked: bool = mission["id"] == &""
+	_title.text = mission["title"]
+	_title.modulate = COLOR_LOCKED if locked else Color.WHITE
+	_pager.text = "◄  %d / %d  ►" % [selected + 1, MissionDirector.MISSIONS.size()]
 	var count: Vector2i = director.count_aboard()
 	_crew.text = "à bord : %d / %d" % [count.x, count.y]
 	_blink += delta
@@ -72,10 +76,35 @@ func _process(delta: float) -> void:
 		_beacon.light_color = COLOR_ARMED
 		_beacon.light_energy = 2.5 if fmod(_blink, 0.6) < 0.3 else 0.2
 	else:
-		_status.text = "Tirez le levier"
-		_status.modulate = COLOR_IDLE
+		_status.text = "Verrouillée" if locked else "Bouton vert : partir"
+		_status.modulate = COLOR_LOCKED if locked else COLOR_IDLE
 		_beacon.light_color = COLOR_IDLE
 		_beacon.light_energy = 0.8
+	_launch.lit = countdown > 0.0 and fmod(_blink, 0.6) < 0.3
+
+
+func _mission() -> Dictionary:
+	return MissionDirector.MISSIONS[clampi(selected, 0, MissionDirector.MISSIONS.size() - 1)]
+
+
+## Hôte : flèches. On ne change pas de mission pendant le compte à rebours.
+func _browse(step: int) -> void:
+	if not multiplayer.is_server() or countdown > 0.0:
+		return
+	selected = posmod(selected + step, MissionDirector.MISSIONS.size())
+
+
+## Hôte : bouton vert. Lance le compte à rebours, ou l'annule s'il tourne déjà.
+func _on_launch() -> void:
+	if not multiplayer.is_server():
+		return
+	var director: MissionDirector = _director()
+	if director == null or not director.in_lobby():
+		return
+	if countdown > 0.0:
+		countdown = 0.0
+	elif _mission()["id"] != &"":
+		countdown = ARM_TIME
 
 
 func _director() -> MissionDirector:
@@ -90,17 +119,18 @@ func _build_screen() -> void:
 	root.size = Vector2(SCREEN_SIZE)
 	_viewport.add_child(root)
 	var column: VBoxContainer = VBoxContainer.new()
-	column.position = Vector2(28, 26)
-	column.size = Vector2(SCREEN_SIZE) - Vector2(56, 52)
-	column.add_theme_constant_override(&"separation", 18)
+	column.position = Vector2(26, 20)
+	column.size = Vector2(SCREEN_SIZE) - Vector2(52, 40)
+	column.add_theme_constant_override(&"separation", 10)
 	root.add_child(column)
-	var caption: Label = _label("MISSION", 26, Color(0.55, 0.8, 0.65))
-	column.add_child(caption)
-	_title = _label(mission_title, 52, Color(0.85, 1.0, 0.9))
+	column.add_child(_label("MISSION", 24, Color(0.55, 0.8, 0.65)))
+	_title = _label("", 46, Color(0.85, 1.0, 0.9))
 	column.add_child(_title)
-	_status = _label("", 40, COLOR_IDLE)
+	_pager = _label("", 30, Color(0.75, 0.95, 0.85))
+	column.add_child(_pager)
+	_status = _label("", 36, COLOR_IDLE)
 	column.add_child(_status)
-	_crew = _label("", 32, Color(0.7, 0.9, 0.8))
+	_crew = _label("", 28, Color(0.7, 0.9, 0.8))
 	column.add_child(_crew)
 	var material: ShaderMaterial = ShaderMaterial.new()
 	material.shader = SCREEN_SHADER

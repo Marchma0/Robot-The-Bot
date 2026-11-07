@@ -20,6 +20,13 @@ const LEVELS: Dictionary[StringName, String] = {
 	&"test_ground": "res://scenes/levels/test_ground.tscn",
 }
 
+## Missions proposées au terminal du camp, dans l'ordre. `id` vide = verrouillée (pas encore faite).
+const MISSIONS: Array[Dictionary] = [
+	{"id": &"test_ground", "title": "Terrain d'essai"},
+	{"id": &"", "title": "Mission 1"},
+	{"id": &"", "title": "Mission 2"},
+]
+
 @export var level_container: Node3D
 @export var mecha: Node3D
 @export var walker: MechaWalker

@@ -1,0 +1,62 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/darts_game.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/models/props/darts_stand.glb" id="2_stand"]
+[ext_resource type="Script" path="res://scripts/props/darts_take.gd" id="3_take"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_take"]
+size = Vector3(0.6, 0.35, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_stand"]
+size = Vector3(1.0, 1.9, 0.5)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_darts"]
+properties/0/path = NodePath(".:thrower_peer_id")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:thrower_name")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:round_scores")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:record")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:record_name")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+
+[node name="DartsGame" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Stand" parent="." instance=ExtResource("2_stand")]
+
+[node name="StandBody" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StandBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0.15)
+shape = SubResource("BoxShape3D_stand")
+
+[node name="Take" type="Area3D" parent="." node_paths=PackedStringArray("game")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.15, 0.6, -2.95)
+script = ExtResource("3_take")
+game = NodePath("..")
+display_name = "Fléchettes"
+reach = 2.2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Take"]
+shape = SubResource("BoxShape3D_take")
+
+[node name="Score" type="Label3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.9, 1.285, 0.008)
+pixel_size = 0.0022
+modulate = Color(0.95, 0.95, 0.88, 1)
+font_size = 36
+outline_size = 0
+text = "FLÉCHETTES"
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_darts")
+replication_interval = 0.1

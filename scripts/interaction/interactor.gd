@@ -49,6 +49,9 @@ var _rope_pending: bool = false
 var _rope_wait: float = 0.0
 var _poop: Poop = null
 var _poop_wait: float = 0.0
+## Fléchettes du camp prises au seau (en attente de l'hôte, ou en main).
+var _darts: DartsGame = null
+var _darts_wait: float = 0.0
 var _hints_key: String = ""
 
 
@@ -70,6 +73,7 @@ func _physics_process(delta: float) -> void:
 		_handle_actions()
 		_update_held(delta)
 		_update_poop(delta)
+		_update_darts(delta)
 	_update_prompt()
 
 
@@ -108,6 +112,11 @@ func release_rope() -> void:
 
 
 ## Vrai quand le joueur tient un caca (confirmé par l'hôte).
+## Vrai quand le joueur a les fléchettes du camp en main (confirmé par l'hôte).
+func is_holding_darts() -> bool:
+	return _darts != null and is_instance_valid(_darts) and _darts.is_thrower_locally()
+
+
 func is_holding_poop() -> bool:
 	return _poop != null and is_instance_valid(_poop) and _poop.is_held_locally()
 
@@ -180,8 +189,23 @@ func _handle_actions() -> void:
 			_poop.request_throw.rpc_id(1, Vector3.ZERO)
 			_poop = null
 			return
-	var free_hands: bool = _held == null and _poop == null
-	if _target is PoopHandle and (press or grab) and free_hands:
+	if is_holding_darts():
+		# Fléchettes en main : clic = lancer dans la direction du regard, E = les reposer.
+		if grab:
+			_darts.request_throw.rpc_id(1, global_position, -global_basis.z)
+			thrown.emit()
+			return
+		if press:
+			_darts.request_release.rpc_id(1)
+			_darts = null
+			return
+	var free_hands: bool = _held == null and _poop == null and _darts == null
+	if _target is DartsTake and (press or grab) and free_hands:
+		_darts = (_target as DartsTake).game
+		_darts_wait = 0.0
+		_darts.request_take.rpc_id(1)
+		button_pressed.emit()
+	elif _target is PoopHandle and (press or grab) and free_hands:
 		_poop = (_target as PoopHandle).poop
 		_poop_wait = 0.0
 		_poop.request_pick.rpc_id(1)
@@ -303,6 +327,21 @@ func _release() -> void:
 	_grab_pending = false
 
 
+## Fléchettes : on oublie le jeu si l'hôte refuse, ou quand la manche est finie (il les reprend).
+func _update_darts(delta: float) -> void:
+	if _darts == null:
+		return
+	if not is_instance_valid(_darts):
+		_darts = null
+		return
+	if _darts.is_thrower_locally():
+		_darts_wait = 0.0
+		return
+	_darts_wait += delta
+	if _darts_wait > GRAB_TIMEOUT:
+		_darts = null
+
+
 ## Attente de la réponse de l'hôte après « ramasser » (refusé = on oublie le caca).
 func _update_poop(delta: float) -> void:
 	if _poop == null:
@@ -319,7 +358,9 @@ func _update_poop(delta: float) -> void:
 
 func _update_prompt() -> void:
 	var hints: Array[InputHint] = []
-	if is_holding_poop():
+	if is_holding_darts():
+		hints = [InputHint.make(&"grab", &"throw"), InputHint.make(&"interact", &"drop")]
+	elif is_holding_poop():
 		hints = [InputHint.make(&"grab", &"throw"), InputHint.make(&"interact", &"drop")]
 	elif _seat != null and not _seat_pending:
 		hints = _seat.get_hints()
