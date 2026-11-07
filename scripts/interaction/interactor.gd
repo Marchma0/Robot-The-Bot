@@ -158,6 +158,9 @@ func _handle_actions() -> void:
 		_poop_wait = 0.0
 		_poop.request_pick.rpc_id(1)
 		button_pressed.emit()
+	elif _target is CargoCrateHandle and (press or grab) and free_hands:
+		(_target as CargoCrateHandle).crate.request_collect.rpc_id(1)
+		button_pressed.emit()
 	elif _target is PushButton and (press or grab):
 		(_target as PushButton).request_press.rpc_id(1)
 		button_pressed.emit()
