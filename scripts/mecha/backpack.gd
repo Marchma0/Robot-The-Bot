@@ -44,7 +44,6 @@ var _gauge_mat: StandardMaterial3D
 @onready var _cargo_pile: Node3D = %CargoPile
 @onready var _flying_items: Node3D = %FlyingItems
 @onready var _gauge_bar: MeshInstance3D = %GaugeBar
-@onready var _counter_label: Label3D = %CounterLabel
 @onready var _catch_zone: Area3D = %CatchZone
 
 
@@ -186,11 +185,7 @@ func _refresh_inventory_visuals() -> void:
 			_gauge_mat.albedo_color = col
 			_gauge_mat.emission = col
 
-	# 2. Compteur sur le sac
-	if _counter_label != null:
-		_counter_label.text = "%d / %d" % [count, max_capacity]
-
-	# 3. Tas d'objets visible à l'intérieur du puits quand le couvercle s'ouvre
+	# 2. Tas d'objets visible à l'intérieur du puits quand le couvercle s'ouvre
 	if _cargo_pile != null:
 		for child: Node in _cargo_pile.get_children():
 			child.queue_free()

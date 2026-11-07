@@ -42,15 +42,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.92, 1.483)
 visible = false
 mesh = SubResource("BoxMesh_gauge")
 
-[node name="CounterLabel" type="Label3D" parent="."]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.38, 1.49)
-pixel_size = 0.0035
-text = "0 / 10"
-font_size = 44
-outline_size = 10
-modulate = Color(0.95, 0.88, 0.72, 1)
-
 [node name="Body" type="AnimatableBody3D" parent="."]
 sync_to_physics = false
 
