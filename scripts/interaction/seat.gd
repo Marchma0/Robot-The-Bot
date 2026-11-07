@@ -33,6 +33,8 @@ const SCREEN_VIEW_FILL: float = 0.9
 @export var reticle: Reticle = Reticle.CLAW
 ## Vrai si le saut lance quelque chose depuis ce poste (grappin) : affiche l'icône correspondante.
 @export var can_launch: bool = false
+## Mini-jeu joué assis (bras de fer) : chaque clic de l'occupant lui est envoyé (`submit_push`).
+@export var game: Node
 
 ## Peer installé sur le siège (0 = libre). Autorité : hôte.
 var occupant_peer_id: int = 0
@@ -106,6 +108,8 @@ func get_hints() -> Array[InputHint]:
 				station_hints.append(InputHint.make(&"jump", &"throw"))
 			station_hints.append(InputHint.make(&"interact", &"stand_up"))
 			return station_hints
+		if game != null:
+			return [InputHint.make(&"grab", &"hand_grab"), InputHint.make(&"interact", &"stand_up")]
 		return [InputHint.make(&"interact", &"stand_up")]
 	if occupant_peer_id != 0:
 		return [InputHint.state(&"locked")]

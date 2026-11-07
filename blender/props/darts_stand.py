@@ -7,7 +7,8 @@ Fiche
 - Budget : 1100 triangles.
 - Pièces : chevalet (Wood) et panneau de fond (Wood), cible à anneaux (DartBlack, Cream, DartRed, DartGreen),
   3 fléchettes plantées (Copper, DartRed), ligne de tir peinte (Cream), table basse en caisse (Wood)
-  avec fléchettes posées, tableau des scores (Board) à la craie (Paper).
+  avec fléchettes posées, tableau des scores (Board) sur poteau à côté de la cible, face aux joueurs : la craie
+  est un Label3D de scenes/props/darts_game.tscn (face avant à y = -0.02, centre (0.9, 1.285), 0,54 x 0,57 m).
 
     blender -b --factory-startup --python blender/props/darts_stand.py
 """
@@ -51,10 +52,10 @@ def main():
     b.box((0.9, 2.7, 0.0), (1.4, 3.2, 0.55), "Wood")
     for k in range(3):
         b.cylinder((1.0 + k * 0.1, 2.85, 0.565), (1.0 + k * 0.1, 3.05, 0.565), 0.01, "Copper", segments=4)
-    # tableau des scores sur le côté du chevalet
-    b.box((0.55, -0.3, 1.0), (0.58, 0.3, 1.6), "Board")
-    for k in range(4):
-        b.box((0.581, -0.22, 1.48 - k * 0.12), (0.585, 0.05 + 0.05 * (k % 2), 1.5 - k * 0.12), "Paper")
+    # tableau des scores sur son poteau, à côté de la cible, face aux joueurs (craie écrite dans Godot)
+    b.cylinder((0.9, -0.06, 0.0), (0.9, -0.06, 1.0), 0.035, "Wood", segments=6)
+    b.box((0.6, -0.08, 0.97), (1.2, -0.04, 1.6), "Wood")
+    b.box((0.63, -0.04, 1.0), (1.17, -0.02, 1.57), "Board")
     b.finish()
     kit.save_and_export("darts_stand", budget_tris=1100)
 

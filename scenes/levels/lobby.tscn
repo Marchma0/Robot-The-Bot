@@ -2,8 +2,8 @@
 
 [ext_resource type="PackedScene" path="res://assets/models/levels/lobby_canyon.glb" id="1_canyon"]
 [ext_resource type="PackedScene" path="res://scenes/props/mission_terminal.tscn" id="2_terminal"]
-[ext_resource type="PackedScene" path="res://assets/models/props/darts_stand.glb" id="3_darts"]
-[ext_resource type="PackedScene" path="res://assets/models/props/armwrestle_table.glb" id="4_arm"]
+[ext_resource type="PackedScene" path="res://scenes/props/darts_game.tscn" id="3_darts"]
+[ext_resource type="PackedScene" path="res://scenes/props/armwrestle_game.tscn" id="4_arm"]
 [ext_resource type="PackedScene" path="res://scenes/props/lobby_campfire.tscn" id="5_fire"]
 [ext_resource type="PackedScene" path="res://assets/models/props/lobby_tent.glb" id="6_tent"]
 [ext_resource type="PackedScene" path="res://assets/models/props/lobby_scaffold.glb" id="7_scaffold"]
