@@ -125,9 +125,13 @@ func _update_target() -> void:
 
 
 func _set_target(target: Interactable) -> void:
+	# La cible visée a pu disparaître (caca qui touche quelque chose) : on l'oublie,
+	# sinon "target == _target" la croit encore là et elle reste en mémoire.
+	if not is_instance_valid(_target):
+		_target = null
 	if target == _target:
 		return
-	if _target != null and is_instance_valid(_target):
+	if _target != null:
 		_target.set_highlighted(false)
 	_target = target
 	if _target != null:
