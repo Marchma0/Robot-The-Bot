@@ -1,0 +1,63 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/mecha/backpack.gd" id="1_backpack"]
+[ext_resource type="PackedScene" path="res://assets/models/props/backpack.glb" id="2_body_glb"]
+[ext_resource type="PackedScene" path="res://assets/models/props/backpack_lid.glb" id="3_lid_glb"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_gauge"]
+size = Vector3(0.38, 0.64, 0.025)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_body"]
+size = Vector3(3.2, 2.52, 1.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_catch"]
+size = Vector3(3.5, 2.9, 1.6)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_backpack"]
+properties/0/path = NodePath(".:stored_items")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+
+[node name="Backpack" type="Node3D"]
+script = ExtResource("1_backpack")
+
+[node name="Model" parent="." instance=ExtResource("2_body_glb")]
+
+[node name="LidPivot" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.52, 0.32)
+
+[node name="LidModel" parent="LidPivot" instance=ExtResource("3_lid_glb")]
+
+[node name="CargoPile" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.69, 0.855)
+
+[node name="FlyingItems" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="GaugeBar" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.92, 1.483)
+visible = false
+mesh = SubResource("BoxMesh_gauge")
+
+[node name="Body" type="AnimatableBody3D" parent="."]
+sync_to_physics = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.26, 0.85)
+shape = SubResource("BoxShape3D_body")
+
+[node name="CatchZone" type="Area3D" parent="."]
+unique_name_in_owner = true
+collision_layer = 0
+collision_mask = 9
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CatchZone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0.9)
+shape = SubResource("BoxShape3D_catch")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_backpack")

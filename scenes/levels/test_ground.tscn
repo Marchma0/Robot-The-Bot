@@ -1,5 +1,7 @@
 [gd_scene format=3]
 
+[ext_resource type="PackedScene" path="res://scenes/props/cargo_crate.tscn" id="1_crate"]
+
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
 [sub_resource type="Sky" id="Sky_main"]
@@ -96,4 +98,19 @@ mesh = SubResource("BoxMesh_pillar")
 [node name="Pillar12" type="MeshInstance3D" parent="Pillars"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 3, 17)
 mesh = SubResource("BoxMesh_pillar")
+
+[node name="CargoCrates" type="Node3D" parent="."]
+
+[node name="Crate1" parent="CargoCrates" instance=ExtResource("1_crate")]
+transform = Transform3D(0.939693, 0, 0.34202, 0, 1, 0, -0.34202, 0, 0.939693, 12.2, 0, -3.5)
+
+[node name="Crate2" parent="CargoCrates" instance=ExtResource("1_crate")]
+transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, 13.6, 0, 4.3)
+
+[node name="Crate3" parent="CargoCrates" instance=ExtResource("1_crate")]
+transform = Transform3D(0.984808, 0, 0.173648, 0, 1, 0, -0.173648, 0, 0.984808, 16.3, 0, 4.5)
+
+[node name="Crate4" parent="CargoCrates" instance=ExtResource("1_crate")]
+transform = Transform3D(0.766044, 0, 0.642788, 0, 1, 0, -0.642788, 0, 0.766044, 15.0, 0, 5.2)
+
 

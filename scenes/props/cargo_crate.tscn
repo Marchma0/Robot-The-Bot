@@ -1,0 +1,34 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/cargo_crate.gd" id="1_crate"]
+[ext_resource type="Script" path="res://scripts/props/cargo_crate_handle.gd" id="2_handle"]
+[ext_resource type="PackedScene" path="res://assets/models/props/cargo_crate.glb" id="3_model"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_body"]
+size = Vector3(0.68, 0.66, 0.68)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pick"]
+size = Vector3(0.84, 0.82, 0.84)
+
+[node name="CargoCrate" type="RigidBody3D"]
+collision_layer = 9
+mass = 2.0
+script = ExtResource("1_crate")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.33, 0)
+shape = SubResource("BoxShape3D_body")
+
+[node name="Model" parent="." instance=ExtResource("3_model")]
+unique_name_in_owner = true
+
+[node name="Handle" type="Area3D" parent="." node_paths=PackedStringArray("crate")]
+script = ExtResource("2_handle")
+display_name = "Caisse de minerai"
+reach = 5.5
+show_debug = false
+crate = NodePath("..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Handle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36, 0)
+shape = SubResource("BoxShape3D_pick")

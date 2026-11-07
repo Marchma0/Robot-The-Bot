@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" path="res://scenes/mecha/legs.tscn" id="17_legs"]
 [ext_resource type="Script" path="res://scripts/mecha/qte_sequence.gd" id="18_qte"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/controls/leg_dashboard.tscn" id="19_dash"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/backpack.tscn" id="20_backpack"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tv"]
 shader = ExtResource("10_tv")
@@ -454,6 +455,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 5.6, 0.93)
 [node name="InteriorBelly" parent="." instance=ExtResource("15_belly")]
 
 [node name="InteriorHead" parent="." instance=ExtResource("14_head")]
+
+[node name="Backpack" parent="." instance=ExtResource("20_backpack")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.55, 2.1)
 
 [node name="Props" type="Node3D" parent="."]
 
