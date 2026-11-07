@@ -20,6 +20,8 @@
 [ext_resource type="Script" path="res://scripts/mecha/qte_sequence.gd" id="18_qte"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/controls/leg_dashboard.tscn" id="19_dash"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/props/backpack.tscn" id="20_backpack"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/drill_arm.tscn" id="21_drill_arm"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/grabber_arm.tscn" id="22_grabber_arm"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tv"]
 shader = ExtResource("10_tv")
@@ -458,6 +460,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 5.6, 0.93)
 
 [node name="Backpack" parent="." instance=ExtResource("20_backpack")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.55, 2.1)
+
+[node name="DrillArm" parent="." node_paths=PackedStringArray("depth_lever", "mine_button") instance=ExtResource("21_drill_arm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.95, 3.4, -0.3)
+depth_lever = NodePath("../Controls/Drill_Depth")
+mine_button = NodePath("../Controls/Drill_Mine")
+
+[node name="GrabberArm" parent="." node_paths=PackedStringArray("seat", "backpack") instance=ExtResource("22_grabber_arm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.95, 3.4, -0.3)
+seat = NodePath("../Controls/Grabber_Seat")
+backpack = NodePath("../Backpack")
 
 [node name="Props" type="Node3D" parent="."]
 

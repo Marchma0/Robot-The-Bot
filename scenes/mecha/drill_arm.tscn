@@ -1,0 +1,86 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/mecha/drill_arm.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/models/props/drill_arm.glb" id="2_arm_glb"]
+[ext_resource type="PackedScene" path="res://assets/models/props/drill_slider.glb" id="3_slider_glb"]
+[ext_resource type="PackedScene" path="res://assets/models/props/drill_bit.glb" id="4_bit_glb"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_drill"]
+radius = 0.95
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_arm_col"]
+size = Vector3(0.75, 0.75, 2.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sleeve"]
+albedo_color = Color(0.32, 0.34, 0.37, 1)
+metallic = 0.75
+roughness = 0.45
+
+[sub_resource type="BoxMesh" id="BoxMesh_sleeve"]
+material = SubResource("StandardMaterial3D_sleeve")
+size = Vector3(0.38, 0.38, 1.6)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_drill"]
+properties/0/path = NodePath(".:extension")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:spinning")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:drilling")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+
+[node name="DrillArm" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="ArmModel" parent="." instance=ExtResource("2_arm_glb")]
+
+[node name="MidSleeve" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.88)
+mesh = SubResource("BoxMesh_sleeve")
+
+[node name="SliderPivot" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.72)
+
+[node name="SliderModel" parent="SliderPivot" instance=ExtResource("3_slider_glb")]
+
+[node name="BitPivot" type="Node3D" parent="SliderPivot"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.78)
+
+[node name="BitModel" parent="SliderPivot/BitPivot" instance=ExtResource("4_bit_glb")]
+
+[node name="Sparks" type="Node3D" parent="SliderPivot"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.78)
+
+[node name="WorkLight" type="OmniLight3D" parent="SliderPivot"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, -0.85)
+light_color = Color(1, 0.82, 0.5, 1)
+light_energy = 0.35
+omni_range = 4.5
+
+[node name="DrillZone" type="Area3D" parent="SliderPivot"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.65)
+collision_layer = 0
+collision_mask = 9
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SliderPivot/DrillZone"]
+shape = SubResource("SphereShape3D_drill")
+
+[node name="ArmBody" type="AnimatableBody3D" parent="SliderPivot"]
+sync_to_physics = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SliderPivot/ArmBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.8)
+shape = SubResource("BoxShape3D_arm_col")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_drill")
+replication_interval = 0.033
