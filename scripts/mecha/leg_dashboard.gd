@@ -6,6 +6,11 @@ extends Node3D
 ## Le nœud est posé sur le plateau incliné de la console (X vers la droite, Y vers le haut du plateau,
 ## Z vers le pilote).
 
+## Couleurs du voyant « à toi » : vert = fais ton pas (marche), jaune = ton tour dans le QTE.
+const LAMP_STEP: Color = Color(0.3, 1.0, 0.35)
+const LAMP_QTE: Color = Color(1.0, 0.8, 0.2)
+
+
 ## 0 = console de la jambe gauche, 1 = droite.
 @export var leg: int = 0
 @export var walker: MechaWalker
@@ -58,10 +63,16 @@ func _process(delta: float) -> void:
 	_fill.visible = _shown_progress > 0.005
 	_fill.scale.x = maxf(0.001, _shown_progress)
 	_fill.position.x = _fill_left + _fill_width * _shown_progress / 2.0
-	# À moi de jouer : voyant qui clignote et flèche allumée.
+	# Voyant « à toi ». QTE : jaune qui clignote + flèche allumée. Marche : vert fixe tant que c'est
+	# à moi de faire mon pas (il s'éteint dès que j'ai poussé mon joystick, l'autre s'allume).
 	var my_turn: bool = qte.active and qte.current_leg == leg
 	var blink: bool = fmod(Time.get_ticks_msec() / 1000.0, 0.5) < 0.3
-	_lamp_material.emission_enabled = my_turn and blink
+	var my_step: bool = not qte.active and walker.phase == MechaWalker.Phase.WALKING \
+		and (walker.next_leg == -1 or walker.next_leg == leg)
+	var lamp_color: Color = LAMP_STEP if my_step else LAMP_QTE
+	_lamp_material.emission = lamp_color
+	_lamp_material.albedo_color = lamp_color.darkened(0.55)
+	_lamp_material.emission_enabled = (my_turn and blink) or my_step
 	_fill_material.emission_energy_multiplier = 1.5 if qte.active else 0.3
 	for arrow: int in pads.size():
 		pads[arrow].lit = my_turn and qte.current_arrow == arrow
