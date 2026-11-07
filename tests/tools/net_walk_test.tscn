@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/tools/net_walk_test.gd" id="1_test"]
+
+[node name="NetWalkTest" type="Node"]
+process_physics_priority = -30
+script = ExtResource("1_test")

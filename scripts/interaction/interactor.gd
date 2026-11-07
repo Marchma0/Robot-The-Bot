@@ -15,6 +15,8 @@ signal thrown
 
 ## Délai max d'attente de la réponse de l'hôte après une demande (attraper, s'installer).
 const GRAB_TIMEOUT: float = 1.0
+## Zone morte du stick de la manette pour un joystick à ressort.
+const STICK_DEADZONE: float = 0.2
 
 ## Variation de la valeur du levier par pixel de souris.
 @export var mouse_lever_sensitivity: float = 0.006
@@ -26,6 +28,8 @@ var _held: Lever = null
 var _grab_pending: bool = false
 var _grab_wait: float = 0.0
 var _wanted: Vector2 = Vector2.ZERO
+## Le joueur a poussé le levier tenu pendant cette image (sinon un joystick à ressort revient au centre).
+var _pushed: bool = false
 var _seat: Seat = null
 var _seat_pending: bool = false
 var _seat_wait: float = 0.0
@@ -107,10 +111,17 @@ func get_held_tilt() -> Vector2:
 ## Mouvement de souris en pixels (x droite, y haut) pendant qu'on tient un levier.
 func drive_mouse(motion: Vector2) -> void:
 	_drive(motion * mouse_lever_sensitivity)
+	_pushed = _pushed or motion.length() > 0.0
 
 
 ## Stick (-1..1, y haut) pendant qu'on tient un levier.
 func drive_stick(stick: Vector2, delta: float) -> void:
+	if is_holding() and _held.self_centering:
+		# Joystick à ressort : il suit directement le stick de la manette.
+		if stick.length() > STICK_DEADZONE:
+			_wanted = _held.constrain(stick)
+			_pushed = true
+		return
 	_drive(stick * stick_lever_speed * delta)
 
 
@@ -203,6 +214,10 @@ func _update_held(delta: float) -> void:
 		# L'hôte nous l'a retiré (trop loin, etc.).
 		_held = null
 		return
+	if _held.self_centering and not _pushed:
+		# Joystick à ressort : on ne le pousse plus, il revient au centre.
+		_wanted = _wanted.move_toward(Vector2.ZERO, _held.return_speed * delta)
+	_pushed = false
 	_held.set_local_value(_wanted)
 	_held.submit_value.rpc_id(1, _wanted)
 

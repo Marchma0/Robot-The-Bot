@@ -133,6 +133,8 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 2. Prototyper chaque mécanique dans une scène isolée `tests/sandbox_<feature>.tscn` avant de l'intégrer.
 3. Tester le multi en local : Godot → Debug → *Customize Run Instances* → 2 à 4 instances (une hôte, les autres clients).
    - À distance : exporter l'exe (`Godot --headless --path . --export-release "Windows Desktop" build/windows/Robot-The-Bot.exe`, puis copier `steam_appid.txt` à côté), envoyer le dossier `build/windows/` zippé, et passer par Steam (lobby / invitation) ou par un VPN type Tailscale en mode local.
+   - Test réseau automatique de la marche (sans jouer) : lancer `Godot --path . res://tests/tools/net_walk_test.tscn -- host`, puis dans un autre terminal la même commande avec `-- client`. Le client attrape un joystick de jambe via le vrai code du nain, les deux font marcher le robot, l'hôte le fait tomber à la fin ; chacun affiche ce qu'il voit (position du robot, pieds en l'air, chute, QTE).
+   - Les deux joueurs doivent avoir **exactement la même version** (même commit de `main`, ou le même `.exe` exporté), sinon la synchro casse.
 4. Après chaque étape qui marche : proposer un message de commit git clair.
 5. Noter les décisions importantes dans `docs/decisions.md`.
 
