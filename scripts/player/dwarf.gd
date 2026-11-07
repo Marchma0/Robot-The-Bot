@@ -387,7 +387,8 @@ func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 		# Tête droite face à l'écran (sinon elle garde l'inclinaison prise en visant le siège).
 		_head.rotation.x = 0.0
 		var move: Vector2 = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
-		seat.submit_controls.rpc_id(1, move, _seat_look + stick_look)
+		var grab_pressed: bool = Input.is_action_pressed("grab")
+		seat.submit_controls.rpc_id(1, move, _seat_look + stick_look, grab_pressed)
 		_seat_look = Vector2.ZERO
 	else:
 		_look(Vector2(-stick_look.x, stick_look.y))

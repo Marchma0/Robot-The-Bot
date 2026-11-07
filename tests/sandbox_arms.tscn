@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/sandbox_arms.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/levels/test_ground.tscn" id="2_ground"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="3_mecha"]
+
+[node name="SandboxArms" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="TestGround" parent="." instance=ExtResource("2_ground")]
+
+[node name="Mecha" parent="." instance=ExtResource("3_mecha")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 0)
+
+[node name="CamExt" type="Camera3D" parent="."]
+current = true
+fov = 62.0
+
+[node name="CamDrill" type="Camera3D" parent="."]
+fov = 58.0

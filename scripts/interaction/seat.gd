@@ -18,9 +18,10 @@ extends Interactable
 
 ## Peer installé sur le siège (0 = libre). Autorité : hôte.
 var occupant_peer_id: int = 0
-## Dernières entrées de l'occupant (hôte uniquement) : déplacement et regard, -1..1 / delta.
+## Dernières entrées de l'occupant (hôte uniquement) : déplacement, regard et pince.
 var control_move: Vector2 = Vector2.ZERO
 var control_look: Vector2 = Vector2.ZERO
+var control_grab: bool = false
 
 @onready var _sit_point: Marker3D = %SitPoint
 @onready var _screen: MeshInstance3D = %Screen
@@ -62,6 +63,13 @@ func _process(_delta: float) -> void:
 
 func get_hints() -> Array[InputHint]:
 	if is_seated_locally():
+		if has_screen:
+			return [
+				InputHint.make(InputHint.LOOK, &"move"),
+				InputHint.make(InputHint.MOVE_VERTICAL, &"climb"),
+				InputHint.make(&"grab", &"hand_grab"),
+				InputHint.make(&"interact", &"stand_up"),
+			]
 		return [InputHint.make(&"interact", &"stand_up")]
 	if occupant_peer_id != 0:
 		return [InputHint.state(&"locked")]
@@ -102,10 +110,11 @@ func request_leave() -> void:
 
 
 @rpc("any_peer", "call_local", "unreliable_ordered")
-func submit_controls(move: Vector2, look: Vector2) -> void:
+func submit_controls(move: Vector2, look: Vector2, grab: bool = false) -> void:
 	if multiplayer.is_server() and multiplayer.get_remote_sender_id() == occupant_peer_id:
 		control_move = move.limit_length(1.0)
 		control_look = look
+		control_grab = grab
 
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:
@@ -117,6 +126,7 @@ func _free_seat() -> void:
 	occupant_peer_id = 0
 	control_move = Vector2.ZERO
 	control_look = Vector2.ZERO
+	control_grab = false
 
 
 func _on_player_left(peer_id: int) -> void:

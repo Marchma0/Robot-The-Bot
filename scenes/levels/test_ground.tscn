@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/props/cargo_crate.tscn" id="1_crate"]
+[ext_resource type="PackedScene" path="res://scenes/props/mineable_rock.tscn" id="2_rock"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -112,5 +113,27 @@ transform = Transform3D(0.984808, 0, 0.173648, 0, 1, 0, -0.173648, 0, 0.984808, 
 
 [node name="Crate4" parent="CargoCrates" instance=ExtResource("1_crate")]
 transform = Transform3D(0.766044, 0, 0.642788, 0, 1, 0, -0.642788, 0, 0.766044, 15.0, 0, 5.2)
+
+[node name="CargoSpawner" type="MultiplayerSpawner" parent="."]
+_spawnable_scenes = PackedStringArray("res://scenes/props/cargo_crate.tscn")
+spawn_path = NodePath("../CargoCrates")
+
+[node name="MineableRocks" type="Node3D" parent="."]
+
+[node name="Rock1" parent="MineableRocks" node_paths=PackedStringArray("drops_container") instance=ExtResource("2_rock")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.95, 0, -6.2)
+drops_container = NodePath("../../CargoCrates")
+
+[node name="Rock2" parent="MineableRocks" node_paths=PackedStringArray("drops_container") instance=ExtResource("2_rock")]
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 13.5, 0, -8.8)
+drops_container = NodePath("../../CargoCrates")
+
+[node name="Rock3" parent="MineableRocks" node_paths=PackedStringArray("drops_container") instance=ExtResource("2_rock")]
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 18.2, 0, -11.5)
+drops_container = NodePath("../../CargoCrates")
+
+[node name="Rock4" parent="MineableRocks" node_paths=PackedStringArray("drops_container") instance=ExtResource("2_rock")]
+transform = Transform3D(0.939693, 0, 0.34202, 0, 1, 0, -0.34202, 0, 0.939693, 11.2, 0, -7.0)
+drops_container = NodePath("../../CargoCrates")
 
 
