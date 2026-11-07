@@ -1,0 +1,63 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/mission_terminal.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/models/props/mission_terminal.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/controls/lever.tscn" id="3_lever"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_body"]
+size = Vector3(1.5, 0.95, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_screen"]
+size = Vector3(0.84, 0.66, 0.3)
+
+[sub_resource type="QuadMesh" id="QuadMesh_screen"]
+size = Vector2(0.62, 0.42)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_terminal"]
+properties/0/path = NodePath(".:countdown")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+
+[node name="MissionTerminal" type="StaticBody3D"]
+script = ExtResource("1_script")
+
+[node name="Model" parent="." instance=ExtResource("2_model")]
+
+[node name="BodyShape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.475, 0)
+shape = SubResource("BoxShape3D_body")
+
+[node name="ScreenShape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.28, 0.05)
+shape = SubResource("BoxShape3D_screen")
+
+[node name="Screen" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(-1, 0, 0, 0, 0.978148, 0.207912, 0, 0.207912, -0.978148, 0, 1.2833, -0.0756)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_screen")
+
+[node name="ScreenViewport" type="SubViewport" parent="."]
+unique_name_in_owner = true
+transparent_bg = false
+size = Vector2i(512, 344)
+render_target_update_mode = 4
+
+[node name="Lever" parent="." instance=ExtResource("3_lever")]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.58, 0.935, -0.18)
+display_name = "Terminal — lancer la mission"
+handle_length = 0.42
+one_axis_min = -1.0
+knob_color = Color(0.8, 0.15, 0.1, 1)
+
+[node name="Beacon" type="OmniLight3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 2.34, 0.3)
+light_color = Color(0.55, 1, 0.75, 1)
+light_energy = 0.8
+omni_range = 3.0
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_terminal")
+replication_interval = 0.1

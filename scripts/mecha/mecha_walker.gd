@@ -161,6 +161,24 @@ func fall() -> void:
 	fell.emit()
 
 
+## Hôte : replace le robot debout en `xform` (changement de niveau : camp ↔ mission), pieds reposés au sol.
+## Attend une étape physique pour que le sol d'un niveau tout juste chargé soit pris en compte.
+func reset_to(xform: Transform3D) -> void:
+	if not multiplayer.is_server():
+		return
+	_ready_done = false
+	body.global_transform = xform
+	body.reset_physics_interpolation()
+	await get_tree().physics_frame
+	_pending = [NAN, NAN]
+	_stumble = 0.0
+	error_gauge = 0.0
+	_body_velocity = Vector2.ZERO
+	_last_step_leg = -1
+	_set_phase(Phase.WALKING)
+	_init_feet()
+
+
 ## Pied (contact au sol) et orientation, en global, tels qu'affichés (lissés chez les clients).
 func get_foot_transform(leg: int) -> Transform3D:
 	return _foot_nodes[leg].get_global_transform_interpolated()
