@@ -15,6 +15,9 @@ const RELEASE_MARGIN: float = 0.5
 @export var axes: Axes = Axes.ONE
 ## Revient au centre quand personne ne le tient.
 @export var spring_back: bool = true
+## Joystick à ressort même quand on le tient (joysticks des jambes) : il revient au centre dès qu'on
+## ne le pousse plus (un coup de souris = une poussée), et à la manette il suit directement le stick.
+@export var self_centering: bool = false
 @export var return_speed: float = 3.0
 @export var max_angle_degrees: float = 30.0
 @export var knob_color: Color = Color(0.45, 0.28, 0.14)
