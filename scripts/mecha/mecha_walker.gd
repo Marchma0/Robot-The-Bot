@@ -71,6 +71,9 @@ var swinging_right: bool = false
 ## Jauge d'erreur (0 = tout va bien, 1 = chute) et phase. Autorité : hôte (synchronisés).
 var error_gauge: float = 0.0
 var phase: int = Phase.WALKING
+## À qui le tour de faire un pas (voyant vert sur la console) : 0 = gauche, 1 = droite, -1 = les deux.
+## Autorité : hôte (synchronisé).
+var next_leg: int = -1
 
 var _phase_time: float = 0.0
 var _last_error_time: float = -10.0
@@ -114,6 +117,9 @@ func _physics_process(delta: float) -> void:
 			_read_stick(Leg.RIGHT, stick_right)
 			for leg: int in 2:
 				_try_pending(leg)
+			# Plus de pas depuis un moment : les deux peuvent repartir.
+			if _time - _last_step_time > 2.0 or _stumble > 0.0:
+				next_leg = -1
 			if _time - _last_error_time > error_calm_time:
 				error_gauge = maxf(0.0, error_gauge - error_decay * delta)
 		Phase.FALLING:
@@ -245,6 +251,7 @@ func _start_step(leg: int, angle: float) -> void:
 	_last_step_time = _time
 	_last_step_angle = angle
 	_last_step_leg = leg
+	next_leg = 1 - leg   # son voyant s'éteint, feu vert pour l'autre
 	stepped.emit(leg)
 
 
@@ -330,6 +337,7 @@ func _slump_amount() -> float:
 func _set_phase(new_phase: int) -> void:
 	phase = new_phase
 	_phase_time = 0.0
+	next_leg = -1
 	if new_phase == Phase.FALLING:
 		# Un pied en l'air se repose là où il est.
 		for foot: Dictionary in _feet:
