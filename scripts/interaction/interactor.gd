@@ -12,14 +12,22 @@ signal hints_changed(hints: Array[InputHint])
 signal button_pressed
 ## Le joueur vient de lancer un objet (sert à l'animation "throw").
 signal thrown
+## Le joystick à ressort tenu vient d'être poussé assez loin pour faire un pas (« clac »), direction (x droite, y avant).
+signal stick_kicked(direction: Vector2)
 
 ## Délai max d'attente de la réponse de l'hôte après une demande (attraper, s'installer).
 const GRAB_TIMEOUT: float = 1.0
 ## Zone morte du stick de la manette pour un joystick à ressort.
 const STICK_DEADZONE: float = 0.2
+## Joystick à ressort à la souris : il reste poussé ce temps (s) après le dernier mouvement,
+## puis revient au centre à cette vitesse (par seconde), comme un vrai manche qu'on relâche.
+const STICK_HOLD_TIME: float = 0.14
+const STICK_RETURN_SPEED: float = 7.0
 
 ## Variation de la valeur du levier par pixel de souris.
 @export var mouse_lever_sensitivity: float = 0.006
+## Pareil pour un joystick à ressort (jambes) : course courte, un petit coup de souris suffit pour un pas.
+@export var mouse_stick_sensitivity: float = 0.012
 ## Variation de la valeur du levier par seconde au stick (stick à fond).
 @export var stick_lever_speed: float = 2.5
 
@@ -30,6 +38,9 @@ var _grab_wait: float = 0.0
 var _wanted: Vector2 = Vector2.ZERO
 ## Le joueur a poussé le levier tenu pendant cette image (sinon un joystick à ressort revient au centre).
 var _pushed: bool = false
+## Joystick à ressort : temps depuis la dernière poussée, et prêt pour un nouveau « clac » (revenu près du centre).
+var _since_push: float = 0.0
+var _stick_armed: bool = true
 var _seat: Seat = null
 var _seat_pending: bool = false
 var _seat_wait: float = 0.0
@@ -108,18 +119,24 @@ func get_held_tilt() -> Vector2:
 	return _wanted * deg_to_rad(_held.max_angle_degrees)
 
 
+## Vrai quand le levier tenu est un joystick à ressort (jambes) : la vue ne le suit pas.
+func is_holding_spring_stick() -> bool:
+	return is_holding() and _held.self_centering
+
+
 ## Mouvement de souris en pixels (x droite, y haut) pendant qu'on tient un levier.
 func drive_mouse(motion: Vector2) -> void:
-	_drive(motion * mouse_lever_sensitivity)
+	var spring: bool = is_holding_spring_stick()
+	_drive(motion * (mouse_stick_sensitivity if spring else mouse_lever_sensitivity))
 	_pushed = _pushed or motion.length() > 0.0
 
 
 ## Stick (-1..1, y haut) pendant qu'on tient un levier.
 func drive_stick(stick: Vector2, delta: float) -> void:
-	if is_holding() and _held.self_centering:
-		# Joystick à ressort : il suit directement le stick de la manette.
-		if stick.length() > STICK_DEADZONE:
-			_wanted = _held.constrain(stick)
+	if is_holding_spring_stick():
+		# Joystick à ressort : à la manette, il suit directement le stick (relâché = au centre).
+		if InputGlyph.use_gamepad:
+			_wanted = _held.constrain(stick if stick.length() > STICK_DEADZONE else Vector2.ZERO)
 			_pushed = true
 		return
 	_drive(stick * stick_lever_speed * delta)
@@ -217,9 +234,8 @@ func _update_held(delta: float) -> void:
 		# L'hôte nous l'a retiré (trop loin, etc.).
 		_held = null
 		return
-	if _held.self_centering and not _pushed:
-		# Joystick à ressort : on ne le pousse plus, il revient au centre.
-		_wanted = _wanted.move_toward(Vector2.ZERO, _held.return_speed * delta)
+	if _held.self_centering:
+		_update_spring_stick(delta)
 	_pushed = false
 	_held.set_local_value(_wanted)
 	_held.submit_value.rpc_id(1, _wanted)
@@ -258,6 +274,25 @@ func _update_rope(delta: float) -> void:
 		return
 	if not Input.is_action_pressed("grab"):
 		release_rope()
+
+
+## Joystick à ressort : il tient la poussée un instant puis revient au centre ; poussé au-delà du seuil
+## d'un pas, il part en butée (« clac ») et il faut le laisser revenir près du centre pour le pas suivant
+## (mêmes seuils que la marche, voir MechaWalker).
+func _update_spring_stick(delta: float) -> void:
+	_since_push = 0.0 if _pushed else _since_push + delta
+	if _since_push > STICK_HOLD_TIME:
+		_wanted = _wanted.move_toward(Vector2.ZERO, STICK_RETURN_SPEED * delta)
+	var amount: float = _wanted.length()
+	if amount < MechaWalker.RELEASE:
+		_stick_armed = true
+	elif amount > MechaWalker.TRIGGER and _stick_armed:
+		_stick_armed = false
+		var direction: Vector2 = _wanted / amount
+		if not InputGlyph.use_gamepad:
+			_wanted = direction   # en butée
+		_held.kick()
+		stick_kicked.emit(direction)
 
 
 func _release() -> void:

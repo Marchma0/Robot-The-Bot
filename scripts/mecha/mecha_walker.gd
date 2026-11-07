@@ -28,6 +28,8 @@ const MAX_REACH: float = 2.45
 ## Seuils du joystick : au-delà de TRIGGER on fait un pas, il faut revenir sous RELEASE pour le suivant.
 const TRIGGER: float = 0.6
 const RELEASE: float = 0.3
+## Élan : le corps ne s'écarte jamais de plus de ça (m) de sa place entre les pieds.
+const MAX_MOMENTUM_LEAD: float = 0.9
 
 @export var body: Node3D
 @export var stick_left: Lever
@@ -46,6 +48,14 @@ const RELEASE: float = 0.3
 @export var mismatch_degrees: float = 60.0
 ## Un pas demandé pendant que l'autre pied est en l'air attend au plus ce temps (s).
 @export var buffer_time: float = 0.35
+
+@export_group("Élan du corps")
+## Part de la destination d'un pied en l'air déjà prise en compte pour placer le corps (0 = aucune).
+@export_range(0.0, 1.0) var step_lead: float = 0.35
+## Raideur du ressort qui tire le corps vers sa place (plus grand = plus vif).
+@export var momentum_stiffness: float = 60.0
+## Amortissement (1 = sans dépassement, < 1 = garde un peu d'élan et dépasse légèrement).
+@export_range(0.3, 1.5) var momentum_damping: float = 0.7
 
 @export_group("Jauge d'erreur et chute (M7.2)")
 ## QTE à faire pour relever le robot après une chute.
@@ -89,6 +99,8 @@ var _stumble: float = 0.0
 var _time: float = 0.0
 var _yaw: float = 0.0
 var _hip_center: Vector3
+## Vitesse du corps au sol (x, z), pour l'élan entre deux pas.
+var _body_velocity: Vector2 = Vector2.ZERO
 var _ready_done: bool = false
 
 @onready var _foot_nodes: Array[Node3D] = [$FootL as Node3D, $FootR as Node3D]
@@ -272,10 +284,12 @@ func _advance_swing(leg: int, delta: float) -> void:
 
 
 ## Le corps se place entre les pieds, à la bonne hauteur, et regarde dans leur direction moyenne.
+## Élan : un pied qui part compte déjà en partie là où il va se poser (le corps part dès la poussée),
+## et le corps suit cette cible avec un ressort amorti qui garde sa vitesse d'un pas à l'autre.
 func _place_body(delta: float) -> void:
 	var left: Dictionary = _feet[Leg.LEFT]
 	var right: Dictionary = _feet[Leg.RIGHT]
-	var mid: Vector3 = ((left["pos"] as Vector3) + (right["pos"] as Vector3)) / 2.0
+	var mid: Vector3 = (_lead_pos(left) + _lead_pos(right)) / 2.0
 	var roll: float = 0.0
 	var dip: float = 0.0
 	for leg: int in 2:
@@ -283,7 +297,7 @@ func _place_body(delta: float) -> void:
 		if foot["swing"]:
 			var s: float = sin(PI * float(foot["t"]))
 			var planted: Vector3 = _feet[1 - leg]["pos"]
-			mid = mid.lerp(Vector3(planted.x, mid.y, planted.z), 0.25 * s)   # poids sur le pied d'appui
+			mid = mid.lerp(Vector3(planted.x, mid.y, planted.z), 0.12 * s)   # un peu de poids sur le pied d'appui
 			roll += (-1.0 if leg == Leg.RIGHT else 1.0) * deg_to_rad(3.0) * s
 			dip += 0.06 * s
 	var target_yaw: float = lerp_angle(left["yaw"], right["yaw"], 0.5)
@@ -310,7 +324,15 @@ func _place_body(delta: float) -> void:
 		pitch += sin(_time * 2.3) * deg_to_rad(0.6)   # il grince un peu par terre
 	var wanted: Vector3 = Vector3(mid.x, hip_y, mid.z)
 	var follow: float = 1.0 - exp(-(18.0 if phase == Phase.FALLING else 10.0) * delta)
-	_hip_center = _hip_center.lerp(wanted, follow) if delta < 1.0 else wanted
+	if delta >= 1.0:
+		_hip_center = wanted
+		_body_velocity = Vector2.ZERO
+	elif phase == Phase.WALKING:
+		_hip_center.y = lerpf(_hip_center.y, wanted.y, follow)
+		_follow_with_momentum(Vector2(wanted.x, wanted.z), delta)
+	else:
+		_hip_center = _hip_center.lerp(wanted, follow)
+		_body_velocity = Vector2.ZERO
 	# Trébuche : le robot vacille.
 	if _stumble > 0.0:
 		var shake: float = _stumble / 0.9
@@ -318,6 +340,28 @@ func _place_body(delta: float) -> void:
 		pitch += sin(_time * 13.0) * deg_to_rad(3.0) * shake
 	var full: Basis = Basis.from_euler(Vector3(pitch, _yaw, roll))
 	body.global_transform = Transform3D(full, _hip_center - full * Vector3(0.0, HIP_LOCAL[0].y, 0.0))
+
+
+## Position d'un pied pour placer le corps : s'il est en l'air, on regarde déjà vers où il va.
+func _lead_pos(foot: Dictionary) -> Vector3:
+	if not foot["swing"]:
+		return foot["pos"]
+	return (foot["pos"] as Vector3).lerp(foot["to"], step_lead)
+
+
+## Ressort amorti (au sol, x et z) : le corps accélère vers sa place et garde un peu d'élan,
+## sans jamais s'éloigner de plus de MAX_MOMENTUM_LEAD de sa place entre les pieds.
+func _follow_with_momentum(target: Vector2, delta: float) -> void:
+	var current: Vector2 = Vector2(_hip_center.x, _hip_center.z)
+	var damping: float = 2.0 * momentum_damping * sqrt(momentum_stiffness)
+	var accel: Vector2 = (target - current) * momentum_stiffness - _body_velocity * damping
+	_body_velocity += accel * delta
+	current += _body_velocity * delta
+	var offset: Vector2 = current - target
+	if offset.length() > MAX_MOMENTUM_LEAD:
+		current = target + offset.limit_length(MAX_MOMENTUM_LEAD)
+	_hip_center.x = current.x
+	_hip_center.z = current.y
 
 
 ## 0 = debout, 1 = effondré à genoux. Petit rebond à l'impact, relèvement en douceur.

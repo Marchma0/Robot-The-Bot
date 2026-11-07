@@ -46,6 +46,9 @@ const CROUCH_EYE_HEIGHT: float = 0.7
 const SIT_GLIDE_TIME: float = 0.4
 const CAMERA_TRAVEL_IN: float = 0.9
 const CAMERA_TRAVEL_OUT: float = 0.55
+## « Clac » du joystick des jambes : amplitude de l'à-coup de vue (rad) et vitesse d'amortissement.
+const KICK_NUDGE: float = 0.035
+const KICK_NUDGE_DAMP: float = 9.0
 ## Bits de `anim_flags` (états d'animation envoyés ensemble, en un seul nombre).
 const FLAG_AIRBORNE: int = 1
 const FLAG_HOLDING: int = 2
@@ -164,6 +167,8 @@ var _pullup_from: Vector3 = Vector3.ZERO
 var _pullup_to: Vector3 = Vector3.ZERO
 ## Emote : temps restant (s) avant la fin d'un geste.
 var _emote_time: float = 0.0
+## « Clac » du joystick des jambes : petit à-coup de la vue (rad, x = lacet, y = tangage) qui s'amortit.
+var _kick_nudge: Vector2 = Vector2.ZERO
 
 @onready var _head: Node3D = %Head
 @onready var _camera: Camera3D = %Camera
@@ -173,6 +178,7 @@ var _emote_time: float = 0.0
 @onready var _interactor: Interactor = %Interactor
 @onready var _hud: CanvasLayer = %Hud
 @onready var _hint_bar: HintBar = %HintBar
+@onready var _hint_panel: HintPanel = %HintPanel
 @onready var _crosshair: Control = %Crosshair
 @onready var _emote_wheel: EmoteWheel = %EmoteWheel
 @onready var _head_pitch: Node3D = %HeadPitch
@@ -221,6 +227,7 @@ func _ready() -> void:
 		_interactor.hints_changed.connect(_on_hints_changed)
 		_interactor.button_pressed.connect(_on_button_pressed)
 		_interactor.thrown.connect(_on_thrown)
+		_interactor.stick_kicked.connect(_on_stick_kicked)
 		_poop_game.finished.connect(_on_poop_game_finished)
 		# Vue à la première personne : on voit son corps (en baissant les yeux, ses gestes),
 		# mais pas sa propre tête, qui boucherait la vue (elle garde son ombre).
@@ -267,6 +274,7 @@ func _process(_delta: float) -> void:
 		# Le corps est affiché lissé entre deux étapes physiques ; la caméra suit cette
 		# position lissée, mais garde l'orientation la plus récente (souris sans retard).
 		_camera.global_transform = _view_transform()
+		_apply_kick_nudge(_delta)
 		_update_camera_travel(_delta)
 
 
@@ -291,7 +299,10 @@ func _physics_process(delta: float) -> void:
 		_update_outside()
 	if _interactor.is_holding():
 		_interactor.drive_stick(Vector2(stick.x, -stick.y), delta)
-		_follow_held_lever()
+		if _interactor.is_holding_spring_stick():
+			_was_holding = false   # joystick des jambes : la vue reste fixe, on regarde où on va
+		else:
+			_follow_held_lever()
 	else:
 		_was_holding = false
 		_look(-stick * stick_look_speed * delta)
@@ -359,7 +370,13 @@ func setup(p_peer_id: int, p_slot: int) -> void:
 
 
 func _on_hints_changed(hints: Array[InputHint]) -> void:
-	_hint_bar.show_hints(hints)
+	# À un poste (assis devant un écran, ou un levier en main) : les touches vont dans le panneau
+	# en haut à gauche (repliable avec Tab) ; sinon, petites pastilles en bas au centre.
+	var seat: Seat = _interactor.get_seat()
+	var at_station: bool = (seat != null and seat.has_screen) or _interactor.is_holding()
+	var empty: Array[InputHint] = []
+	_hint_panel.show_hints(hints if at_station else empty)
+	_hint_bar.show_hints(empty if at_station else hints)
 
 
 func _on_button_pressed() -> void:
@@ -379,6 +396,19 @@ func _on_poop_game_finished(success: bool) -> void:
 
 func _on_thrown() -> void:
 	anim_throw_count += 1
+
+
+func _on_stick_kicked(direction: Vector2) -> void:
+	# La vue est poussée un instant dans le sens du joystick (avant = elle plonge, comme le robot qui part).
+	_kick_nudge = Vector2(-direction.x, -direction.y) * KICK_NUDGE
+
+
+## Ajoute le petit à-coup du « clac » à la caméra (purement visuel, local), puis l'amortit.
+func _apply_kick_nudge(delta: float) -> void:
+	if _kick_nudge.length_squared() < 0.000001:
+		return
+	_camera.global_basis = _camera.global_basis * Basis.from_euler(Vector3(_kick_nudge.y, _kick_nudge.x, 0.0))
+	_kick_nudge = _kick_nudge.lerp(Vector2.ZERO, 1.0 - exp(-KICK_NUDGE_DAMP * delta))
 
 
 ## Où se trouve un objet tenu en main (devant soi, en bas à droite de la vue), en global.

@@ -11,6 +11,11 @@ enum Axes { ONE, TWO }
 
 ## Marge au-delà de la portée avant que l'hôte force le lâcher.
 const RELEASE_MARGIN: float = 0.5
+## Vitesse à laquelle le manche affiché rattrape sa valeur (plus grand = plus sec).
+const KNOB_FOLLOW: float = 28.0
+## « Clac » en butée : durée et amplitude du rebond (fraction de l'inclinaison).
+const KICK_DURATION: float = 0.14
+const KICK_OVERSHOOT: float = 0.18
 
 @export var axes: Axes = Axes.ONE
 ## Revient au centre quand personne ne le tient.
@@ -32,6 +37,10 @@ var value: Vector2 = Vector2.ZERO
 var holder_peer_id: int = 0
 
 var _local_value: Vector2 = Vector2.ZERO
+## Inclinaison affichée (suit la valeur avec un peu d'inertie, comme un vrai manche).
+var _shown: Vector2 = Vector2.ZERO
+## « Clac » : temps restant du petit rebond du pommeau en butée (s).
+var _kick_time: float = 0.0
 
 @onready var _pivot: Node3D = %Pivot
 @onready var _rod: MeshInstance3D = %Rod
@@ -62,9 +71,15 @@ func _physics_process(delta: float) -> void:
 		value = value.move_toward(Vector2.ZERO, return_speed * delta)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	# Le porteur voit sa propre valeur tout de suite ; les autres voient celle de l'hôte.
-	var shown: Vector2 = _local_value if is_held_locally() else value
+	var wanted: Vector2 = _local_value if is_held_locally() else value
+	_shown = _shown.lerp(wanted, 1.0 - exp(-KNOB_FOLLOW * delta))
+	var shown: Vector2 = _shown
+	if _kick_time > 0.0:
+		# Le pommeau tape en butée et rebondit un peu.
+		_kick_time = maxf(_kick_time - delta, 0.0)
+		shown *= 1.0 + KICK_OVERSHOOT * sin(PI * (1.0 - _kick_time / KICK_DURATION))
 	var max_angle: float = deg_to_rad(max_angle_degrees)
 	_pivot.rotation = Vector3(-shown.y * max_angle, 0.0, -shown.x * max_angle)
 	if show_debug:
@@ -87,6 +102,11 @@ func is_held_locally() -> bool:
 ## Valeur voulue par le joueur local qui tient le levier (affichage immédiat).
 func set_local_value(local_value: Vector2) -> void:
 	_local_value = _constrain(local_value)
+
+
+## Petit rebond du pommeau en butée (joueur local, au moment où le pas part).
+func kick() -> void:
+	_kick_time = KICK_DURATION
 
 
 ## Limite une valeur aux axes autorisés et à [-1, 1].

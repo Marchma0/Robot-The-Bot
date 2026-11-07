@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/ui/splat_overlay.gd" id="8_splat"]
 [ext_resource type="Script" path="res://scripts/network/net_smoother.gd" id="10_smoother"]
 [ext_resource type="Script" path="res://scripts/ui/hint_bar.gd" id="11_hintbar"]
+[ext_resource type="Script" path="res://scripts/ui/hint_panel.gd" id="13_hintpanel"]
 [ext_resource type="FontVariation" path="res://assets/fonts/fredoka.tres" id="12_font"]
 [ext_resource type="Script" path="res://scripts/ui/poop_minigame.gd" id="9_poopgame"]
 
@@ -125,6 +126,15 @@ grow_vertical = 0
 mouse_filter = 2
 alignment = 1
 script = ExtResource("11_hintbar")
+
+[node name="HintPanel" type="VBoxContainer" parent="Hud"]
+unique_name_in_owner = true
+offset_left = 22.0
+offset_top = 22.0
+offset_right = 222.0
+offset_bottom = 222.0
+mouse_filter = 2
+script = ExtResource("13_hintpanel")
 
 [node name="EmoteWheel" parent="Hud" instance=ExtResource("6_wheel")]
 unique_name_in_owner = true
