@@ -223,5 +223,5 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
   - [ ] M7.5 — Saut directionnel : un joueur tient la direction au joystick pendant un QTE, trajectoire calculée par l'hôte, réception ratée = remplit la jauge d'erreur ou fait tomber
 - [ ] M8 — Foreuse : levier de profondeur + bouton miner déjà en place (console de la tête), bras qui **s'étend en animation** jusqu'à 3 m, mèche qui tourne, minage des éléments minables (premiers blocs minables dans un niveau de test, avec une animation de destruction)
 - [ ] M9 — Grappin : poste assis avec écran et vue caméra déjà en place (station `Seat`) ; reste l'animation `sit`, la caméra portée par le bras, **bras et pince animés**, attraper un objet
-- [ ] M10 — Inventaire : gros sac à dos dans le dos du robot, les objets attrapés y vont automatiquement, avec une **animation de rangement** (le bras dépose l'objet, le sac s'ouvre). Modèle + stockage synchronisé
+- [ ] M10 — Inventaire `[en cours — massyl12]` : gros sac à dos dans le dos du robot, les objets attrapés y vont automatiquement, avec une **animation de rangement** (le bras dépose l'objet, le sac s'ouvre). Modèle + stockage synchronisé
 - [ ] M11 — Expérimentations et réglages game design (parcours A → B, difficulté, sensations)
