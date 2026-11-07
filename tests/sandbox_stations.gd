@@ -99,6 +99,9 @@ func _station_run(seat: Seat, label: String, fire: bool) -> void:
 		print("Grappin : état %d, sac %d objet(s)" % [_grabber_arm.shot_state, ($Mecha/Backpack as Backpack).stored_items.size()])
 	else:
 		await _capture_at(0.6, "%s_4_vue" % label)
+	_tap_key(KEY_TAB)
+	await _capture_at(0.2, "%s_4b_tab" % label)
+	_tap_key(KEY_TAB)
 	await _tap("interact")
 	await _capture_at(0.25, "%s_6_leve" % label)
 	await _capture_at(0.6, "%s_7_debout" % label)
@@ -115,3 +118,13 @@ func _capture_at(delay: float, shot_name: String) -> void:
 	await get_tree().create_timer(delay).timeout
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png("res://build/views/stations_%s.png" % shot_name)
+
+
+## Appui réel sur une touche du clavier (comme un joueur), relâchée juste après.
+func _tap_key(key: Key) -> void:
+	for pressed: bool in [true, false]:
+		var event: InputEventKey = InputEventKey.new()
+		event.physical_keycode = key
+		event.keycode = key
+		event.pressed = pressed
+		Input.parse_input_event(event)

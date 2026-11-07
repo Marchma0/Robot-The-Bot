@@ -169,6 +169,10 @@ var _pullup_to: Vector3 = Vector3.ZERO
 var _emote_time: float = 0.0
 ## « Clac » du joystick des jambes : petit à-coup de la vue (rad, x = lacet, y = tangage) qui s'amortit.
 var _kick_nudge: Vector2 = Vector2.ZERO
+## Dernières touches à afficher, et où elles sont affichées (panneau des postes ou barre du bas).
+var _hints: Array[InputHint] = []
+var _hints_routed: Array[InputHint] = []
+var _hints_at_station: bool = false
 
 @onready var _head: Node3D = %Head
 @onready var _camera: Camera3D = %Camera
@@ -282,6 +286,7 @@ func _physics_process(delta: float) -> void:
 	var stick: Vector2 = Input.get_vector("look_left", "look_right", "look_up", "look_down")
 	var seat: Seat = _interactor.get_seat()
 	_update_view(seat)
+	_route_hints()
 	if not (seat is Toilet) and _poop_game.is_active():
 		_poop_game.stop()   # on s'est levé en pleine partie
 	var busy: bool = seat != null or _interactor.get_rope() != null or _pullup_time >= 0.0 or _interactor.is_holding()
@@ -370,13 +375,24 @@ func setup(p_peer_id: int, p_slot: int) -> void:
 
 
 func _on_hints_changed(hints: Array[InputHint]) -> void:
-	# À un poste (assis devant un écran, ou un levier en main) : les touches vont dans le panneau
-	# en haut à gauche (repliable avec Tab) ; sinon, petites pastilles en bas au centre.
+	_hints = hints
+	_route_hints()
+
+
+## À un poste (assis devant un écran, ou un levier en main) : les touches vont dans le panneau
+## en haut à gauche (repliable avec Tab) ; sinon, petites pastilles en bas au centre.
+## Revérifié à chaque image : chez l'hôte, les touches du poste arrivent dans la même image que
+## la demande pour s'asseoir, avant que l'Interactor ne la confirme.
+func _route_hints() -> void:
 	var seat: Seat = _interactor.get_seat()
 	var at_station: bool = (seat != null and seat.has_screen) or _interactor.is_holding()
+	if at_station == _hints_at_station and _hints_routed == _hints:
+		return
+	_hints_at_station = at_station
+	_hints_routed = _hints
 	var empty: Array[InputHint] = []
-	_hint_panel.show_hints(hints if at_station else empty)
-	_hint_bar.show_hints(empty if at_station else hints)
+	_hint_panel.show_hints(_hints if at_station else empty)
+	_hint_bar.show_hints(empty if at_station else _hints)
 
 
 func _on_button_pressed() -> void:
