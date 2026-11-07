@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://assets/models/props/grabber_arm.glb" id="2_arm_glb"]
 [ext_resource type="PackedScene" path="res://assets/models/props/grabber_slider.glb" id="3_slider_glb"]
 [ext_resource type="PackedScene" path="res://assets/models/props/grabber_claw.glb" id="4_claw_glb"]
+[ext_resource type="PackedScene" path="res://assets/models/props/drill_barrel.glb" id="5_barrel_glb"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_grab"]
 radius = 0.95
@@ -13,9 +14,13 @@ albedo_color = Color(0.32, 0.34, 0.37, 1)
 metallic = 0.75
 roughness = 0.45
 
-[sub_resource type="BoxMesh" id="BoxMesh_sleeve"]
+[sub_resource type="BoxMesh" id="BoxMesh_sleeve_outer"]
 material = SubResource("StandardMaterial3D_sleeve")
-size = Vector3(0.34, 0.34, 1.65)
+size = Vector3(0.38, 0.38, 1.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sleeve_inner"]
+material = SubResource("StandardMaterial3D_sleeve")
+size = Vector3(0.3, 0.3, 1.55)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hub"]
 albedo_color = Color(0.17, 0.17, 0.19, 1)
@@ -54,10 +59,17 @@ script = ExtResource("1_script")
 [node name="ElbowPivot" type="Node3D" parent="."]
 unique_name_in_owner = true
 
-[node name="MidSleeve" type="MeshInstance3D" parent="ElbowPivot"]
+[node name="BarrelModel" parent="ElbowPivot" instance=ExtResource("5_barrel_glb")]
+
+[node name="SleeveOuter" type="MeshInstance3D" parent="ElbowPivot"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.9)
+mesh = SubResource("BoxMesh_sleeve_outer")
+
+[node name="SleeveInner" type="MeshInstance3D" parent="ElbowPivot"]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.95)
-mesh = SubResource("BoxMesh_sleeve")
+mesh = SubResource("BoxMesh_sleeve_inner")
 
 [node name="SliderPivot" type="Node3D" parent="ElbowPivot"]
 unique_name_in_owner = true

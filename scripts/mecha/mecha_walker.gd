@@ -63,12 +63,14 @@ const MAX_MOMENTUM_LEAD: float = 0.9
 ## Nombre de tours (joueur 1, joueur 2, …) du QTE de relèvement.
 @export var recovery_turns: int = 4
 ## Écart de direction toléré sans remplir la jauge (degrés).
-@export var error_free_degrees: float = 20.0
+@export var error_free_degrees: float = 15.0
 ## Remplissage pour un pas dans la direction opposée (180°) ; proportionnel en dessous.
-@export var error_per_opposite_step: float = 0.4
+@export var error_per_opposite_step: float = 0.6
+## Pénalité en plus quand le désaccord fait trébucher le robot (écart > mismatch_degrees).
+@export var error_per_stumble: float = 0.1
 ## Vidange par seconde quand on marche bien (après error_calm_time sans erreur).
-@export var error_decay: float = 0.05
-@export var error_calm_time: float = 2.0
+@export var error_decay: float = 0.035
+@export var error_calm_time: float = 2.5
 ## Durées de l'effondrement et du relèvement (s).
 @export var fall_time: float = 0.9
 @export var get_up_time: float = 1.6
@@ -208,13 +210,15 @@ func _try_pending(leg: int) -> void:
 	if _last_step_leg == other and _time - _last_step_time < 1.5:
 		var gap: float = rad_to_deg(absf(angle_difference(angle, _last_step_angle)))
 		if gap > error_free_degrees:
-			error_gauge = minf(1.0, error_gauge
-				+ (gap - error_free_degrees) / (180.0 - error_free_degrees) * error_per_opposite_step)
+			var penalty: float = (gap - error_free_degrees) / (180.0 - error_free_degrees) * error_per_opposite_step
+			# Gros désaccord : en plus, il trébuche (pénalité en plus, et le pas est perdu).
+			if gap > mismatch_degrees:
+				penalty += error_per_stumble
+			error_gauge = minf(1.0, error_gauge + penalty)
 			_last_error_time = _time
 			if error_gauge >= 1.0:
 				fall()
 				return
-		# Gros désaccord : il trébuche (le pas est perdu).
 		if gap > mismatch_degrees:
 			_stumble = 0.9
 			_last_step_leg = -1

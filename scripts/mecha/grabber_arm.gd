@@ -24,7 +24,12 @@ enum Shot { IDLE, OUT, BACK }
 const SIDE_SIGN: float = -1.0
 const MAX_EXTENSION: float = 3.80
 const SLIDER_REST_Z: float = -1.80
-const MID_SLEEVE_REST_Z: float = -0.95
+## Fût télescopique : fût fixe (drill_barrel.glb), deux manchons emboîtés puis la glissière.
+## Chaque étage avance d'une part de l'extension : à 3,8 m tout reste emboîté (12 cm de recouvrement mini).
+const SLEEVE_OUTER_REST_Z: float = -0.9
+const SLEEVE_INNER_REST_Z: float = -0.95
+const SLEEVE_OUTER_SHARE: float = 0.3
+const SLEEVE_INNER_SHARE: float = 0.62
 const REST_PITCH: float = -0.12
 const CLAW_OPEN_ANGLE: float = 0.44
 const CLAW_CLOSED_ANGLE: float = -0.10
@@ -78,7 +83,8 @@ var _shown_shot: float = 0.0
 var _cable_parts: Array[MeshInstance3D] = []
 
 @onready var _elbow_pivot: Node3D = %ElbowPivot
-@onready var _mid_sleeve: MeshInstance3D = %MidSleeve
+@onready var _sleeve_outer: MeshInstance3D = %SleeveOuter
+@onready var _sleeve_inner: MeshInstance3D = %SleeveInner
 @onready var _slider_pivot: Node3D = %SliderPivot
 @onready var _claw_head: Node3D = %ClawHead
 @onready var _hub: MeshInstance3D = %Hub
@@ -139,8 +145,8 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	_elbow_pivot.rotation = Vector3(arm_pitch, arm_yaw, 0.0)
 	_slider_pivot.position = Vector3(0.0, 0.0, SLIDER_REST_Z - extension)
-	if _mid_sleeve != null:
-		_mid_sleeve.position = Vector3(0.0, 0.0, MID_SLEEVE_REST_Z - extension * 0.5)
+	_sleeve_outer.position = Vector3(0.0, 0.0, SLEEVE_OUTER_REST_Z - extension * SLEEVE_OUTER_SHARE)
+	_sleeve_inner.position = Vector3(0.0, 0.0, SLEEVE_INNER_REST_Z - extension * SLEEVE_INNER_SHARE)
 
 	var target_open: float = 0.0 if claw_closed else 1.0
 	_claw_open_ratio = move_toward(_claw_open_ratio, target_open, CLAW_SPEED * delta)
