@@ -83,9 +83,6 @@ size = Vector3(4.6, 0.1, 4)
 [sub_resource type="BoxShape3D" id="Shape_GrabberDesk"]
 size = Vector3(0.8, 0.88, 0.4)
 
-[sub_resource type="BoxShape3D" id="Shape_ArmConsoleR"]
-size = Vector3(0.9, 0.5, 0.6)
-
 [sub_resource type="BoxShape3D" id="Shape_RailHatch"]
 size = Vector3(0.95, 0.95, 0.06)
 
@@ -243,9 +240,9 @@ shape = SubResource("Shape_HeadCeiling")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 6.04, -1.55)
 shape = SubResource("Shape_GrabberDesk")
 
-[node name="ArmConsoleR" type="CollisionShape3D" parent="Hull"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 5.85, -1.45)
-shape = SubResource("Shape_ArmConsoleR")
+[node name="DrillDesk" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 6.04, -1.55)
+shape = SubResource("Shape_GrabberDesk")
 
 [node name="RailHatch" type="CollisionShape3D" parent="Hull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.725, 3.075, 0.93)
@@ -379,28 +376,29 @@ display_name = "Jambe droite — pad droite"
 cap_color = Color(0.78, 0.76, 0.7, 1)
 show_debug = false
 
-[node name="Drill_Depth" parent="Controls" instance=ExtResource("2_lever")]
-transform = Transform3D(1, 0, 0, 0, 0.9397, -0.342, 0, 0.342, 0.9397, 1.25, 6.2189, -1.3573)
-display_name = "Foreuse — profondeur"
-axes = 0
-handle_length = 0.28
-one_axis_min = 0
-spring_back = false
-knob_color = Color(0.8, 0.15, 0.1, 1)
+[node name="Drill_Seat" parent="Controls" instance=ExtResource("4_seat")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 5.6, -0.85)
+display_name = "Foreuse — poste"
+feed_tint = Color(1, 0.8, 0.52, 1)
+reticle = 1
 
-[node name="Drill_Mine" parent="Controls" instance=ExtResource("3_button")]
-transform = Transform3D(1.4, 0, 0, 0, 1.3156, -0.4788, 0, 0.4788, 1.3156, 0.9, 6.2348, -1.4154)
-display_name = "Foreuse — miner"
-cap_color = Color(0.8, 0.15, 0.1, 1)
-toggle = true
-
-[node name="Grabber_Seat" parent="Controls" node_paths=PackedStringArray("camera_anchor") instance=ExtResource("4_seat")]
+[node name="Grabber_Seat" parent="Controls" instance=ExtResource("4_seat")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 5.6, -0.85)
 display_name = "Grappin — poste"
-camera_anchor = NodePath("../../GrabberCamAnchor")
+feed_tint = Color(0.66, 1, 0.9, 1)
+can_launch = true
 
-[node name="GrabberCamAnchor" type="Marker3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.9397, 0.342, 0, -0.342, 0.9397, -2.95, 3.98, -2.72)
+[node name="DrillStationLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87, 6.62, -1.6)
+light_color = Color(1, 0.62, 0.22, 1)
+light_energy = 0.7
+omni_range = 1.6
+
+[node name="GrabberStationLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 6.62, -1.5)
+light_color = Color(0.45, 0.95, 0.85, 1)
+light_energy = 0.5
+omni_range = 1.4
 
 [node name="BeamSwitch_Belly" parent="Controls" node_paths=PackedStringArray("beam") instance=ExtResource("6_switch")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 2.19, 3.45, 0.3)
@@ -461,10 +459,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 5.6, 0.93)
 [node name="Backpack" parent="." instance=ExtResource("20_backpack")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.55, 2.1)
 
-[node name="DrillArm" parent="." node_paths=PackedStringArray("depth_lever", "mine_button") instance=ExtResource("21_drill_arm")]
+[node name="DrillArm" parent="." node_paths=PackedStringArray("seat") instance=ExtResource("21_drill_arm")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.95, 3.4, -0.3)
-depth_lever = NodePath("../Controls/Drill_Depth")
-mine_button = NodePath("../Controls/Drill_Mine")
+seat = NodePath("../Controls/Drill_Seat")
 
 [node name="GrabberArm" parent="." node_paths=PackedStringArray("seat", "backpack") instance=ExtResource("22_grabber_arm")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.95, 3.4, -0.3)

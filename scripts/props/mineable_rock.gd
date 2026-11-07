@@ -77,6 +77,32 @@ func _process(delta: float) -> void:
 	_model.scale = Vector3(damage_scale, lerpf(0.76, 1.0, hp_ratio), damage_scale)
 
 
+## Distance (m) le long d'un rayon global (`from`, `dir` normé) jusqu'à l'entrée dans la boîte
+## de collision du rocher ; -1.0 si le rayon la manque. Sert à la foreuse pour buter dans le rocher.
+func ray_entry(from: Vector3, dir: Vector3) -> float:
+	var box: BoxShape3D = _collision.shape as BoxShape3D
+	if box == null:
+		return -1.0
+	var inv: Transform3D = _collision.global_transform.affine_inverse()
+	var o: Vector3 = inv * from
+	var d: Vector3 = inv.basis * dir
+	var half: Vector3 = box.size * 0.5
+	var t_min: float = -INF
+	var t_max: float = INF
+	for i: int in range(3):
+		if absf(d[i]) < 0.00001:
+			if absf(o[i]) > half[i]:
+				return -1.0
+			continue
+		var t0: float = (-half[i] - o[i]) / d[i]
+		var t1: float = (half[i] - o[i]) / d[i]
+		t_min = maxf(t_min, minf(t0, t1))
+		t_max = minf(t_max, maxf(t0, t1))
+	if t_max < maxf(t_min, 0.0):
+		return -1.0
+	return maxf(t_min, 0.0)
+
+
 ## Appelé sur l'hôte par la foreuse (`DrillArm`) à chaque étape physique de contact.
 ## Renvoie vrai si le rocher vient d'être détruit.
 func apply_drill_damage(amount: float) -> bool:

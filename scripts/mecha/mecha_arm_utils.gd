@@ -7,10 +7,38 @@ extends RefCounted
 const ARM_X_THRESHOLD: float = 2.37
 const ARM_MAX_Y: float = 5.20
 
+## Limites d'orientation des bras, pour qu'ils ne traversent jamais la coque.
+## L'épaule est à 0,58 m du flanc (x ±2,95 contre ±2,37) et 1,8 m derrière l'avant de la coque :
+## vers l'intérieur, au-delà de 7° le bras (0,35 m de demi-largeur) entrerait dans la cabine.
+const YAW_INWARD_MAX: float = deg_to_rad(7.0)
+const YAW_OUTWARD_MAX: float = deg_to_rad(60.0)
+const PITCH_MIN: float = deg_to_rad(-44.0)
+const PITCH_MAX: float = deg_to_rad(24.0)
+
+
+## Borne le lacet d'un bras : peu vers la coque, beaucoup vers l'extérieur.
+## `side_sign` : +1.0 = bras droit (foreuse, l'intérieur est un lacet positif), -1.0 = bras gauche (grappin).
+static func clamp_yaw(yaw: float, side_sign: float) -> float:
+	return clampf(yaw * side_sign, -YAW_OUTWARD_MAX, YAW_INWARD_MAX) * side_sign
+
+
+static func clamp_pitch(pitch: float) -> float:
+	return clampf(pitch, PITCH_MIN, PITCH_MAX)
+
 
 ## Retire du maillage `Ext_Details` les triangles de l'ancien bras statique du côté `side_sign`
 ## (+1.0 = bras droit foreuse, -1.0 = bras gauche grappin).
 static func strip_static_arm(details: MeshInstance3D, side_sign: float) -> void:
+	_strip(details, func(v: Vector3) -> bool: return v.x * side_sign > ARM_X_THRESHOLD and v.y < ARM_MAX_Y)
+
+
+## Retire d'un maillage du mécha les triangles qui ont un sommet dans `box` (repère du maillage).
+## Sert à effacer un reste de vieux décor de `mecha.blend` sans modifier le fichier (verrouillé par M7).
+static func strip_box(details: MeshInstance3D, box: AABB) -> void:
+	_strip(details, func(v: Vector3) -> bool: return box.has_point(v))
+
+
+static func _strip(details: MeshInstance3D, removed: Callable) -> void:
 	if details == null or details.mesh == null:
 		return
 	var src_mesh: Mesh = details.mesh
@@ -29,7 +57,7 @@ static func strip_static_arm(details: MeshInstance3D, side_sign: float) -> void:
 				var i0: int = indices[t * 3]
 				var i1: int = indices[t * 3 + 1]
 				var i2: int = indices[t * 3 + 2]
-				if _is_arm_vertex(verts[i0], side_sign) or _is_arm_vertex(verts[i1], side_sign) or _is_arm_vertex(verts[i2], side_sign):
+				if removed.call(verts[i0]) or removed.call(verts[i1]) or removed.call(verts[i2]):
 					continue
 				kept_indices.append(i0)
 				kept_indices.append(i1)
@@ -44,6 +72,3 @@ static func strip_static_arm(details: MeshInstance3D, side_sign: float) -> void:
 			out_mesh.surface_set_material(out_mesh.get_surface_count() - 1, mat)
 	details.mesh = out_mesh
 
-
-static func _is_arm_vertex(v: Vector3, side_sign: float) -> bool:
-	return v.x * side_sign > ARM_X_THRESHOLD and v.y < ARM_MAX_Y

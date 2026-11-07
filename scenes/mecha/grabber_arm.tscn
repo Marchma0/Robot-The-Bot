@@ -17,6 +17,15 @@ roughness = 0.45
 material = SubResource("StandardMaterial3D_sleeve")
 size = Vector3(0.34, 0.34, 1.65)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hub"]
+albedo_color = Color(0.17, 0.17, 0.19, 1)
+metallic = 0.7
+roughness = 0.55
+
+[sub_resource type="BoxMesh" id="BoxMesh_hub"]
+material = SubResource("StandardMaterial3D_hub")
+size = Vector3(0.62, 0.3, 0.2)
+
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_grabber"]
 properties/0/path = NodePath(".:arm_yaw")
 properties/0/spawn = true
@@ -30,6 +39,12 @@ properties/2/replication_mode = 1
 properties/3/path = NodePath(".:claw_closed")
 properties/3/spawn = true
 properties/3/replication_mode = 2
+properties/4/path = NodePath(".:shot_state")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:shot_distance")
+properties/5/spawn = true
+properties/5/replication_mode = 1
 
 [node name="GrabberArm" type="Node3D"]
 script = ExtResource("1_script")
@@ -50,38 +65,50 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.8)
 
 [node name="SliderModel" parent="ElbowPivot/SliderPivot" instance=ExtResource("3_slider_glb")]
 
-[node name="ClawLeft" type="Node3D" parent="ElbowPivot/SliderPivot"]
+[node name="Cable" type="Node3D" parent="ElbowPivot/SliderPivot"]
+unique_name_in_owner = true
+
+[node name="ClawHead" type="Node3D" parent="ElbowPivot/SliderPivot"]
+unique_name_in_owner = true
+
+[node name="Hub" type="MeshInstance3D" parent="ElbowPivot/SliderPivot/ClawHead"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.4)
+visible = false
+mesh = SubResource("BoxMesh_hub")
+
+[node name="ClawLeft" type="Node3D" parent="ElbowPivot/SliderPivot/ClawHead"]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0, -0.44)
 
-[node name="Model" parent="ElbowPivot/SliderPivot/ClawLeft" instance=ExtResource("4_claw_glb")]
+[node name="Model" parent="ElbowPivot/SliderPivot/ClawHead/ClawLeft" instance=ExtResource("4_claw_glb")]
 
-[node name="ClawRight" type="Node3D" parent="ElbowPivot/SliderPivot"]
+[node name="ClawRight" type="Node3D" parent="ElbowPivot/SliderPivot/ClawHead"]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0, -0.44)
 
-[node name="Model" parent="ElbowPivot/SliderPivot/ClawRight" instance=ExtResource("4_claw_glb")]
+[node name="Model" parent="ElbowPivot/SliderPivot/ClawHead/ClawRight" instance=ExtResource("4_claw_glb")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
-[node name="CameraAnchor" type="Marker3D" parent="ElbowPivot/SliderPivot"]
+[node name="CameraAnchor" type="Marker3D" parent="ElbowPivot/SliderPivot/ClawHead"]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 0.951057, 0.309017, 0, -0.309017, 0.951057, 0, 0.48, -0.44)
 
-[node name="HoldPoint" type="Marker3D" parent="ElbowPivot/SliderPivot"]
+[node name="HoldPoint" type="Marker3D" parent="ElbowPivot/SliderPivot/ClawHead"]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.05)
 
-[node name="GrabZone" type="Area3D" parent="ElbowPivot/SliderPivot"]
+[node name="GrabZone" type="Area3D" parent="ElbowPivot/SliderPivot/ClawHead"]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.05)
 collision_layer = 0
 collision_mask = 9
 monitorable = false
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ElbowPivot/SliderPivot/GrabZone"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ElbowPivot/SliderPivot/ClawHead/GrabZone"]
 shape = SubResource("SphereShape3D_grab")
 
-[node name="WorkLight" type="OmniLight3D" parent="ElbowPivot/SliderPivot"]
+[node name="WorkLight" type="OmniLight3D" parent="ElbowPivot/SliderPivot/ClawHead"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.45, -0.45)
 light_color = Color(1, 0.9, 0.72, 1)
 light_energy = 1.1
