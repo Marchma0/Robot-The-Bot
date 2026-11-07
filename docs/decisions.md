@@ -77,3 +77,4 @@ Format : date - decision - raison
 - 2026-11-06 - M7.3 (ragdoll) et M7.5 (se relever après une vraie chute) retirés de la roadmap, gardés dans docs/ideas.md - le porteur du projet aime l'effondrement à genoux de M7.2
 - 2026-11-06 - La jauge de QTE se vide avec le temps (une étape perdue si on traîne) - forcer les joueurs à enchaîner vite
 - 2026-11-07 - Joysticks des jambes à ressort même quand on les tient (un coup de souris = une poussée, la manette suit le stick) - un nouveau pas ne part que si le joystick repasse par le centre, et à la souris il restait au bout : le joueur ne faisait plus qu'un pas
+- 2026-11-07 - Voyant « à toi » réutilisé pour la marche (vert fixe = fais ton pas, s'éteint après ton pas et passe à l'autre) au lieu d'un nouveau voyant ; il reste jaune clignotant pendant le QTE - un seul voyant qui veut toujours dire « à toi », console moins chargée

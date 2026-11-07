@@ -87,6 +87,10 @@ func _place_cameras() -> void:
 
 
 func _maybe_shoot() -> void:
+	if _time > 1.1 and _time < 1.4 and _walker.next_leg == 1:
+		_shoot("5_voyant_eteint", _cam_inside)
+	if _time > 1.6 and _time < 2.4 and _walker.next_leg == 0:
+		_shoot("6_voyant_vert", _cam_inside)
 	if _walker.error_gauge > 0.5 and _walker.phase == MechaWalker.Phase.WALKING:
 		_shoot("1_jauge", _cam_inside)
 	if _time > 0.6 and _walker.error_gauge == 0.0 and _walker.phase == MechaWalker.Phase.WALKING:
