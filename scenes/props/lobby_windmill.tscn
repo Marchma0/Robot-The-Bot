@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/props/lobby_windmill.glb" id="1_tower"]
+[ext_resource type="PackedScene" path="res://assets/models/props/lobby_windmill_rotor.glb" id="2_rotor"]
+[ext_resource type="Script" path="res://scripts/props/spinner.gd" id="3_spinner"]
+
+[node name="LobbyWindmill" type="Node3D"]
+
+[node name="Tower" parent="." instance=ExtResource("1_tower")]
+
+[node name="Rotor" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, -0.45)
+script = ExtResource("3_spinner")
+axis = Vector3(0, 0, 1)
+
+[node name="Model" parent="Rotor" instance=ExtResource("2_rotor")]

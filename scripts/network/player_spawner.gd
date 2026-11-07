@@ -3,8 +3,10 @@ extends MultiplayerSpawner
 ## le MultiplayerSpawner les réplique chez les clients (y compris ceux qui arrivent en cours).
 
 @export var dwarf_scene: PackedScene
-## Parent contenant les Marker3D de spawn, un par slot de joueur.
+## Parent contenant les Marker3D de spawn dans le robot, un par slot de joueur (pendant une mission).
 @export var spawn_points: Node3D
+## Au camp, les nains apparaissent dehors, aux Marker3D du nœud `PlayerSpawns` du niveau.
+@export var director: MissionDirector
 
 ## peer_id -> slot (0..MAX_PLAYERS-1). Tenu uniquement sur l'hôte.
 var _slots: Dictionary[int, int] = {}
@@ -25,7 +27,8 @@ func _on_player_joined(peer_id: int) -> void:
 		push_warning("Plus de slot libre pour le peer %d" % peer_id)
 		return
 	_slots[peer_id] = slot
-	spawn({"peer_id": peer_id, "slot": slot})
+	# La place est calculée ici (hôte) et envoyée : tout le monde fait apparaître le nain au même endroit.
+	spawn({"peer_id": peer_id, "slot": slot, "xform": _spawn_transform(slot)})
 
 
 func _on_player_left(peer_id: int) -> void:
@@ -50,9 +53,20 @@ func _spawn_dwarf(data: Variant) -> Node:
 	var slot: int = info["slot"]
 	var dwarf: Dwarf = dwarf_scene.instantiate()
 	dwarf.setup(info["peer_id"], slot)
-	var marker: Node3D = spawn_points.get_child(slot) as Node3D
-	dwarf.transform = marker.transform
+	dwarf.transform = info.get("xform", (spawn_points.get_child(slot) as Node3D).transform)
 	return dwarf
+
+
+## Place d'apparition (repère du parent des nains, dans le robot) : au camp, un point du niveau ;
+## sinon, un point dans le robot.
+func _spawn_transform(slot: int) -> Transform3D:
+	var parent: Node3D = get_node(spawn_path) as Node3D
+	if director != null and director.in_lobby() and director.get_level() != null:
+		var spawns: Node = director.get_level().get_node_or_null("PlayerSpawns")
+		if spawns != null and slot < spawns.get_child_count():
+			var marker: Node3D = spawns.get_child(slot) as Node3D
+			return parent.global_transform.affine_inverse() * marker.global_transform
+	return (spawn_points.get_child(slot) as Node3D).transform
 
 
 func _first_free_slot() -> int:

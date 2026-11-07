@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/props/lobby_campfire.glb" id="1_model"]
+[ext_resource type="Script" path="res://scripts/props/campfire_flames.gd" id="2_flames"]
+
+[node name="LobbyCampfire" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1_model")]
+
+[node name="Flames" type="Node3D" parent="."]
+script = ExtResource("2_flames")
+
+[node name="Light" type="OmniLight3D" parent="Flames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+light_color = Color(1, 0.55, 0.22, 1)
+light_energy = 2.4
+shadow_enabled = true
+omni_range = 7.0

@@ -32,6 +32,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 
 PALETTE = {
     "Board": ((0.120, 0.170, 0.140), 0.90, 0.0, 0.0),
     "Bulb": ((1.000, 0.800, 0.450), 0.40, 0.0, 4.0),
+    "Canvas": ((0.880, 0.800, 0.640), 0.95, 0.0, 0.0),
     "ButtonGreen": ((0.200, 0.700, 0.250), 0.75, 0.0, 0.0),
     "ButtonRed": ((0.800, 0.150, 0.100), 0.75, 0.0, 0.0),
     "Ceiling": ((0.700, 0.660, 0.580), 0.75, 0.0, 0.0),
@@ -47,6 +48,7 @@ PALETTE = {
     "Iron": ((0.420, 0.430, 0.460), 0.45, 0.8, 0.0),
     "IronDark": ((0.170, 0.170, 0.190), 0.55, 0.7, 0.0),
     "Lamp": ((1.000, 0.750, 0.400), 0.75, 0.0, 3.0),
+    "Ochre": ((0.800, 0.480, 0.240), 0.95, 0.0, 0.0),
     "Paint": ((0.290, 0.470, 0.450), 0.75, 0.0, 0.0),
     "Paper": ((0.920, 0.860, 0.700), 0.90, 0.0, 0.0),
     "Patch": ((0.360, 0.400, 0.380), 0.60, 0.4, 0.0),
@@ -54,6 +56,10 @@ PALETTE = {
     "Rug": ((0.550, 0.150, 0.120), 1.00, 0.0, 0.0),
     "RugTrim": ((0.880, 0.720, 0.360), 1.00, 0.0, 0.0),
     "Rust": ((0.300, 0.170, 0.090), 1.00, 0.0, 0.0),
+    "RockDark": ((0.420, 0.230, 0.160), 0.95, 0.0, 0.0),
+    "Sand": ((0.860, 0.660, 0.430), 1.00, 0.0, 0.0),
+    "Scrub": ((0.470, 0.500, 0.250), 0.95, 0.0, 0.0),
+    "Terracotta": ((0.640, 0.300, 0.180), 0.95, 0.0, 0.0),
     "Velvet": ((0.170, 0.360, 0.240), 0.95, 0.0, 0.0),
     "WallCream": ((0.800, 0.740, 0.620), 0.75, 0.0, 0.0),
     "WallTeal": ((0.220, 0.360, 0.350), 0.75, 0.0, 0.0),
@@ -166,6 +172,30 @@ class Builder:
             self.bm, u_segments=segments, v_segments=max(4, segments // 2), radius=radius,
             matrix=Matrix.Translation(Vector(center)),
         )
+        self._tag(result["verts"], mat_name)
+
+    def rock(self, center, size, mat_name: str, jitter: float = 0.18, rng=None, flat_bottom: bool = True) -> None:
+        """Bloc de roche facetté : boîte de dimensions size dont chaque coin est déplacé au hasard
+        (jitter = fraction de la taille). flat_bottom garde la base à plat pour la poser au sol.
+        rng : un random.Random pour des rochers identiques à chaque export."""
+        import random
+        rng = rng or random.Random(0)
+        size = Vector(size)
+        matrix = Matrix.Translation(Vector(center)) @ Matrix.Diagonal((*size, 1.0))
+        result = bmesh.ops.create_cube(self.bm, size=1.0, matrix=matrix)
+        bottom = Vector(center).z - size.z / 2
+        # Base plate un peu enfoncée, de façon différente pour chaque rocher : deux bases ne sont
+        # jamais dans le même plan (sinon elles clignotent là où les rochers se chevauchent).
+        sink = rng.uniform(0.004, 0.12)
+        for v in result["verts"]:
+            move = Vector((rng.uniform(-1, 1) * size.x, rng.uniform(-1, 1) * size.y,
+                           rng.uniform(-1, 1) * size.z)) * jitter
+            if flat_bottom and v.co.z <= bottom + 1e-4:
+                move.z = -sink
+            v.co += move
+        # Les faces carrées déformées ne sont plus planes : on les coupe en triangles (facettes nettes).
+        faces = list({f for v in result["verts"] for f in v.link_faces})
+        bmesh.ops.triangulate(self.bm, faces=faces)
         self._tag(result["verts"], mat_name)
 
     def pipe(self, points, radius: float, mat_name: str, joint_mat: str = "", segments: int = 10) -> None:

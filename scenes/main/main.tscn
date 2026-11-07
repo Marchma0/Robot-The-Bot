@@ -3,9 +3,15 @@
 [ext_resource type="Script" uid="uid://ciec6v40oaog0" path="res://scripts/network/lobby_menu.gd" id="1_lobby"]
 [ext_resource type="Script" uid="uid://bhtfpmu8ia6hg" path="res://scripts/network/player_spawner.gd" id="2_spawner"]
 [ext_resource type="PackedScene" path="res://scenes/player/dwarf.tscn" id="3_dwarf"]
-[ext_resource type="PackedScene" path="res://scenes/levels/test_ground.tscn" id="4_ground"]
+[ext_resource type="Script" path="res://scripts/main/mission_director.gd" id="4_director"]
+[ext_resource type="Script" path="res://scripts/ui/screen_fader.gd" id="8_fader"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="5_mecha"]
 [ext_resource type="Script" path="res://scripts/ui/hint_bar.gd" id="7_hintbar"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_director"]
+properties/0/path = NodePath(".:current_level")
+properties/0/spawn = true
+properties/0/replication_mode = 2
 
 [node name="Main" type="Node" unique_id=708183551]
 
@@ -126,19 +132,32 @@ script = ExtResource("7_hintbar")
 
 [node name="World" type="Node3D" parent="." unique_id=1784168218]
 
-[node name="TestGround" parent="World" unique_id=2147304120 instance=ExtResource("4_ground")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0059006214, -0.00799489, 0.008200645)
+[node name="Level" type="Node3D" parent="World"]
 
 [node name="MenuCamera" type="Camera3D" parent="World" unique_id=344973914]
-transform = Transform3D(0.707107, 0.0467, -0.705, 0, 0.997, 0.066, 0.707107, -0.0467, 0.705, -1, 6, 16)
+transform = Transform3D(-0.8515, -0.0103, -0.524, 0, 0.9993, -0.0196, 0.5243, -0.0167, -0.851, -8, 3.2, -13)
 current = true
 
 [node name="Mecha" parent="World" unique_id=757713693 instance=ExtResource("5_mecha")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 0)
 
-[node name="PlayerSpawner" type="MultiplayerSpawner" parent="World" unique_id=1793405204 node_paths=PackedStringArray("spawn_points")]
+[node name="PlayerSpawner" type="MultiplayerSpawner" parent="World" unique_id=1793405204 node_paths=PackedStringArray("spawn_points", "director")]
 spawn_path = NodePath("../Mecha/Players")
 spawn_limit = 4
 script = ExtResource("2_spawner")
 dwarf_scene = ExtResource("3_dwarf")
 spawn_points = NodePath("../Mecha/SpawnPoints")
+director = NodePath("../MissionDirector")
+
+[node name="MissionDirector" type="Node" parent="World" node_paths=PackedStringArray("level_container", "mecha", "walker", "fader", "return_button")]
+script = ExtResource("4_director")
+level_container = NodePath("../Level")
+mecha = NodePath("../Mecha")
+walker = NodePath("../Mecha/Walker")
+fader = NodePath("../../Fader")
+return_button = NodePath("../Mecha/Controls/ReturnToCamp")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="World/MissionDirector"]
+replication_config = SubResource("SceneReplicationConfig_director")
+
+[node name="Fader" type="CanvasLayer" parent="."]
+script = ExtResource("8_fader")

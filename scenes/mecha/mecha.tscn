@@ -400,6 +400,12 @@ light_color = Color(0.45, 0.95, 0.85, 1)
 light_energy = 0.5
 omni_range = 1.4
 
+[node name="ReturnToCamp" parent="Controls" instance=ExtResource("3_button")]
+transform = Transform3D(1.6, 0, 0, 0, 0, 1.6, 0, -1.6, 0, -0.95, 3.35, 1.89)
+display_name = "Retour au camp"
+cap_color = Color(0.95, 0.55, 0.12, 1)
+show_debug = false
+
 [node name="BeamSwitch_Belly" parent="Controls" node_paths=PackedStringArray("beam") instance=ExtResource("6_switch")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 2.19, 3.45, 0.3)
 display_name = "Rayon tracteur (ventre)"
