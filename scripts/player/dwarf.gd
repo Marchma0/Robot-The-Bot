@@ -42,6 +42,10 @@ const EYE_HEIGHT: float = 0.95
 ## Position d'un objet tenu en main, par rapport aux yeux (m).
 const HOLD_OFFSET: Vector3 = Vector3(0.2, -0.22, -0.4)
 const CROUCH_EYE_HEIGHT: float = 0.7
+## Durée du glissement jusqu'au siège et du traveling de caméra (aller / retour), en secondes.
+const SIT_GLIDE_TIME: float = 0.4
+const CAMERA_TRAVEL_IN: float = 0.9
+const CAMERA_TRAVEL_OUT: float = 0.55
 ## Bits de `anim_flags` (états d'animation envoyés ensemble, en un seul nombre).
 const FLAG_AIRBORNE: int = 1
 const FLAG_HOLDING: int = 2
@@ -127,6 +131,19 @@ var _spawn_position: Vector3 = Vector3.ZERO
 ## Regard accumulé pendant qu'on est assis (envoyé à la station à chaque frame physique).
 var _seat_look: Vector2 = Vector2.ZERO
 var _pov_active: bool = false
+## Appuis sur « lancer » depuis qu'on est assis au poste (envoyés au poste, voir Seat.control_fire_count).
+var _fire_count: int = 0
+## S'asseoir en douceur : siège visé, avancement (0..1) et départ (repère du siège).
+var _glide_seat: Seat = null
+var _sit_glide: float = 1.0
+var _sit_from: Transform3D = Transform3D.IDENTITY
+## Traveling de caméra vers l'écran d'un poste : poste concerné, avancement (0 = yeux du nain,
+## 1 = collé à l'écran), sens (+1 on s'assoit, -1 on se lève, 0 à l'arrêt), départ (repère du siège).
+var _view_seat: Seat = null
+var _travel: float = 0.0
+var _travel_dir: int = 0
+var _travel_from: Transform3D = Transform3D.IDENTITY
+var _body_hidden: bool = false
 ## Assis sur un simple siège (canapé) : on tourne la tête / le buste de cet angle (rad).
 var _seat_yaw: float = 0.0
 ## Dernière partie du mini-jeu des toilettes lancée chez nous (numéro donné par l'hôte).
@@ -250,6 +267,7 @@ func _process(_delta: float) -> void:
 		# Le corps est affiché lissé entre deux étapes physiques ; la caméra suit cette
 		# position lissée, mais garde l'orientation la plus récente (souris sans retard).
 		_camera.global_transform = _view_transform()
+		_update_camera_travel(_delta)
 
 
 func _physics_process(delta: float) -> void:
@@ -382,17 +400,30 @@ func receive_splat() -> void:
 ## la station (hôte) ; sur un simple siège (canapé), il regarde autour de lui.
 func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 	velocity = Vector3.ZERO
+	if _glide_seat != seat:
+		# On vient de s'asseoir : le nain glisse de là où il était jusqu'au siège.
+		_glide_seat = seat
+		_sit_glide = 0.0
+		_sit_from = seat.global_transform.affine_inverse() * global_transform
+	var sit: Transform3D
 	if seat.has_screen:
-		global_transform = seat.get_sit_transform()
+		sit = seat.get_sit_transform()
 		# Tête droite face à l'écran (sinon elle garde l'inclinaison prise en visant le siège).
 		_head.rotation.x = 0.0
 		var move: Vector2 = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 		var grab_pressed: bool = Input.is_action_pressed("grab")
-		seat.submit_controls.rpc_id(1, move, _seat_look + stick_look, grab_pressed)
+		if Input.is_action_just_pressed("jump"):
+			_fire_count += 1
+		seat.submit_controls.rpc_id(1, move, _seat_look + stick_look, grab_pressed, _fire_count)
 		_seat_look = Vector2.ZERO
 	else:
 		_look(Vector2(-stick_look.x, stick_look.y))
-		global_transform = seat.get_sit_transform() * Transform3D(Basis(Vector3.UP, _seat_yaw), Vector3.ZERO)
+		sit = seat.get_sit_transform() * Transform3D(Basis(Vector3.UP, _seat_yaw), Vector3.ZERO)
+	if _sit_glide < 1.0:
+		_sit_glide = minf(_sit_glide + get_physics_process_delta_time() / SIT_GLIDE_TIME, 1.0)
+		var from: Transform3D = seat.global_transform * _sit_from
+		sit = from.interpolate_with(sit, smoothstep(0.0, 1.0, _sit_glide))
+	global_transform = sit
 	_smoother.world_space = false
 	anim_seated = true
 	anim_pooping = seat is Toilet
@@ -410,19 +441,66 @@ func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 	anim_crouching = false
 
 
-## Plein écran sur la caméra de la station quand on est assis, sinon caméra du nain.
+## Assis à un poste : traveling jusqu'à son écran puis plein écran sur sa caméra. Debout : caméra du nain.
 func _update_view(seat: Seat) -> void:
 	if seat == null:
 		_seat_yaw = 0.0   # prochain siège : on part face à l'avant du siège
+		_glide_seat = null
 	var want_pov: bool = seat != null and seat.get_pov_camera() != null
 	if want_pov == _pov_active:
 		return
 	_pov_active = want_pov
-	if want_pov:
-		seat.get_pov_camera().current = true
-	else:
-		_camera.current = true
 	_crosshair.visible = not want_pov
+	if want_pov:
+		_fire_count = 0
+		_view_seat = seat
+		_travel = 0.0
+		_travel_dir = 1
+		_travel_from = seat.global_transform.affine_inverse() * _camera.global_transform
+	elif _view_seat != null:
+		# On se lève : on quitte l'image du poste, la caméra recule de l'écran jusqu'aux yeux.
+		_view_seat.set_overlay_visible(false)
+		_camera.current = true
+		_travel_dir = -1
+
+
+## Traveling de caméra entre les yeux du nain et l'écran du poste (à chaque image, après _view_transform).
+func _update_camera_travel(delta: float) -> void:
+	if _view_seat != null and not is_instance_valid(_view_seat):
+		_view_seat = null
+		_travel_dir = 0
+	# Pendant le traveling, la caméra passe à travers les bras du nain : on ne garde que son ombre.
+	_set_body_hidden(_view_seat != null)
+	if _travel_dir == 0 or _view_seat == null:
+		return
+	var duration: float = CAMERA_TRAVEL_IN if _travel_dir > 0 else CAMERA_TRAVEL_OUT
+	_travel = clampf(_travel + float(_travel_dir) * delta / duration, 0.0, 1.0)
+	var screen: Transform3D = _view_seat.get_screen_view_transform(_camera.fov)
+	var from: Transform3D = _camera.global_transform   # retour : les yeux, tels qu'ils sont maintenant
+	if _travel_dir > 0:
+		from = _view_seat.get_global_transform_interpolated() * _travel_from
+	_camera.global_transform = from.interpolate_with(screen, smoothstep(0.0, 1.0, _travel))
+	if _travel_dir > 0 and _travel >= 1.0:
+		# Arrivé contre l'écran : on bascule sur la caméra du bras, qui s'allume dans la neige.
+		_travel_dir = 0
+		_view_seat.get_pov_camera().current = true
+		_view_seat.set_overlay_visible(true)
+		_view_seat.flash_static(1.0)
+	elif _travel_dir < 0 and _travel <= 0.0:
+		_travel_dir = 0
+		_view_seat = null
+
+
+## Masque le corps du nain local (il garde son ombre) ; sa tête l'est toujours, en vue à la première personne.
+func _set_body_hidden(value: bool) -> void:
+	if value == _body_hidden:
+		return
+	_body_hidden = value
+	for mesh: MeshInstance3D in _meshes_of(_body_model):
+		if _head_model.is_ancestor_of(mesh):
+			continue
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if value \
+				else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 
 
 ## Sur la corde : avancer / reculer = monter / descendre, saut = lâcher.

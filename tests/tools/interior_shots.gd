@@ -10,6 +10,8 @@ const SHOTS: Array = [
 	["tete_vers_arriere", Vector3(0.0, 6.65, -1.7), Vector3(0.0, 6.4, 1.9)],
 	["tete_vers_gauche", Vector3(2.0, 6.65, 0.0), Vector3(-2.2, 6.4, 0.0)],
 	["tete_vers_droite", Vector3(-2.0, 6.65, 0.0), Vector3(2.2, 6.4, 0.0)],
+	["poste_foreuse", Vector3(0.75, 6.75, 0.2), Vector3(1.1, 6.1, -1.6)],
+	["poste_grappin", Vector3(-0.75, 6.75, 0.2), Vector3(-1.1, 6.1, -1.6)],
 ]
 
 @onready var _camera: Camera3D = $Camera3D
