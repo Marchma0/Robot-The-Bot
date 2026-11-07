@@ -61,6 +61,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 3. Les interactions (prendre un poste, appuyer sur un bouton) passent par des RPC `@rpc("any_peer", "call_local", "reliable")` vers l'hôte, qui vérifie puis applique.
 4. Les inputs continus (joystick) : `"unreliable_ordered"`.
 5. Tout nouveau système doit être pensé "comment ça se synchronise ?" **avant** d'être codé. Si ce n'est pas clair, demander.
+   **Toute interaction doit être synchronisée avec tous les joueurs** (ce que l'un fait, tous le voient), et testée en multi (hôte + au moins un client) avant d'être considérée comme finie.
 6. Le cockpit est dans un repère **local au mécha** : les nains sont enfants du mécha (ou d'un nœud qui le suit), pour ne pas glisser quand il bouge.
 
 ## Conventions GDScript
@@ -194,6 +195,14 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - Les chemins propres à une machine ne vont jamais dans un fichier versionné : variables d'environnement (`GODOT_PATH`) ou fichiers locaux ignorés.
 
 ## Roadmap (prototype)
+
+> **À faire en priorité (Kamel / Marchma0)** : tâche S1 ci-dessous, avant toute nouvelle fonctionnalité.
+
+- [ ] **S1 — Synchro de toutes les interactions (PRIORITÉ, à faire par Kamel)** : aujourd'hui, certaines actions ne sont pas vues pareil par tous les joueurs. À vérifier et corriger en multi (2 à 4 instances, hôte + clients), pour que chaque joueur voie exactement la même chose :
+  - casser des objets avec le robot (foreuse qui mine les rochers, éclats, caisse de minerai qui apparaît) ;
+  - ramasser des objets (caisses, cacas, grappin, rangement dans le sac à dos) ;
+  - plus généralement toutes les interactions : boutons, leviers, sièges, portes, mini-jeux du camp, terminal de mission.
+  Pour chaque interaction : l'hôte décide, l'état est répliqué (ou envoyé par RPC à tous), un joueur qui arrive en cours de partie voit le bon état.
 - [x] M0 — Projet, Input Map, NetworkManager ENet (host/join local), spawn de 4 nains
 - [x] M1 — Nain contrôlable (CharacterBody3D) dans un cockpit qui bouge
 - [x] M2 — Modèles 3D low poly simples (Blender via MCP) : nain, mécha robot (ventre + tête, trou de circulation), postes → `.glb` + scènes héritées
