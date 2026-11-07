@@ -38,11 +38,15 @@ func _ready() -> void:
 		status_text = "Steam indisponible (addon GodotSteam absent)"
 		return
 	_steam = Engine.get_singleton("Steam")
-	var result: Dictionary = _steam.call("steamInitEx", APP_ID, true)
-	if int(result.get("status", 1)) != 0:
-		status_text = "Steam indisponible : lance le client Steam puis relance le jeu"
-		push_warning("Steam : %s" % result.get("verbal", "échec de l'initialisation"))
-		return
+	# Normalement déjà initialisé au lancement par GodotSteam (section [steam] de project.godot) :
+	# il faut que ce soit fait avant la création de la fenêtre, sinon l'overlay Steam ne
+	# s'accroche pas au jeu (pas d'invitation F2). Ici : seulement si ça n'a pas été fait.
+	if int(_steam.call("getSteamID")) == 0:
+		var result: Dictionary = _steam.call("steamInitEx", APP_ID, true)
+		if int(result.get("status", 1)) != 0:
+			status_text = "Steam indisponible : lance le client Steam puis relance le jeu"
+			push_warning("Steam : %s" % result.get("verbal", "échec de l'initialisation"))
+			return
 	available = true
 	persona_name = _steam.call("getPersonaName")
 	status_text = "Steam : connecté en tant que %s" % persona_name
@@ -72,9 +76,16 @@ func join(code: String) -> void:
 
 
 ## Ouvre la fenêtre d'invitation d'amis de l'overlay Steam.
+## Sans overlay (désactivé dans Steam) : ouvre la liste d'amis du client Steam, où
+## clic droit sur un ami → « Inviter à jouer » marche aussi (on est dans le lobby).
 func invite_friends() -> void:
-	if available and lobby_id != 0:
+	if not available or lobby_id == 0:
+		return
+	if _steam.call("isOverlayEnabled"):
 		_steam.call("activateGameOverlayInviteDialog", lobby_id)
+	else:
+		push_warning("Steam : overlay indisponible, ouverture de la liste d'amis")
+		OS.shell_open("steam://open/friends")
 
 
 func leave() -> void:
