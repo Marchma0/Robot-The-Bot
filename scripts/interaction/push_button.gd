@@ -23,6 +23,8 @@ const ARROW_MARK_COLOR: Color = Color(0.93, 0.9, 0.82)
 ## Bouton en forme de flèche de manette (croix directionnelle) : -1 = bouton rond, sinon
 ## 0 haut, 1 bas, 2 gauche, 3 droite (même ordre que QteSequence.Arrow). Le socle rond est alors caché.
 @export_range(-1, 3) var arrow: int = -1
+## Interrupteur allumé au début de la partie (et après une partie terminée).
+@export var start_on: bool = false
 
 ## Nombre d'appuis validés. Autorité : hôte.
 var press_count: int = 0
@@ -41,6 +43,7 @@ var _cap_material: StandardMaterial3D
 
 func _ready() -> void:
 	super()
+	is_on = start_on
 	_cap_material = StandardMaterial3D.new()
 	_cap_material.albedo_color = cap_color
 	_cap_material.roughness = 0.5
@@ -139,4 +142,4 @@ static func _add_prism(mesh: ArrayMesh, outline: PackedVector2Array, y0: float, 
 
 func _on_session_ended(_reason: String) -> void:
 	press_count = 0
-	is_on = false
+	is_on = start_on
