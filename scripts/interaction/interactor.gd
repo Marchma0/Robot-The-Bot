@@ -6,7 +6,8 @@ extends RayCast3D
 ## Garde aussi ce que le joueur tient ou occupe (`_claim` : levier, siège ou corde,
 ## un seul à la fois, voir Possession), attend que l'hôte le confirme, et gère les touches tant qu'on le tient.
 ## Avec un objet de l'inventaire en main (voir Inventory) : clic = le lancer, G = le poser, E = ramasser ou
-## appuyer ; levier, siège et corde demandent la main vide (`Interactable.needs_empty_hands`).
+## appuyer ; prendre un levier, la corde ou s'asseoir range l'objet (`Interactable.stows_hand_item`), sauf un
+## objet lourd (caisse) : clic ou G la pose, et il faut la poser avant de prendre une commande.
 ## Actif uniquement pour le joueur local.
 
 ## Les indices à afficher (touche → icône) ont changé (liste vide = rien à afficher).
@@ -252,15 +253,18 @@ func _handle_actions() -> void:
 	var press: bool = Input.is_action_just_pressed("interact")
 	var grab: bool = Input.is_action_just_pressed("grab")
 	var item: Dictionary = _hand_item() if _claim == null else {}
-	if not item.is_empty():
-		# Objet en main : clic = le lancer dans la direction du regard, G = le poser ;
-		# E = ramasser ou appuyer sur la commande visée (pas ce qui demande la main vide).
+	var stows: bool = _target != null and _target.stows_hand_item()
+	if not item.is_empty() and not (stows and not item["heavy"]):
+		# Objet en main : clic = le lancer dans la direction du regard (objet lourd : le poser), G = le poser ;
+		# E = ramasser ou appuyer sur la commande visée. Levier, siège, corde : on passe à la suite (l'objet
+		# se range tout seul), sauf avec un objet lourd.
 		if grab:
 			item["node"].call(&"throw_from_hand", global_position, -global_basis.z)
-			thrown.emit()
+			if not item["heavy"]:
+				thrown.emit()
 		elif Input.is_action_just_pressed("drop"):
 			item["node"].call(&"drop_from_hand")
-		elif press and _target != null and not _target.needs_empty_hands():
+		elif press and _target != null and not stows:
 			if _target.interact(true, false, false) == Interactable.Use.DONE:
 				button_pressed.emit()
 		return
@@ -305,10 +309,16 @@ func _update_spring_stick(lever: Lever, delta: float) -> void:
 
 func _update_prompt() -> void:
 	var hints: Array[InputHint] = []
-	if _claim == null and has_item_in_hand():
-		if _target != null and not _target.needs_empty_hands():
+	var item: Dictionary = _hand_item() if _claim == null else {}
+	var stows: bool = _target != null and _target.stows_hand_item()
+	if stows and not item.is_empty() and not item["heavy"]:
+		hints = _target.get_hints()   # levier, siège, corde : l'objet en main se rangera
+	elif not item.is_empty():
+		if _target != null and not stows:
 			hints.append_array(_target.get_hints())   # ramasser, appuyer…
-		hints.append_array([InputHint.make(&"grab", &"throw"), InputHint.make(&"drop", &"drop")])
+		if not item["heavy"]:
+			hints.append(InputHint.make(&"grab", &"throw"))
+		hints.append(InputHint.make(&"drop", &"drop"))
 	elif _claim is Interactable and _claim_confirmed:
 		hints = (_claim as Interactable).get_hints()
 		if _claim is Seat and _target != null:

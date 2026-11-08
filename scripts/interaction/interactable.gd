@@ -43,9 +43,10 @@ func interact(_press: bool, _grab: bool, _hands_free: bool) -> Use:
 	return Use.NONE
 
 
-## Vrai si on ne peut pas l'utiliser avec un objet de l'inventaire en main (levier, siège, corde…) :
-## l'Interactor ne la propose pas tant que la main n'est pas vide. À surcharger.
-func needs_empty_hands() -> bool:
+## Vrai si l'utiliser range l'objet de l'inventaire en main (levier, siège, corde…) : avec un objet en main,
+## l'Interactor la traite comme à main vide (clic = l'attraper, pas lancer). Pas possible avec un objet
+## lourd (caisse) : il faut le poser. À surcharger.
+func stows_hand_item() -> bool:
 	return false
 
 

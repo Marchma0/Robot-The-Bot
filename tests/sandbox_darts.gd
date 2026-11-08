@@ -7,6 +7,7 @@ extends Node3D
 
 const DWARF_SCENE: PackedScene = preload("res://scenes/player/dwarf.tscn")
 const POOP_SCENE: PackedScene = preload("res://scenes/props/poop.tscn")
+const CRATE_SCENE: PackedScene = preload("res://scenes/props/cargo_crate.tscn")
 
 @export var quit_when_done: bool = true
 
@@ -111,7 +112,8 @@ func _ready() -> void:
 
 
 ## Inventaire : 5 cacas remplissent les 5 cases, un 6e est refusé ; seul celui de la case choisie est en main
-## (visible, seul à pouvoir être lancé) ; avec un objet en main, on ne peut pas s'asseoir.
+## (visible, seul à pouvoir être lancé) ; un levier tenu le range tout seul. Puis une caisse portée à deux mains :
+## elle passe en main, on ne change plus de case, on ne ramasse rien d'autre, ni levier ni siège.
 func _inventory_checks() -> void:
 	var poops: Array[Poop] = []
 	for i: int in Inventory.SIZE + 1:
@@ -142,13 +144,57 @@ func _inventory_checks() -> void:
 	poops[0].request_throw.rpc_id(1, Vector3.FORWARD)
 	await _wait(0.1)
 	TestCheck.expect(poops[0].holder_peer_id == 1, "un caca rangé (pas en main) ne se lance pas")
-	TestCheck.expect(Possession.is_peer_busy(get_tree(), 1), "objet en main : levier, siège et corde refusés")
+	TestCheck.expect(not Possession.is_peer_busy(get_tree(), 1), "caca en main : levier, siège et corde restent possibles")
+	var lever: Lever = _mecha.get_node("Controls/LegL_Stick") as Lever
+	lever.holder_peer_id = 1   # comme si l'hôte venait d'accepter l'attrape
+	await _wait(0.1)
+	TestCheck.expect(not poops[2].visible and not Inventory.has_item_in_hand(get_tree(), 1), "levier en main : le caca est rangé tout seul")
+	lever.holder_peer_id = 0
+	await _wait(0.1)
+	TestCheck.expect(poops[2].visible, "levier lâché : le caca revient en main")
 	poops[2].request_throw.rpc_id(1, Vector3.ZERO)
 	await _wait(0.1)
-	TestCheck.expect(poops[2].holder_peer_id == 0 and not Possession.is_peer_busy(get_tree(), 1), "G : on pose le caca, la main est vide")
+	TestCheck.expect(poops[2].holder_peer_id == 0, "G : on pose le caca")
+
+	# Caisse : la case en main (3) est vide, mais on choisit une case pleine pour vérifier qu'elle y passe.
+	_dwarf.hand_slot = 0
+	var crate: CargoCrate = CRATE_SCENE.instantiate() as CargoCrate
+	_mecha.get_node("Props").add_child(crate, true)
+	crate.global_position = _dwarf.global_position + _mecha.global_basis.x * 0.6
+	await _wait(0.1)
+	crate.request_pick.rpc_id(1)
+	await _wait(0.1)
+	TestCheck.expect(crate.holder_peer_id == 1 and crate.holder_slot == 2 and _dwarf.hand_slot == 2,
+		"caisse prise : elle va dans la case libre, qui passe en main")
+	_dwarf.hand_slot = 0
+	_dwarf._choose_slot(_key_event(&"slot_1"))
+	await _wait(0.1)
+	TestCheck.expect(_dwarf.hand_slot == 2, "caisse en main : on ne change pas de case")
+	TestCheck.expect(Possession.is_peer_busy(get_tree(), 1), "caisse en main : levier, siège et corde refusés")
+	poops[2].request_pick.rpc_id(1)
+	await _wait(0.1)
+	TestCheck.expect(poops[2].holder_peer_id == 0, "caisse en main : on ne ramasse rien d'autre")
+	await TestCheck.frame_drawn(get_tree())
+	TestCheck.save_view(get_viewport(), "res://build/views/darts_8_caisse.png")
+	var side: Vector3 = _mecha.to_local(_dwarf.global_position)
+	await _shot("9_caisse_portee", side + Vector3(1.6, 1.0, 0.9), side + Vector3(0.0, 0.5, 0.0))
+	crate.request_put_down.rpc_id(1)
+	await _wait(0.1)
+	var on_floor: float = (_mecha.global_transform.affine_inverse() * crate.global_position).y
+	TestCheck.expect(crate.holder_peer_id == 0 and crate.collision_layer != 0, "clic ou G : la caisse est posée")
+	print("Caisse posée à %.2f m (repère du mécha), nain à %.2f m" % [on_floor, _dwarf.position.y])
+	TestCheck.expect(absf(on_floor - _dwarf.position.y) < 0.3, "elle est posée au sol, devant le nain")
+	crate.queue_free()
 	for poop: Poop in poops:
 		if is_instance_valid(poop):
 			poop.queue_free()
+
+
+func _key_event(action: StringName) -> InputEventAction:
+	var event: InputEventAction = InputEventAction.new()
+	event.action = action
+	event.pressed = true
+	return event
 
 
 func _spawn(peer: int, slot: int, at: Vector3) -> Dwarf:

@@ -104,8 +104,8 @@ func _process(_delta: float) -> void:
 		physics_interpolation_mode = held_mode
 		reset_physics_interpolation()
 	var dwarf: Dwarf = Dwarf.of_peer(holder_peer_id)
-	# Rangé dans une autre case que celle en main : caché (il suit quand même la main).
-	visible = holder_peer_id == 0 or (dwarf != null and dwarf.hand_slot == holder_slot)
+	# Rangé (autre case que celle en main, ou le porteur tient une commande) : caché, il suit quand même la main.
+	visible = holder_peer_id == 0 or Inventory.is_in_hand(get_tree(), holder_peer_id, holder_slot)
 	if dwarf != null:
 		global_transform = dwarf.get_hold_transform()
 	if _gold_material != null:
@@ -169,7 +169,7 @@ func request_throw(direction: Vector3) -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
-	if sender != holder_peer_id or Inventory.hand_slot_of(sender) != holder_slot:
+	if sender != holder_peer_id or (sender != 0 and not Inventory.is_in_hand(get_tree(), sender, holder_slot)):
 		return
 	var dwarf: Dwarf = Dwarf.of_peer(sender)
 	if dwarf != null:

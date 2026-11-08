@@ -75,7 +75,7 @@ func _deposit_one() -> void:
 	var crate: CargoCrate = _crates[_next_store_index]
 	_next_store_index += 1
 	if is_instance_valid(crate):
-		crate.request_collect()
+		_backpack.store_node(crate, crate.item_kind)   # seul le robot range les caisses
 
 
 func _spawn_batch() -> void:

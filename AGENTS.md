@@ -228,7 +228,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 2.3 Emotes (roue de 8), corps visible en première personne, bulle d'état avec portrait, s'accroupir (M6.5)
 - [ ] 2.4 Skins des nains : pièces interchangeables (barbe, casque, couleurs…), choix synchronisé et sauvegardé — vendus en 4.5
 - [ ] 2.5 Améliorations des nains : liste à définir avec le porteur du projet (pistes dans `docs/ideas.md`) — vendues en 4.6
-- [ ] 2.6 **Inventaire** `[en cours — Marchma0]` : barre de 5 cases (caca, fléchettes…), l'objet de la case choisie est en main ; panneau des touches des postes descendu sous la ligne « Échap »
+- [ ] 2.6 **Inventaire** `[en cours — Marchma0]` : barre de 5 cases (caca, fléchettes…), l'objet de la case choisie est en main, rangé tout seul en prenant une commande ; caisses portées à deux mains (objet lourd) ; panneau des touches des postes descendu sous la ligne « Échap ». Reste : animation « porter à deux mains » du nain (`carry`, Blender)
 
 ### Phase 3 — Le robot
 - [x] 3.1 Modèle low poly (ventre + tête), postes, système d'interaction (boutons, leviers, joysticks toujours actifs) (M2, M3)

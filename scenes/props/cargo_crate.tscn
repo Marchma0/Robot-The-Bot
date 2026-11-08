@@ -17,6 +17,12 @@ properties/1/replication_mode = 2
 properties/2/path = NodePath(".:item_kind")
 properties/2/spawn = true
 properties/2/replication_mode = 0
+properties/3/path = NodePath(".:holder_slot")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:holder_peer_id")
+properties/4/spawn = true
+properties/4/replication_mode = 2
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_pick"]
 size = Vector3(0.84, 0.82, 0.84)

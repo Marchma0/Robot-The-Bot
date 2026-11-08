@@ -158,7 +158,7 @@ func _process(delta: float) -> void:
 			continue
 		holders.append(dart_peer[i])
 		var holder: Dwarf = Dwarf.of_peer(dart_peer[i])
-		if holder != null and holder.hand_slot == dart_slot[i]:
+		if holder != null and Inventory.is_in_hand(get_tree(), dart_peer[i], dart_slot[i]):
 			_hand_darts[shown].visible = true
 			_hand_darts[shown].global_transform = holder.get_hold_transform()
 			shown += 1
@@ -230,7 +230,7 @@ func request_release() -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
-	if darts_held_by(sender) == 0 or Inventory.hand_slot_of(sender) != _slot_of(sender):
+	if darts_held_by(sender) == 0 or not Inventory.is_in_hand(get_tree(), sender, _slot_of(sender)):
 		return
 	for i: int in DART_COUNT:
 		if dart_where[i] == Where.IN_HAND and dart_peer[i] == sender:
@@ -249,8 +249,8 @@ func request_throw(origin: Vector3, direction: Vector3) -> void:
 	var index: int = _first_held_by(sender)
 	if dwarf == null or index < 0 or direction.length() < 0.1:
 		return
-	if Inventory.hand_slot_of(sender) != dart_slot[index]:
-		return   # les fléchettes sont rangées dans une autre case
+	if not Inventory.is_in_hand(get_tree(), sender, dart_slot[index]):
+		return   # les fléchettes sont rangées (autre case, ou il tient une commande)
 	if dwarf.global_position.distance_to(origin) > 2.0:
 		return   # yeux trop loin du nain
 	if sender != thrower_peer_id or round_done or round_scores.size() >= DART_COUNT:

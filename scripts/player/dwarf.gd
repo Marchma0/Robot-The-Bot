@@ -26,6 +26,8 @@ const STAND_HEIGHT: float = 1.2
 const CROUCH_HEIGHT: float = 0.72
 ## Position d'un objet tenu en main, par rapport aux yeux (m).
 const HOLD_OFFSET: Vector3 = Vector3(0.2, -0.22, -0.4)
+## Position du dessous d'un objet lourd porté à deux mains (caisse), par rapport aux pieds (m).
+const CARRY_OFFSET: Vector3 = Vector3(0.0, 0.3, -0.62)
 ## Durée du glissement jusqu'au siège (s).
 const SIT_GLIDE_TIME: float = 0.4
 ## Bits de `anim_flags` (états d'animation envoyés ensemble, en un seul nombre).
@@ -243,7 +245,11 @@ func _physics_process(delta: float) -> void:
 			_glide_seat = null
 	_camera_rig.update_view(seat)
 	_route_hints()
-	_hud.inventory_bar.show_slots(Inventory.slots_of(get_tree(), peer_id), hand_slot)
+	var slots: Array[Dictionary] = Inventory.slots_of(get_tree(), peer_id)
+	var heavy: int = Inventory.heavy_slot_in(slots)
+	if heavy >= 0:
+		hand_slot = heavy   # objet lourd (caisse) : toujours en main
+	_hud.inventory_bar.show_slots(slots, hand_slot)
 	if not (seat is Toilet) and _hud.poop_game.is_active():
 		_hud.poop_game.stop()   # on s'est levé en pleine partie
 	var busy: bool = seat != null or _interactor.get_rope() != null or _climb.is_pulling_up() or _interactor.is_holding()
@@ -381,6 +387,12 @@ func get_hold_transform() -> Transform3D:
 	return view_transform() * Transform3D(Basis.IDENTITY, HOLD_OFFSET)
 
 
+## Où se trouve un objet lourd porté à deux mains (caisse), en global : devant le nain, à hauteur de ventre,
+## droit (il ne suit que la rotation du corps, pas l'inclinaison du regard). Origine = dessous de l'objet.
+func get_carry_transform() -> Transform3D:
+	return get_global_transform_interpolated() * Transform3D(Basis.IDENTITY, CARRY_OFFSET)
+
+
 ## Envoyé par l'hôte quand un caca lancé touche ce nain : écran taché + animation "hit".
 @rpc("any_peer", "call_local", "reliable")
 func receive_splat() -> void:
@@ -437,9 +449,10 @@ func _route_hints() -> void:
 
 
 ## Changer de case de l'inventaire : 1 à 5, molette, croix de la manette (gauche / droite).
-## Pas pendant qu'on tient un levier, la corde, qu'on est assis, ou que la roue d'emotes est ouverte.
+## Pas pendant qu'on tient un levier, la corde, qu'on est assis, qu'on porte un objet lourd (caisse),
+## ou que la roue d'emotes est ouverte.
 func _choose_slot(event: InputEvent) -> void:
-	if _interactor.has_claim() or _hud.emote_wheel.is_open():
+	if _interactor.has_claim() or _hud.emote_wheel.is_open() or Inventory.carries_heavy(get_tree(), peer_id):
 		return
 	for i: int in Inventory.SIZE:
 		if event.is_action_pressed(&"slot_%d" % (i + 1)):

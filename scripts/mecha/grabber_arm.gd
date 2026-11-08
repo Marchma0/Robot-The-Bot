@@ -5,7 +5,7 @@ extends MechaArm
 ## - souris / stick droit (`control_look`) et Q/D (`control_move.x`) : orientent le bras (lacet + tangage),
 ##   sans jamais pouvoir rentrer dans la coque (`MechaArmUtils`) ;
 ## - Z/S (`control_move.y`) : étendent ou replient le fût télescopique (0 → 3,8 m) ;
-## - clic gauche / RT (`control_grab`) : referme la pince pour saisir un objet (`CargoCrate`, `Poop`…) ;
+## - clic gauche / RT (`control_grab`) : referme la pince pour saisir un objet (`CargoCrate`, `Poop`…) ; seul le robot range les caisses dans son sac ;
 ## - saut (`control_fire_count`) : lance la pince au bout de son câble, droit dans l'axe du bras (15 m).
 ##   Elle attrape le premier objet rangeable qu'elle croise, rebondit sur le décor, puis s'enroule.
 ## Dès qu'un objet est saisi, la pince le ramène à l'épaule gauche puis
@@ -199,7 +199,8 @@ func _find_grabbable(center: Vector3, radius: float) -> Array:
 ## Type d'objet pour le sac à dos, ou "" si la pince ne peut pas le prendre.
 func _kind_of(body: Node3D) -> String:
 	if body is CargoCrate:
-		return (body as CargoCrate).item_kind
+		var crate: CargoCrate = body as CargoCrate
+		return "" if crate.holder_peer_id != 0 else crate.item_kind   # portée par un nain
 	if body is Poop:
 		var poop: Poop = body as Poop
 		if poop.holder_peer_id != 0:

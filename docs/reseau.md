@@ -46,12 +46,14 @@ elle envoie la RPC `request_xxx` vers l'hôte et renvoie `Use.DONE` (action inst
 (objet qu'on va tenir ou occuper). L'`Interactor` n'a pas à changer. L'hôte vérifie `is_peer_in_reach` ;
 les variables d'état vont dans le `MultiplayerSynchronizer` de sa scène.
 Un objet qu'on **tient ou occupe** (levier, siège, corde) : groupe `Possession.GROUP`,
-une ligne dans `Possession.holder_of`, surcharger `needs_empty_hands` (vrai), et l'hôte refuse la demande si
-`Possession.is_peer_busy` (une seule chose à la fois, main vide).
+une ligne dans `Possession.holder_of`, surcharger `stows_hand_item` (vrai : l'objet en main est rangé), et l'hôte refuse la demande si
+`Possession.is_peer_busy` (une seule chose à la fois, pas d'objet lourd porté).
 Un objet qu'on **met dans l'inventaire** (caca, fléchettes) : groupe `Inventory.GROUP`, l'objet garde lui-même
 qui l'a et dans quelle case (variables synchronisées) et a les méthodes `inventory_entries`, `throw_from_hand`,
 `drop_from_hand` (voir `scripts/player/inventory.gd`) ; à la demande, l'hôte prend la case `Inventory.free_slot`
-(refus si -1 ou `Possession.holds_control`). La case choisie (`Dwarf.hand_slot`) est écrite par le joueur et répliquée.
+(refus si -1 ou `Possession.holds_control`). La case choisie (`Dwarf.hand_slot`) est écrite par le joueur et répliquée ;
+un objet n'est en main que si `Inventory.is_in_hand` (bonne case, aucune commande tenue). Objet lourd : `"heavy": true`
+dans son entrée (`CargoCrate`).
 Le robot est dans `main.tscn` : ses commandes existent déjà chez tout le monde.
 
 ### Un objet qu'on ramasse, qui casse, qui apparaît (caisse, caca…)

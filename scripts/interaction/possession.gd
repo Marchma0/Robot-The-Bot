@@ -1,8 +1,8 @@
 class_name Possession
 extends RefCounted
-## Ce qu'un joueur tient ou occupe : un levier, un siège ou la corde. Un seul à la fois, et il faut
-## avoir la main vide (aucun objet de l'inventaire en main, voir Inventory). Chacun de ces objets se range
-## dans le groupe `GROUP`.
+## Ce qu'un joueur tient ou occupe : un levier, un siège ou la corde. Un seul à la fois. L'objet de
+## l'inventaire en main est alors rangé tout seul (voir Inventory), sauf un objet lourd (caisse) : il faut
+## d'abord le poser. Chacun de ces objets se range dans le groupe `GROUP`.
 ##
 ## Réseau : l'hôte appelle `is_peer_busy` avant d'accepter une demande (attraper, s'asseoir…), et
 ## `holds_control` avant de laisser ramasser un objet dans l'inventaire.
@@ -25,9 +25,9 @@ static func holder_of(node: Node) -> int:
 
 
 ## Vrai si le joueur `peer_id` ne peut pas prendre un levier, un siège ou la corde : il tient ou occupe
-## déjà quelque chose (autre que `except`), ou il a un objet en main.
+## déjà quelque chose (autre que `except`), ou il porte un objet lourd.
 static func is_peer_busy(tree: SceneTree, peer_id: int, except: Node = null) -> bool:
-	return holds_control(tree, peer_id, except) or Inventory.has_item_in_hand(tree, peer_id)
+	return holds_control(tree, peer_id, except) or Inventory.carries_heavy(tree, peer_id)
 
 
 ## Vrai si le joueur `peer_id` tient un levier, la corde, ou est assis (autre que `except`).

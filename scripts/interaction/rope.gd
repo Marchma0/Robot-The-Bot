@@ -63,8 +63,8 @@ func get_hints() -> Array[InputHint]:
 	return [InputHint.make(&"grab", &"climb")]
 
 
-## Demande la main vide (voir Interactable.needs_empty_hands).
-func needs_empty_hands() -> bool:
+## Range l'objet de l'inventaire en main (voir Interactable.stows_hand_item).
+func stows_hand_item() -> bool:
 	return true
 
 

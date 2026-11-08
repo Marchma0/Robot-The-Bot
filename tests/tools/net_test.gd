@@ -77,7 +77,6 @@ func _run_host() -> void:
 	await _check("caca qui apparaît")
 
 	# Le client agit lui-même (il se place à portée, puis envoie la même demande que le jeu).
-	await _client_step("caisse rangée à la demande du client", "Level/TestGround/CargoCrates/Crate3", "request_collect")
 	await _client_step("interrupteur du rayon (client)", "Mecha/Controls/BeamSwitch_Belly", "request_press")
 	await _client_step("porte des toilettes (client)", "Mecha/ToiletDoor/Handle", "request_toggle")
 	await _client_step("télé éteinte (client)", "Mecha/InteriorBelly/TvSet/Power", "request_press")
@@ -123,7 +122,8 @@ func _run_host() -> void:
 	await _client_step("terminal : mission suivante (client)", "Level/Lobby/MissionTerminal/Next", "request_press")
 	await _client_step("fléchettes du robot prises (client)", "Mecha/Controls/Darts", "darts_take")
 	await _client_step("fléchette lancée (client)", "Mecha/Controls/Darts", "throw")
-	await _client_refused("fléchettes en main : le bras de fer est refusé (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit", false)
+	await _client_step("fléchettes en main : assis au bras de fer, fléchettes rangées (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit")
+	await _client_step("levé du bras de fer, fléchettes revenues en main (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_leave")
 	await _client_step("fléchettes reposées (client)", "Mecha/Controls/Darts", "request_release")
 	await _dart_in_client_step()
 	await _client_step("bras de fer : assis (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit")
@@ -161,11 +161,25 @@ func _inventory_steps() -> void:
 	await _client_refused("inventaire : le caca rangé ne se lance pas (client)", poops[0], "request_throw", true, [Vector3.FORWARD])
 	await _client_step("inventaire : caca de la case 2 posé (client)", poops[1], "request_throw", [Vector3.ZERO])
 	await _client_hand_slot(0)
-	# À portée du levier d'abord (le caca en main bouge avec le nain), puis la demande, qui doit être refusée.
+	await _client_step("caca en main : levier attrapé, caca rangé (client)", "Mecha/Controls/LegL_Stick", "request_grab")
+	if Inventory.has_item_in_hand(get_tree(), _client_id):
+		_failures += 1
+		_log("ÉCHEC  levier attrapé : le caca est encore en main")
+	await _client_step("levier lâché, caca revenu en main (client)", "Mecha/Controls/LegL_Stick", "request_release")
+	await _client_step("inventaire : caca de la case 1 posé (client)", poops[0], "request_throw", [Vector3.ZERO])
+	await _crate_steps()
+
+
+## Caisse portée à deux mains par le client : prise, levier refusé tant qu'il la porte, posée.
+func _crate_steps() -> void:
+	var crate: String = str(_world.get_path_to(_level().get_node("CargoCrates/Crate3")))
+	await _client_step("caisse prise à deux mains (client)", crate, "request_pick")
+	# À portée du levier d'abord (la caisse bouge avec le nain), puis la demande, qui doit être refusée.
 	_client_action.rpc_id(_client_id, "Mecha/Controls/LegL_Stick", "goto", [])
 	await get_tree().create_timer(STEP_WAIT).timeout
-	await _client_refused("caca en main : le levier est refusé (client)", "Mecha/Controls/LegL_Stick", "request_grab")
-	await _client_step("inventaire : caca de la case 1 posé (client)", poops[0], "request_throw", [Vector3.ZERO])
+	await _check("caisse portée jusqu'au levier (client)")
+	await _client_refused("caisse en main : le levier est refusé (client)", "Mecha/Controls/LegL_Stick", "request_grab")
+	await _client_step("caisse posée (client)", crate, "stay:request_put_down")
 
 
 ## Le client choisit une case (touche 1 à 5) : l'hôte doit la voir sur son nain (propriété du client, répliquée).
