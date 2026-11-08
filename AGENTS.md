@@ -98,7 +98,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (
 
 ### Intérieur modulaire : coque + un fichier par objet
 - **Modèles construits par script** : le script Python fait foi, le `.blend` et le `.glb` en sont générés. On modifie le script puis on le relance ; si on retouche un `.blend` à la main, le dire dans le commit.
-- **Coque du mécha** (murs, sol, plafond, structure, textures de tôle) : `blender/mecha_shell.py`, relançable à volonté :
+- **Coque du mécha** (murs, sol, plafond, hublots, structure, tuyaux, usure, textures de tôle) : `blender/mecha_shell.py`, relançable à volonté. **Aucun décor dans `mecha.blend`** : un meuble, un objet ou un équipement (garde-corps, émetteur du rayon, plafonnier…) est toujours un objet à part (ligne suivante), jamais modélisé dans la coque. `mecha_shell.py` retire le décor qui y traînerait encore (liste `DECOR`) :
   `blender -b blender/mecha.blend --python blender/mecha_shell.py` → sauvegarde `mecha.blend` et réexporte `mecha.glb`.
 - **Objets de l'intérieur** (meubles, caisses, cabine des toilettes…) : un script par objet `blender/props/<nom>.py`, qui utilise `blender/tools/prop_kit.py` et produit `blender/props/<nom>.blend` + `assets/models/props/<nom>.glb` :
   `blender -b --factory-startup --python blender/props/<nom>.py`
@@ -200,7 +200,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 > Avant de commencer une tâche : la marquer `[en cours — pseudo]` et pousser tout de suite. La cocher quand elle est fusionnée dans `main`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 1.7 Rationalisation du code (Marchma0) · 3.4 Marche du robot (Marchma0)
+**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0)
 
 ### Phase 1 — Fondations (moteur, réseau, outils)
 - [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet (héberger / rejoindre en local), 4 nains (M0)
@@ -211,13 +211,13 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
   - [ ] À confirmer en vraie partie Steam (hôte + client, F9 pour comparer)
 - [ ] 1.5 Steam (M5) : GodotSteam (App ID 480), lobby, invitation ou code de lobby, export Windows `.exe` pour les testeurs — en place, reste à valider à distance (avec 1.4)
 - [x] 1.6 Pipeline 3D : un script Python par objet (`blender/props/`), palette partagée, planche de vues, refus des faces superposées, captures `interior_shots` (M6.7)
-- [ ] 1.7 **Rationalisation du code** `[en cours — Marchma0]` : rendre le code prêt pour le camp et les missions, sans rien changer en jeu (test réseau vert à chaque étape)
+- [x] 1.7 **Rationalisation du code** (2026-11-08) : rendre le code prêt pour le camp et les missions, sans rien changer en jeu (test réseau vert à chaque étape)
   - [x] Ménage (2026-11-08) : une seule façon de retrouver le nain d'un joueur (`Dwarf.of_peer`) et son nom (« Joueur N » partout), petites bidouilles retirées, pieds du robot typés, scènes de test obsolètes supprimées, vérifications automatiques + `tests/tools/run_tests.sh`. Le script à la racine du robot attend les skins du robot (3.8)
   - [x] Système d'interaction (2026-11-08) : chaque commande gère son utilisation (`Interactable.interact`), l'Interactor n'a plus de liste de types ; l'hôte refuse qu'un joueur tienne ou occupe deux choses à la fois (`Possession`) ; le test réseau vérifie vraiment que chaque demande a un effet
   - [x] Nain découpé (2026-11-08) : apparence (`DwarfLook`, où iront les skins), caméra (`DwarfCamera`), corde (`DwarfClimb`) ; interface du joueur dans `scenes/ui/player_hud.tscn`, créée seulement pour le joueur local ; `dwarf.gd` passe de 780 à 590 lignes
   - [x] Base commune des bras (2026-11-08) : `MechaArm` (visée depuis le poste, limites, caméra, remise à zéro), `DrillArm` et `GrabberArm` n'ont plus que leur outil
   - [x] Traduction (2026-11-08) : textes visibles passés par `tr()`, tableau `assets/translations/texts.csv` (54 textes, fr + en), le jeu suit la langue du système (menu de langue : 6.2), vérification dans `run_tests.sh`
-  - [ ] Dette de `mecha.blend` `[en cours — Marchma0]` (avancé avant 3.4 à la demande du porteur du projet) : plus aucun décor dans le modèle du robot (coque seulement) ; anciens bras et anciennes consoles retirés par `mecha_shell.py` ; tout le décor refait en objets (`blender/props/`) placés dans `belly.tscn` / `head.tscn`, avec leur collision ; `MechaArmUtils.strip_*` supprimé
+  - [x] Dette de `mecha.blend` (2026-11-08, avancé avant 3.4 à la demande du porteur du projet) : le modèle du robot n'a plus que sa coque ; anciens bras et anciennes consoles retirés par `mecha_shell.py` (`MechaArmUtils.strip_*` supprimé) ; décor refait en 20 objets améliorés (`blender/props/`) placés dans `belly.tscn` / `head.tscn` et dans le rayon tracteur ; collisions des meubles sorties de la coque vers les scènes des objets
 
 ### Phase 2 — Les nains
 - [x] 2.1 Nain contrôlable dans un cockpit qui bouge, vue à la première personne (M1)

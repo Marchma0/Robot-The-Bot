@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/mecha/tractor_beam.gd" id="1_beam"]
+[ext_resource type="PackedScene" path="res://assets/models/props/beam_emitter.glb" id="2_emitter"]
 
 [sub_resource type="Shader" id="Shader_beam"]
 code = "shader_type spatial;
@@ -54,6 +55,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
 light_color = Color(0.35, 0.75, 1, 1)
 light_energy = 0.8
 omni_range = 2.5
+
+[node name="EmitterBottom" parent="." instance=ExtResource("2_emitter")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)
+
+[node name="EmitterTop" parent="." instance=ExtResource("2_emitter")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 5.7, 0)
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_beam")

@@ -25,8 +25,6 @@ const BITE_DEPTH: float = 0.35
 const BIT_SPIN_MAX: float = 20.0
 const BIT_ACCEL: float = 28.0
 const SPARK_COUNT: int = 6
-## Emprise (repère du mécha) des restes de l'ancienne console dans Int_Head, effacés au démarrage.
-const OLD_CONSOLE_DECOR: AABB = AABB(Vector3(0.75, 6.1, -1.56), Vector3(0.6, 0.2, 0.33))
 
 @export var mining_dps: float = 48.0
 
@@ -48,12 +46,6 @@ var _sparks: Array[MeshInstance3D] = []
 
 func _ready() -> void:
 	super()
-	var parent_node: Node = get_parent()
-	if parent_node != null:
-		# Petit tableau de l'ancienne console de la foreuse, resté dans Int_Head : il traverserait l'établi.
-		var head_decor: MeshInstance3D = parent_node.get_node_or_null("Int_Head") as MeshInstance3D
-		if head_decor != null:
-			MechaArmUtils.strip_box(head_decor, OLD_CONSOLE_DECOR)
 	_build_sparks()
 
 

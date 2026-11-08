@@ -1,7 +1,21 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://assets/models/props/console_leg.glb" id="1_console"]
-[ext_resource type="PackedScene" path="res://assets/models/props/sofa.glb" id="2_sofa"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/console_leg.tscn" id="1_console"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/sofa.tscn" id="2_sofa"]
+[ext_resource type="PackedScene" path="res://assets/models/props/belly_rug.glb" id="3_rug"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/coffee_table.tscn" id="4_table"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/wood_crate.tscn" id="5_crate"]
+[ext_resource type="PackedScene" path="res://assets/models/props/potted_mushroom.glb" id="6_mushroom"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/barrel.tscn" id="7_barrel"]
+[ext_resource type="PackedScene" path="res://assets/models/props/chalkboard.glb" id="8_chalkboard"]
+[ext_resource type="PackedScene" path="res://assets/models/props/dartboard_wall.glb" id="9_dartboard"]
+[ext_resource type="PackedScene" path="res://assets/models/props/poster.glb" id="10_poster"]
+[ext_resource type="PackedScene" path="res://assets/models/props/wall_clock.glb" id="11_clock"]
+[ext_resource type="PackedScene" path="res://assets/models/props/coat_rack.glb" id="12_coat_rack"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/tv_set.tscn" id="13_tv"]
+[ext_resource type="PackedScene" path="res://assets/models/props/ceiling_light.glb" id="14_light"]
+[ext_resource type="PackedScene" path="res://assets/models/props/rope_bracket.glb" id="15_rope_bracket"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/railing.tscn" id="16_railing"]
 
 [node name="InteriorBelly" type="Node3D"]
 
@@ -13,3 +27,54 @@ transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 1, 2.6, -1.5)
 
 [node name="Sofa" parent="." instance=ExtResource("2_sofa")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.89, 2.6, -0.05)
+
+[node name="Rug" parent="." instance=ExtResource("3_rug")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 2.6, -0.1)
+
+[node name="CoffeeTable" parent="." instance=ExtResource("4_table")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.025, 2.6, -0.075)
+
+[node name="CornerCrate" parent="." instance=ExtResource("5_crate")]
+transform = Transform3D(0.9848, 0, 0.1736, 0, 1, 0, -0.1736, 0, 0.9848, -1.92, 2.6, -1.5)
+
+[node name="PottedMushroom" parent="." instance=ExtResource("6_mushroom")]
+transform = Transform3D(0.9397, 0, -0.342, 0, 1, 0, 0.342, 0, 0.9397, -1.92, 2.966, -1.5)
+
+[node name="CrateStackBottom" parent="." instance=ExtResource("5_crate")]
+transform = Transform3D(0.9903, 0, -0.1392, 0, 1, 0, 0.1392, 0, 0.9903, 0.85, 2.6, 1.65)
+
+[node name="CrateStackTop" parent="." instance=ExtResource("5_crate")]
+transform = Transform3D(0.7704, 0, 0.3592, 0, 0.85, 0, -0.3592, 0, 0.7704, 0.86, 2.966, 1.63)
+
+[node name="Barrel" parent="." instance=ExtResource("7_barrel")]
+transform = Transform3D(-0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, -0.7071, 1.9, 2.6, -1.55)
+
+[node name="Chalkboard" parent="." instance=ExtResource("8_chalkboard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.57, 3.84, 1.9)
+
+[node name="Dartboard" parent="." instance=ExtResource("9_dartboard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.85, 1.9)
+
+[node name="Poster" parent="." instance=ExtResource("10_poster")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 3.95, 1.9)
+
+[node name="WallClock" parent="." instance=ExtResource("11_clock")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.75, -1.9)
+
+[node name="CoatRack" parent="." instance=ExtResource("12_coat_rack")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -2.2, 4.25, 0.4)
+
+[node name="TvSet" parent="." instance=ExtResource("13_tv")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.2, 3.86, -0.26)
+
+[node name="CeilingLightL" parent="." instance=ExtResource("14_light")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 5.4, -0.4)
+
+[node name="CeilingLightR" parent="." instance=ExtResource("14_light")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 5.4, -0.4)
+
+[node name="RopeBracket" parent="." instance=ExtResource("15_rope_bracket")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -2.2, 4.51, 1.4)
+
+[node name="HatchRailing" parent="." instance=ExtResource("16_railing")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7, 2.6, 0.93)

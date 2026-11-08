@@ -29,12 +29,6 @@ var extension: float = 0.0
 
 
 func _ready() -> void:
-	var mecha: Node = get_parent()
-	if mecha != null:
-		# Ancien bras statique du modèle du robot, retiré en mémoire (voir MechaArmUtils).
-		var ext_details: MeshInstance3D = mecha.get_node_or_null("Ext_Details") as MeshInstance3D
-		if ext_details != null:
-			MechaArmUtils.strip_static_arm(ext_details, _side_sign())
 	if seat != null:
 		seat.camera_anchor = _camera_anchor
 	NetworkManager.session_ended.connect(func(_reason: String) -> void: reset_arm())

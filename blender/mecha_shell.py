@@ -10,7 +10,9 @@ Ce que fait le script :
 2. Les applique aux matériaux WallCream, WallTeal, FloorPlate, Ceiling (projection en coordonnées monde,
    1 répétition de texture = 2 m, donc les joints tombent tous les mètres).
 3. Supprime les traînées et fissures trop fines de Int_Wear (elles ressemblaient à des brindilles).
-4. Construit Shell_Belly et Shell_Head : montants d'angle, poutres de plafond, tuyaux avec colliers.
+4. Retire tout le décor du modèle (liste DECOR) : le robot ne garde que sa coque. Le décor est fait d'objets
+   à part (blender/props/), placés dans scenes/mecha/interior/belly.tscn et head.tscn.
+5. Construit Shell_Belly et Shell_Head : montants d'angle, poutres de plafond, tuyaux avec colliers.
 """
 
 import os
@@ -276,77 +278,101 @@ def clean_wear():
     print("mecha_shell : usure, %d sommets de traits fins retirés" % len(set(doomed)))
 
 
-# Meubles remplacés par des objets (blender/props/) : boîtes englobantes exactes des anciennes pièces.
-REPLACED = {
-    "Ext_Details": [
-        # anciennes jambes fixes (gauche, droite) -> blender/mecha_legs.py (jambes articulées, M7.1)
-        ((-1.8, -0.4, 0.6), (-1.0, 0.4, 1.95)), ((-2.0, -0.75, 0.0), (-0.8, 1.05, 0.45)),
-        ((-1.9, -0.5, 1.22), (-0.9, 0.5, 1.38)), ((-1.85, -0.3, 0.265), (-0.95, 0.3, 0.835)),
-        ((-2.0, 1.05, 0.0), (-0.8, 1.4, 0.32)),
-        ((1.0, -0.4, 0.6), (1.8, 0.4, 1.95)), ((0.8, -0.75, 0.0), (2.0, 1.05, 0.45)),
-        ((0.9, -0.5, 1.22), (1.9, 0.5, 1.38)), ((0.95, -0.3, 0.265), (1.85, 0.3, 0.835)),
-        ((0.8, 1.05, 0.0), (2.0, 1.4, 0.32)),
+# ---------------------------------------------------------------- décor retiré
+
+# Le modèle du robot ne garde que sa coque (murs, sols, plafonds, hublots, structure, tuyaux, usure).
+# Tout le décor est fait d'objets à part (blender/props/), placés dans scenes/mecha/interior/*.tscn.
+# Chaque pièce (partie connexe d'un maillage) dont le CENTRE est dans une de ces boîtes est supprimée
+# (coordonnées Blender du mécha, en mètres). Relancer le script ne retire plus rien : il l'affiche.
+DECOR = {
+    "Int_Decor": [
+        ("champignon sur sa caisse -> potted_mushroom + wood_crate", (-2.2, 1.2, 2.55), (-1.6, 1.8, 3.35)),
+        ("tapis et table basse -> belly_rug + coffee_table", (-1.3, -0.65, 2.55), (0.65, 0.85, 3.1)),
+        ("caisses -> wood_crate", (0.55, -1.95, 2.55), (1.15, -1.3, 3.35)),
+        ("tonneau -> barrel", (1.6, 1.25, 2.55), (2.2, 1.85, 3.25)),
+        ("ardoise -> chalkboard", (0.3, -1.95, 3.5), (0.85, -1.8, 4.2)),
+        ("télé -> tv_set", (2.0, -0.2, 3.4), (2.25, 0.75, 4.45)),
+        ("affiche -> poster", (-1.0, -1.95, 3.55), (-0.4, -1.8, 4.35)),
+        ("cible -> dartboard_wall", (-0.3, -1.95, 3.55), (0.3, -1.8, 4.15)),
+        ("patère et casques -> coat_rack", (-2.25, -0.7, 4.1), (-1.95, -0.1, 4.4)),
+        ("horloge -> wall_clock", (-0.2, 1.8, 4.55), (0.2, 1.95, 4.95)),
     ],
     "Int_Belly": [
-        # aiguilles fixes des cadrans des consoles de jambe -> aiguilles animées (jauge d'erreur, LegDashboard)
-        ((-1.006, 1.575, 3.26), (-0.994, 1.644, 3.293)), ((0.994, 1.575, 3.26), (1.006, 1.644, 3.293)),
-        # consoles des jambes (gauche, droite) : caisson, rehausse arrière, plateau incliné -> props/console.py
-        ((-1.5, 1.2, 2.6), (-0.5, 1.8, 3.1)), ((-1.5, 1.6, 3.1), (-0.5, 1.72, 3.18)), ((-1.52, 1.1813, 3.0378), (-0.48, 1.7187, 3.2822)),
-        ((0.5, 1.2, 2.6), (1.5, 1.8, 3.1)), ((0.5, 1.6, 3.1), (1.5, 1.72, 3.18)), ((0.48, 1.1813, 3.0378), (1.52, 1.7187, 3.2822)),
+        ("restes des anciennes consoles des jambes (consoles : props/console.py)", (-1.45, 1.2, 3.05), (1.6, 1.75, 3.35)),
+        ("plafonnier gauche -> ceiling_light", (-1.1, 0.2, 5.25), (-0.7, 0.6, 5.45)),
+        ("plafonnier droit -> ceiling_light", (0.7, 0.2, 5.25), (1.1, 0.6, 5.45)),
     ],
-    "Int_Decor": [
-        # canapé du salon -> props/sofa.py
-        ((-2.15, -0.62, 2.6), (-2.09, -0.56, 2.68)), ((-2.15, 0.66, 2.6), (-2.09, 0.72, 2.68)),
-        ((-1.69, -0.62, 2.6), (-1.63, -0.56, 2.68)), ((-1.69, 0.66, 2.6), (-1.63, 0.72, 2.68)),
-        ((-2.18, -0.65, 2.68), (-1.6, 0.75, 2.93)), ((-1.98, -0.5, 2.93), (-1.62, 0.04, 3.05)),
-        ((-1.98, 0.06, 2.93), (-1.62, 0.6, 3.05)), ((-2.18, -0.65, 2.93), (-1.98, 0.75, 3.45)),
-        ((-2.18, -0.65, 2.93), (-1.6, -0.5, 3.18)), ((-1.61, -0.62, 2.98), (-1.595, -0.53, 3.1)),
-        ((-2.18, 0.6, 2.93), (-1.6, 0.75, 3.18)), ((-1.61, 0.63, 2.98), (-1.595, 0.72, 3.1)),
-        ((-1.971, 0.28, 3.051), (-1.789, 0.58, 3.349)), ((-1.962, -0.465, 3.035), (-1.798, -0.175, 3.325)),
+    "Int_Circulation": [
+        ("garde-corps de la trappe -> railing", (-2.2, -1.0, 2.63), (-1.2, -0.85, 3.6)),
+        ("potence de la corde -> rope_bracket", (-2.25, -1.6, 4.2), (-1.5, -1.2, 4.75)),
+        ("émetteur bas du rayon -> beam_emitter", (1.3, -1.9, 2.615), (2.2, -1.0, 2.7)),
+        ("émetteur haut du rayon -> beam_emitter", (1.3, -1.9, 8.15), (2.2, -1.0, 8.35)),
+        ("garde-corps du trou de la tête -> railing", (1.25, -1.1, 5.62), (2.25, -0.9, 6.6)),
     ],
     "Int_Head": [
-        # console de la foreuse -> props/console.py
-        ((0.65, 1.15, 5.6), (1.55, 1.75, 6.1)), ((0.65, 1.55, 6.1), (1.55, 1.67, 6.18)), ((0.63, 1.1313, 6.0378), (1.57, 1.6687, 6.2822)),
-        # siège du grappin -> props/grabber_chair.py
-        ((-1.32, 0.63, 5.6), (-0.88, 1.07, 5.63)), ((-1.15, 0.8, 5.62), (-1.05, 0.9, 5.92)), ((-1.35, 0.62, 5.91), (-0.85, 1.08, 5.99)),
-        ((-1.35, 0.58, 5.99), (-0.85, 0.64, 6.45)), ((-0.88, 0.66, 6.12), (-0.82, 1.0, 6.16)), ((-1.38, 0.66, 6.12), (-1.32, 1.0, 6.16)),
-        ((-0.87, 0.95, 5.99), (-0.83, 0.99, 6.12)), ((-1.37, 0.95, 5.99), (-1.33, 0.99, 6.12)),
-        # bureau du grappin (le cadre de l'écran reste) -> props/grabber_desk.py
-        ((-1.5, 1.35, 5.6), (-0.7, 1.75, 6.02)), ((-1.52, 1.33, 6.02), (-0.68, 1.77, 6.06)),
+        ("reste de l'ancien écran du grappin", (-1.45, 1.55, 6.0), (-0.75, 1.75, 6.5)),
+        ("reste de l'ancienne console de la foreuse", (0.7, 1.2, 6.05), (1.4, 1.6, 6.3)),
+        ("plafonnier -> ceiling_light", (-0.25, -0.25, 8.15), (0.25, 0.25, 8.31)),
+    ],
+    "Int_Toilet": [
+        ("cuvette, carrelage, papier, cadre -> toilet_bowl + toilet_cabin", (-2.15, -1.95, 5.55), (-0.8, -0.85, 7.0)),
+    ],
+    "Ext_Details": [
+        ("ancien bras droit fixe (foreuse : props/drill_*.py)", (2.37, -0.5, 2.0), (3.6, 4.5, 5.15)),
+        ("ancien bras gauche fixe (grappin : props/grabber_*.py)", (-3.6, -0.5, 2.0), (-2.37, 4.5, 5.15)),
     ],
 }
+# Objets entièrement faits de décor : supprimés.
+DECOR_OBJECTS = ["Int_DecorHead"]
 
 
-def remove_replaced_furniture():
-    for name, boxes in REPLACED.items():
+def _components(bm):
+    """Parties connexes d'un bmesh (listes de sommets)."""
+    seen, comps = set(), []
+    for v in bm.verts:
+        if v in seen:
+            continue
+        stack, comp = [v], []
+        while stack:
+            x = stack.pop()
+            if x in seen:
+                continue
+            seen.add(x)
+            comp.append(x)
+            stack += [e.other_vert(x) for e in x.link_edges]
+        comps.append(comp)
+    return comps
+
+
+def strip_decor():
+    for name in DECOR_OBJECTS:
+        obj = bpy.data.objects.get(name)
+        if obj is not None:
+            mesh = obj.data
+            bpy.data.objects.remove(obj, do_unlink=True)
+            if mesh.users == 0:
+                bpy.data.meshes.remove(mesh)
+            print("mecha_shell : objet de décor %s supprimé" % name)
+    for name, boxes in DECOR.items():
         obj = bpy.data.objects[name]
         bm = bmesh.new()
         bm.from_mesh(obj.data)
         mw = obj.matrix_world
-        seen, doomed, hits = set(), [], 0
-        for v in bm.verts:
-            if v in seen:
-                continue
-            stack, comp = [v], []
-            while stack:
-                x = stack.pop()
-                if x in seen:
-                    continue
-                seen.add(x)
-                comp.append(x)
-                stack += [e.other_vert(x) for e in x.link_edges]
+        doomed = []
+        hits = [0] * len(boxes)
+        for comp in _components(bm):
             pts = [mw @ p.co for p in comp]
-            lo = Vector([min(p[i] for p in pts) for i in range(3)])
-            hi = Vector([max(p[i] for p in pts) for i in range(3)])
-            for blo, bhi in boxes:
-                if all(abs(lo[i] - blo[i]) < 0.006 and abs(hi[i] - bhi[i]) < 0.006 for i in range(3)):
+            center = Vector([(min(p[i] for p in pts) + max(p[i] for p in pts)) / 2 for i in range(3)])
+            for k, (_label, lo, hi) in enumerate(boxes):
+                if all(lo[i] <= center[i] <= hi[i] for i in range(3)):
                     doomed += comp
-                    hits += 1
+                    hits[k] += 1
                     break
         bmesh.ops.delete(bm, geom=list(set(doomed)), context="VERTS")
         bm.to_mesh(obj.data)
         bm.free()
-        print("mecha_shell : %s, %d anciens meubles retirés" % (name, hits))
+        for (label, _lo, _hi), count in zip(boxes, hits):
+            print("mecha_shell : %s, %s : %d pièce(s) retirée(s)" % (name, label, count))
 
 
 def fix_z_fighting(obj, step=0.0015, passes=6):
@@ -458,40 +484,6 @@ def _fix_after_modifiers(obj, bm, comps, step):
         for v in comps[best[0]][0]:
             v.co += offset
     return len(moved)
-
-
-def remove_toilet_planks():
-    """Retire les cloisons en planches de la cabine des toilettes (remplacées par l'objet toilet_cabin)."""
-    obj = bpy.data.objects["Int_Toilet"]
-    mesh = obj.data
-    bm = bmesh.new()
-    bm.from_mesh(mesh)
-    names = [m.name if m else "" for m in mesh.materials]
-    mw = obj.matrix_world
-    seen, doomed = set(), []
-    for v in bm.verts:
-        if v in seen:
-            continue
-        stack, comp = [v], []
-        while stack:
-            x = stack.pop()
-            if x in seen:
-                continue
-            seen.add(x)
-            comp.append(x)
-            stack += [e.other_vert(x) for e in x.link_edges]
-        pts = [mw @ p.co for p in comp]
-        lo = Vector([min(p[i] for p in pts) for i in range(3)])
-        hi = Vector([max(p[i] for p in pts) for i in range(3)])
-        mats = {names[f.material_index] for p in comp for f in p.link_faces}
-        in_side = lo.x >= -0.89 and hi.x <= -0.82        # cloison droite (porte)
-        in_front = lo.y >= -0.94 and hi.y <= -0.87       # cloison avant
-        if mats <= {"Wood", "Cushion", "IronDark"} and (in_side or in_front) and hi.z - lo.z > 0.05:
-            doomed += comp
-    bmesh.ops.delete(bm, geom=list(set(doomed)), context="VERTS")
-    bm.to_mesh(mesh)
-    bm.free()
-    print("mecha_shell : toilettes, %d sommets de planches retirés" % len(set(doomed)))
 
 
 # ---------------------------------------------------------------- structure
@@ -624,8 +616,7 @@ def main():
     for name in ("Int_Belly", "Int_Head", "Int_HeadFront", "Int_Slab"):
         world_uvs(bpy.data.objects[name])
     clean_wear()
-    remove_toilet_planks()
-    remove_replaced_furniture()
+    strip_decor()
     for obj in [o for o in bpy.data.objects if o.type == "MESH" and not o.hide_render and not o.name.startswith("Shell_")]:
         fix_z_fighting(obj)
     build_structure()
