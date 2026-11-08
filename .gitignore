@@ -26,3 +26,6 @@ Thumbs.db
 
 # Python (scripts Blender)
 __pycache__/
+
+# VS Code : réglages propres à chaque machine (chemin de Godot…)
+.vscode/
