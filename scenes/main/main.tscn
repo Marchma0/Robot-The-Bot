@@ -8,11 +8,6 @@
 [ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="5_mecha"]
 [ext_resource type="Script" path="res://scripts/ui/hint_bar.gd" id="7_hintbar"]
 
-[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_director"]
-properties/0/path = NodePath(".:current_level")
-properties/0/spawn = true
-properties/0/replication_mode = 2
-
 [node name="Main" type="Node" unique_id=708183551]
 
 [node name="LobbyMenu" type="CanvasLayer" parent="." unique_id=1483567492]
@@ -130,7 +125,7 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("7_hintbar")
 
-[node name="World" type="Node3D" parent="." unique_id=1784168218]
+[node name="World" type="Node3D" parent="." unique_id=1784168218 groups=["net_world"]]
 
 [node name="Level" type="Node3D" parent="World"]
 
@@ -155,9 +150,6 @@ mecha = NodePath("../Mecha")
 walker = NodePath("../Mecha/Walker")
 fader = NodePath("../../Fader")
 return_button = NodePath("../Mecha/Controls/ReturnToCamp")
-
-[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="World/MissionDirector"]
-replication_config = SubResource("SceneReplicationConfig_director")
 
 [node name="Fader" type="CanvasLayer" parent="."]
 script = ExtResource("8_fader")

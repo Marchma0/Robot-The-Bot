@@ -1,13 +1,14 @@
 class_name MissionDirector
 extends Node
 ## Enchaîne le camp (lobby) et les missions (M12).
-## - Charge le niveau courant (`current_level`) dans `level_container`, chez chaque joueur.
+## - Le niveau courant (`current_level`) est créé par l'hôte dans `level_container`, chez chaque joueur.
 ## - Hôte : lance une mission (terminal du camp) ou ramène au camp (bouton dans le robot),
 ##   seulement si tous les nains sont à bord : fondu au noir chez tout le monde, changement de niveau,
 ##   le robot (et les nains dedans) est replacé au point `MechaStart` du niveau, puis le fondu s'éclaircit.
 ##
-## Réseau : l'hôte est autoritaire sur `current_level` (répliqué, aussi pour ceux qui arrivent en cours
-## de partie) ; chaque peer charge lui-même la scène du niveau. Le fondu passe par un RPC.
+## Réseau : le niveau est créé par l'hôte avec un MultiplayerSpawner (`LevelSpawner`), jamais chargé par
+## chaque joueur de son côté : un client a donc toujours le niveau avant de recevoir l'état de ses objets,
+## y compris s'il arrive en cours de partie (voir docs/reseau.md). Le fondu passe par un RPC.
 ## Le robot est replacé par l'hôte (MechaWalker.reset_to), sa place est déjà synchronisée.
 
 signal level_changed(level_id: StringName)
@@ -34,29 +35,28 @@ const MISSIONS: Array[Dictionary] = [
 ## Bouton « retour au camp » dans le robot : n'apparaît qu'en mission.
 @export var return_button: PushButton
 
-## Niveau chargé. Autorité : hôte (synchronisé).
-var current_level: StringName = &"":
-	set(value):
-		if value == current_level:
-			return
-		current_level = value
-		if is_node_ready():
-			_load_level(value)
+## Niveau chargé (le même chez tout le monde : c'est l'hôte qui le crée).
+var current_level: StringName = &""
 
 var _level: Node3D = null
 var _busy: bool = false
+var _level_spawner: MultiplayerSpawner
 
 
 func _ready() -> void:
 	add_to_group(&"mission_director")
 	NetworkManager.session_ended.connect(_on_session_ended)
+	NetworkManager.session_joining.connect(_on_session_joining)
 	if return_button != null:
 		return_button.set_meta(&"layer", return_button.collision_layer)
 		return_button.pressed.connect(func(_peer_id: int) -> void: return_to_lobby())
-	if current_level == &"":
-		current_level = LOBBY
-	if _level == null:
-		_load_level(current_level)
+	_level_spawner = MultiplayerSpawner.new()
+	_level_spawner.name = "LevelSpawner"
+	add_child(_level_spawner)
+	_level_spawner.spawn_path = _level_spawner.get_path_to(level_container)
+	_level_spawner.spawn_function = _spawn_level
+	# Hors ligne (menu), on est son propre hôte : le camp s'affiche derrière le menu.
+	_set_level(LOBBY)
 
 
 ## Vrai au camp.
@@ -115,7 +115,7 @@ func _travel(level_id: StringName) -> void:
 	_busy = true
 	_fade.rpc(true)
 	await get_tree().create_timer(ScreenFader.FADE_TIME + 0.1).timeout
-	current_level = level_id
+	_set_level(level_id)
 	await _place_mecha()
 	await get_tree().create_timer(0.3).timeout
 	_fade.rpc(false)
@@ -131,15 +131,32 @@ func _place_mecha() -> void:
 	await walker.reset_to(xform)
 
 
-func _load_level(level_id: StringName) -> void:
-	if _level != null:
-		_level.queue_free()
-		_level = null
-	var path: String = LEVELS.get(level_id, "")
-	if path.is_empty() or level_container == null:
+## Hôte : remplace le niveau courant (le spawner le recrée chez tous les clients).
+func _set_level(level_id: StringName) -> void:
+	if not multiplayer.is_server() or level_container == null or not LEVELS.has(level_id):
 		return
-	_level = (load(path) as PackedScene).instantiate() as Node3D
-	level_container.add_child(_level)
+	_drop_level()
+	_level_spawner.spawn(level_id)
+
+
+## Exécuté chez chaque peer (hôte compris) avec le même identifiant de niveau.
+func _spawn_level(data: Variant) -> Node:
+	var level_id: StringName = StringName(data)
+	_level = (load(LEVELS[level_id]) as PackedScene).instantiate() as Node3D
+	current_level = level_id
+	_level.ready.connect(_on_level_ready.bind(level_id), CONNECT_ONE_SHOT)
+	return _level
+
+
+## Retire le niveau tout de suite (son nom est libéré pour le suivant).
+func _drop_level() -> void:
+	for child: Node in level_container.get_children():
+		level_container.remove_child(child)
+		child.queue_free()
+	_level = null
+
+
+func _on_level_ready(level_id: StringName) -> void:
 	if return_button != null:
 		# Au camp, pas de bouton de retour : on le cache et on ne peut plus le viser.
 		return_button.visible = level_id != LOBBY
@@ -160,5 +177,11 @@ func _on_session_ended(_reason: String) -> void:
 	_busy = false
 	if fader != null:
 		fader.fade(false)
-	current_level = LOBBY
+	_set_level(LOBBY)
 	_place_mecha()
+
+
+func _on_session_joining() -> void:
+	# On rejoint une partie : notre camp local disparaît, l'hôte va envoyer le sien.
+	_drop_level()
+	current_level = &""

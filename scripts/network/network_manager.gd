@@ -8,6 +8,8 @@ extends Node
 signal player_joined(peer_id: int)
 ## Un joueur a quitté la partie. Émis sur tous les peers.
 signal player_left(peer_id: int)
+## On va rejoindre une partie (juste avant la connexion) : le monde local est vidé, l'hôte envoie le sien.
+signal session_joining
 ## La partie a démarré localement (on héberge, ou on est connecté à l'hôte).
 signal session_started
 ## La partie est terminée localement (on est parti, ou l'hôte a fermé).
@@ -35,6 +37,9 @@ func _ready() -> void:
 	_steam.client_ready.connect(_on_steam_client_ready)
 	_steam.failed.connect(_on_steam_failed)
 	add_child(_steam)
+	var guard: NetGuard = NetGuard.new()
+	guard.name = "NetGuard"
+	add_child(guard)
 
 
 # --- ENet (local / réseau local / VPN) ---
@@ -54,6 +59,7 @@ func join_game(address: String, port: int = DEFAULT_PORT) -> Error:
 	var err: Error = peer.create_client(address, port)
 	if err != OK:
 		return err
+	session_joining.emit()
 	multiplayer.multiplayer_peer = peer
 	return OK
 
@@ -154,6 +160,7 @@ func _on_steam_host_ready(peer: MultiplayerPeer, lobby_id: int) -> void:
 
 func _on_steam_client_ready(peer: MultiplayerPeer) -> void:
 	# La suite (session_started) arrive par multiplayer.connected_to_server, comme en ENet.
+	session_joining.emit()
 	multiplayer.multiplayer_peer = peer
 
 

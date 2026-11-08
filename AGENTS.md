@@ -52,6 +52,7 @@ scripts/
 docs/
   ideas.md         # idées de game design NON validées
   decisions.md     # décisions prises (date + raison)
+  reseau.md        # modèle réseau : comment synchroniser une interaction, un objet, un niveau (À LIRE)
 tests/             # scènes de test isolées (sandbox_*.tscn)
 ```
 
@@ -63,6 +64,8 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
 5. Tout nouveau système doit être pensé "comment ça se synchronise ?" **avant** d'être codé. Si ce n'est pas clair, demander.
    **Toute interaction doit être synchronisée avec tous les joueurs** (ce que l'un fait, tous le voient), et testée en multi (hôte + au moins un client) avant d'être considérée comme finie.
 6. Le cockpit est dans un repère **local au mécha** : les nains sont enfants du mécha (ou d'un nœud qui le suit), pour ne pas glisser quand il bouge.
+7. **Modèle réseau détaillé dans `docs/reseau.md`** (à lire avant toute interaction, objet ou niveau). En bref : un état qui dure = une variable dans un `MultiplayerSynchronizer` avec `spawn = true` ; un effet d'un instant = RPC `authority, call_local` de l'hôte ; un objet qui apparaît ou disparaît en jeu = créé par l'hôte sous un `NetSpawner` (place réglée **avant** `add_child`) ; un niveau = créé par l'hôte via le `LevelSpawner` de `MissionDirector`, jamais chargé par chaque joueur ; un `RigidBody3D` figé = `FREEZE_MODE_STATIC`.
+8. **Test réseau automatique** : `sh tests/tools/net_test.sh` (hôte + client sans fenêtre, compare ce que chacun voit) doit afficher `NET TEST OK` avant de fusionner une branche qui touche au réseau, aux objets ou aux interactions. Chaque nouvelle interaction ajoute son étape dans `tests/tools/net_test.gd`. En vraie partie (Steam compris), **F9** compare l'état du client à celui de l'hôte.
 
 ## Conventions GDScript
 - **Typage statique partout** (`var speed: float = 3.0`, `func foo(x: int) -> void`).
@@ -203,6 +206,8 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
   - ramasser des objets (caisses, cacas, grappin, rangement dans le sac à dos) ;
   - plus généralement toutes les interactions : boutons, leviers, sièges, portes, mini-jeux du camp, terminal de mission.
   Pour chaque interaction : l'hôte décide, l'état est répliqué (ou envoyé par RPC à tous), un joueur qui arrive en cours de partie voit le bon état.
+  - [x] Modèle réseau général (2026-11-08) : niveau créé par l'hôte (`LevelSpawner`), objets réseau sous `NetSpawner` (objets posés à la main repris par l'hôte), caisses synchronisées, cacas et caisses figés en mode STATIC, garde-fous (`tests/tools/net_test.sh`, F9, alerte « créé hors d'un MultiplayerSpawner »), doc `docs/reseau.md`. Test auto vert sur rochers, caisses, sac, cacas, grappin, foreuse, boutons, leviers, sièges, porte, rayon, terminal, fléchettes, bras de fer, arrivée en cours de partie et changements de niveau
+  - [ ] À confirmer en vraie partie Steam (hôte + client, F9 pour comparer)
 - [x] M0 — Projet, Input Map, NetworkManager ENet (host/join local), spawn de 4 nains
 - [x] M1 — Nain contrôlable (CharacterBody3D) dans un cockpit qui bouge
 - [x] M2 — Modèles 3D low poly simples (Blender via MCP) : nain, mécha robot (ventre + tête, trou de circulation), postes → `.glb` + scènes héritées

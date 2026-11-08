@@ -1,0 +1,87 @@
+class_name NetAudit
+extends RefCounted
+## Photo de « ce que ce joueur voit » du monde partagé, pour comparer l'hôte et un client.
+## Utilisé par le test réseau automatique (`tests/tools/net_test.tscn`) et par la touche de
+## debug F9 en partie (`NetworkManager`) : un écart entre l'hôte et un client = un bug de synchro.
+##
+## Contenu de la photo (clé = chemin depuis `root`) :
+## - chaque propriété « à chaque changement » des MultiplayerSynchronizer tenus par l'hôte ;
+## - chaque objet réseau (RigidBody3D, ou nœud qui porte un MultiplayerSynchronizer) : sa présence
+##   et sa place (à 10 cm près).
+## Les nains sont ignorés (chaque joueur a l'autorité sur le sien).
+
+const POSITION_TOLERANCE: float = 0.15
+const FLOAT_TOLERANCE: float = 0.05
+
+
+## `continuous` : ajoute aussi les propriétés envoyées en continu (bras, jauges…). Elles bougent tout le
+## temps et ne se comparent pas entre deux joueurs, mais servent à voir si une action a eu un effet.
+static func snapshot(root: Node, continuous: bool = false) -> Dictionary:
+	var out: Dictionary = {}
+	_walk(root, root, out, continuous)
+	return out
+
+
+## Lignes lisibles décrivant les écarts entre la photo de l'hôte et celle du client.
+static func diff(host: Dictionary, client: Dictionary) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for key: String in host:
+		if not client.has(key):
+			lines.append("%s : absent chez le client (hôte : %s)" % [key, host[key]])
+		elif not _same(host[key], client[key]):
+			lines.append("%s : hôte %s, client %s" % [key, host[key], client[key]])
+	for key: String in client:
+		if not host.has(key):
+			lines.append("%s : en trop chez le client (%s)" % [key, client[key]])
+	lines.sort()
+	return lines
+
+
+static func _walk(root: Node, node: Node, out: Dictionary, continuous: bool) -> void:
+	if node.is_in_group(&"dwarves"):
+		return
+	if node is MultiplayerSynchronizer:
+		_add_sync(root, node as MultiplayerSynchronizer, out, continuous)
+	elif node is Node3D and _is_net_object(node):
+		var place: Vector3 = (node as Node3D).global_position.snappedf(0.1)
+		out["objet " + str(root.get_path_to(node))] = place
+	for child: Node in node.get_children():
+		_walk(root, child, out, continuous)
+
+
+static func _is_net_object(node: Node) -> bool:
+	if node is RigidBody3D:
+		return true
+	for child: Node in node.get_children():
+		if child is MultiplayerSynchronizer:
+			return true
+	return false
+
+
+static func _add_sync(root: Node, sync: MultiplayerSynchronizer, out: Dictionary, continuous: bool) -> void:
+	if sync.get_multiplayer_authority() != 1 or sync.replication_config == null:
+		return
+	var target: Node = sync.get_node_or_null(sync.root_path)
+	if target == null:
+		return
+	var config: SceneReplicationConfig = sync.replication_config
+	for prop: NodePath in config.get_properties():
+		var mode: SceneReplicationConfig.ReplicationMode = config.property_get_replication_mode(prop)
+		if mode == SceneReplicationConfig.REPLICATION_MODE_ALWAYS and not continuous:
+			continue
+		var found: Array = target.get_node_and_resource(prop)
+		var owner_node: Node = found[0] as Node
+		if owner_node == null:
+			continue
+		var value: Variant = owner_node.get_indexed(found[2] as NodePath)
+		out[str(root.get_path_to(owner_node)) + ":" + str(found[2])] = value
+
+
+static func _same(a: Variant, b: Variant) -> bool:
+	if typeof(a) != typeof(b):
+		return false
+	if a is float:
+		return absf(a - b) <= FLOAT_TOLERANCE
+	if a is Vector3:
+		return (a as Vector3).distance_to(b) <= POSITION_TOLERANCE
+	return a == b

@@ -20,7 +20,8 @@ const BACKPACK_REACH: float = 14.0
 
 func _ready() -> void:
 	add_to_group(&"storable_items")
-	freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+	# STATIC et non KINEMATIC : en KINEMATIC, Jolt réécrit parfois une ancienne place quand le parent bouge.
+	freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
 	freeze = true
 
 
