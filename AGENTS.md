@@ -203,6 +203,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 **En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0)
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) :
+- Caisse portée (2.6) : le nain n'a pas encore d'animation « porter à deux mains » (`carry`, à faire dans Blender), il garde la pose d'un objet tenu à une main (noté le 2026-11-09).
 - Bras de vue (`DwarfViewArms`) : sur certaines emotes, les bras se détachent du corps au moment où on lance l'emote (vu par Marchma0 le 2026-11-08). Pistes : le décalage propre à l'emote (`EMOTE_OFFSETS`) et la compensation du torse sont appliqués pendant que les bras montent ; le resserrement (`VIEW_SQUEEZE`, échelle non uniforme) déforme les os qui tournent.
 
 ### Phase 1 — Fondations (moteur, réseau, outils)
@@ -228,6 +229,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 2.3 Emotes (roue de 8), corps visible en première personne, bulle d'état avec portrait, s'accroupir (M6.5)
 - [ ] 2.4 Skins des nains : pièces interchangeables (barbe, casque, couleurs…), choix synchronisé et sauvegardé — vendus en 4.5
 - [ ] 2.5 Améliorations des nains : liste à définir avec le porteur du projet (pistes dans `docs/ideas.md`) — vendues en 4.6
+- [x] 2.6 Inventaire (2026-11-09) : barre de 5 cases (caca, fléchettes…), l'objet de la case choisie est en main, rangé tout seul en prenant une commande ; caisses portées à deux mains (objet lourd) ; panneau des touches des postes descendu sous la ligne « Échap »
 
 ### Phase 3 — Le robot
 - [x] 3.1 Modèle low poly (ventre + tête), postes, système d'interaction (boutons, leviers, joysticks toujours actifs) (M2, M3)

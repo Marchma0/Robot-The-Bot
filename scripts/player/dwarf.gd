@@ -26,6 +26,8 @@ const STAND_HEIGHT: float = 1.2
 const CROUCH_HEIGHT: float = 0.72
 ## Position d'un objet tenu en main, par rapport aux yeux (m).
 const HOLD_OFFSET: Vector3 = Vector3(0.2, -0.22, -0.4)
+## Position du dessous d'un objet lourd porté à deux mains (caisse), par rapport aux pieds (m).
+const CARRY_OFFSET: Vector3 = Vector3(0.0, 0.3, -0.62)
 ## Durée du glissement jusqu'au siège (s).
 const SIT_GLIDE_TIME: float = 0.4
 ## Bits de `anim_flags` (états d'animation envoyés ensemble, en un seul nombre).
@@ -104,6 +106,10 @@ var anim_flags: int:
 		anim_climbing = value & FLAG_CLIMBING != 0
 		anim_crouching = value & FLAG_CROUCHING != 0
 		anim_pooping = value & FLAG_POOPING != 0
+
+## Case de l'inventaire choisie (0 à Inventory.SIZE - 1) : son objet est en main. Écrite par le propriétaire,
+## répliquée (les autres voient ce qu'il a en main, l'hôte vérifie les lancers avec).
+var hand_slot: int = 0
 
 ## Nains présents dans la partie, par peer id (chaque peer tient le sien : même contenu partout).
 static var _by_peer: Dictionary[int, Dwarf] = {}
@@ -206,7 +212,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	elif event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	_choose_slot(event)
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var motion: InputEventMouseMotion = event
 		# Roue d'emotes ouverte : la souris choisit. Assis : elle pilote la station.
 		# Levier tenu : elle bouge le levier. Sinon : elle tourne la tête.
@@ -238,6 +245,11 @@ func _physics_process(delta: float) -> void:
 			_glide_seat = null
 	_camera_rig.update_view(seat)
 	_route_hints()
+	var slots: Array[Dictionary] = Inventory.slots_of(get_tree(), peer_id)
+	var heavy: int = Inventory.heavy_slot_in(slots)
+	if heavy >= 0:
+		hand_slot = heavy   # objet lourd (caisse) : toujours en main
+	_hud.inventory_bar.show_slots(slots, hand_slot)
 	if not (seat is Toilet) and _hud.poop_game.is_active():
 		_hud.poop_game.stop()   # on s'est levé en pleine partie
 	var busy: bool = seat != null or _interactor.get_rope() != null or _climb.is_pulling_up() or _interactor.is_holding()
@@ -316,7 +328,7 @@ func _physics_process(delta: float) -> void:
 	_air_time = 0.0 if is_on_floor() or anim_floating else _air_time + delta
 	anim_speed = horizontal.length()
 	anim_airborne = _air_time > AIRBORNE_DELAY
-	anim_holding = _interactor.is_holding() or _interactor.is_holding_poop()
+	anim_holding = _interactor.is_holding() or _interactor.has_item_in_hand()
 	anim_seated = false
 	anim_pooping = false
 	anim_climbing = false
@@ -375,6 +387,12 @@ func get_hold_transform() -> Transform3D:
 	return view_transform() * Transform3D(Basis.IDENTITY, HOLD_OFFSET)
 
 
+## Où se trouve un objet lourd porté à deux mains (caisse), en global : devant le nain, à hauteur de ventre,
+## droit (il ne suit que la rotation du corps, pas l'inclinaison du regard). Origine = dessous de l'objet.
+func get_carry_transform() -> Transform3D:
+	return get_global_transform_interpolated() * Transform3D(Basis.IDENTITY, CARRY_OFFSET)
+
+
 ## Envoyé par l'hôte quand un caca lancé touche ce nain : écran taché + animation "hit".
 @rpc("any_peer", "call_local", "reliable")
 func receive_splat() -> void:
@@ -428,6 +446,22 @@ func _on_hints_changed(hints: Array[InputHint]) -> void:
 func _route_hints() -> void:
 	var seat: Seat = _interactor.get_seat()
 	_hud.show_hints(_hints, (seat != null and seat.has_screen) or _interactor.is_holding())
+
+
+## Changer de case de l'inventaire : 1 à 5, molette, croix de la manette (gauche / droite).
+## Pas pendant qu'on tient un levier, la corde, qu'on est assis, qu'on porte un objet lourd (caisse),
+## ou que la roue d'emotes est ouverte.
+func _choose_slot(event: InputEvent) -> void:
+	if _interactor.has_claim() or _hud.emote_wheel.is_open() or Inventory.carries_heavy(get_tree(), peer_id):
+		return
+	for i: int in Inventory.SIZE:
+		if event.is_action_pressed(&"slot_%d" % (i + 1)):
+			hand_slot = i
+			return
+	if event.is_action_pressed(&"slot_next"):
+		hand_slot = (hand_slot + 1) % Inventory.SIZE
+	elif event.is_action_pressed(&"slot_previous"):
+		hand_slot = (hand_slot + Inventory.SIZE - 1) % Inventory.SIZE
 
 
 func _on_button_pressed() -> void:

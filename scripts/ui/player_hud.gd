@@ -1,6 +1,6 @@
 class_name PlayerHud
 extends CanvasLayer
-## Interface du joueur local : viseur, touches à l'écran, roue d'emotes, bulle d'état, écran taché, vue brouillée par une fléchette au visage,
+## Interface du joueur local : viseur, touches à l'écran, barre d'inventaire, roue d'emotes, bulle d'état, écran taché, vue brouillée par une fléchette au visage,
 ## flash rouge de douleur,
 ## mini-jeu des toilettes. Créée par le nain du joueur local seulement (jamais pour ceux des autres).
 ##
@@ -13,6 +13,7 @@ extends CanvasLayer
 @onready var dart_blind: DartBlindOverlay = %DartBlind
 @onready var hurt_overlay: HurtOverlay = %HurtOverlay
 @onready var poop_game: PoopMinigame = %PoopMinigame
+@onready var inventory_bar: InventoryBar = %InventoryBar
 @onready var _hint_bar: HintBar = %HintBar
 @onready var _hint_panel: HintPanel = %HintPanel
 

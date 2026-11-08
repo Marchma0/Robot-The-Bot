@@ -70,23 +70,30 @@
   **mine** ce qui est minable devant elle (le rocher éclate, une caisse de minerai tombe).
 - **Grappin** : orienté et étendu pareil, clic = refermer la pince, saut = **lancer la pince** au bout d'un câble (15 m).
 - **Sac à dos** : ce qui est attrapé va **automatiquement** dans un gros sac à dos sur le dos du robot (animation de rangement).
+  Seul le robot y range les caisses (grappin, ou lancées dans l'ouverture) ; les nains peuvent seulement les porter pour les déplacer.
 
 ## Les nains
 - Nain de 1,2 m, vue à la première personne (on voit son corps, pas sa tête), clavier + manette.
 - Marcher, sauter, s'accroupir, roue d'emotes (8 gestes), bulle d'état avec mini-portrait animé en haut à droite.
+- **Inventaire de 5 cases** (barre en bas de l'écran) : un caca prend une case, les fléchettes une seule pour toutes.
+  On choisit sa case avec 1 à 5, la molette ou la croix de la manette ; l'objet de la case choisie est en main
+  (les autres le voient), clic = le lancer, G = le poser, E = ramasser même avec un objet en main.
+  Prendre un levier, la corde ou s'asseoir **range l'objet en main** tout seul ; il revient en main en lâchant.
+  **Objets lourds** (caisses) : portés à deux mains devant soi, ils prennent une case et restent en main (on ne
+  change plus de case, on ne ramasse rien d'autre, pas de levier ni de siège) ; clic ou G les pose devant soi.
 - **Vue à la première personne façon Lethal Company / Deep Rock Galactic** : on ne voit pas son corps ; ses bras
   montent dans le champ pendant un geste (appuyer, tenir, lancer, emote) et redescendent sinon. Les emotes restent
   à la première personne : on voit son bras pointer, saluer, applaudir…
 - **Vie à bord** : salon dans le ventre (canapé où s'asseoir, télé animée qu'on allume et éteint avec son bouton, lampe qui se balance),
   toilettes dans la tête (mini-jeu « Poussée », cacas qu'on ramasse et qu'on lance, caca légendaire doré).
   Intérieur usé et encombré, jamais vide.
-- **Fléchettes** sur la cible du salon : on prend les 3 fléchettes d'un coup (sur la cible ou là où elles sont
-  plantées), on lance de n'importe où dans le robot, elles se plantent là où elles tapent. Centre = « Dans le mille ! »
+- **Fléchettes** sur la cible du salon : on prend les fléchettes libres d'un coup (sur la cible ou là où elles sont
+  plantées, une case d'inventaire), on lance de n'importe où dans le robot, elles se plantent là où elles tapent. Centre = « Dans le mille ! »
   (confettis) ; les scores s'écrivent à la craie sur l'ardoise d'à côté (lancers, total, 3 manches précédentes ;
   rien n'est gardé après la partie). Un nain touché a un flash rouge de douleur et la fléchette reste plantée là
   où elle l'a touché (casque, visage ou corps) ; au visage seulement, il a en plus la vue brouillée
   (aucun texte à l'écran). Un autre nain
-  doit venir la lui retirer.
+  doit venir la lui retirer : elle va dans son inventaire, avec ses autres fléchettes.
 - **Jeu de dames** sur la table basse du salon, à deux (ou seul contre soi-même), debout ou assis sur le canapé (clic) : on vise un pion puis sa case
   d'arrivée ; règles à la française simplifiées (prise obligatoire en avant et en arrière, rafles, dame volante),
   le premier qui joue un côté le garde ; une pendule d'échecs à côté du damier montre à qui de jouer, sonne en fin

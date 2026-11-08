@@ -1,6 +1,6 @@
 class_name PoopHandle
 extends Interactable
-## Zone visée pour ramasser un caca (enfant du caca).
+## Zone visée pour ramasser un caca (enfant du caca) : il va dans une case de l'inventaire.
 
 @export var poop: Poop
 
@@ -8,19 +8,15 @@ extends Interactable
 func get_hints() -> Array[InputHint]:
 	if poop.holder_peer_id != 0:
 		return []
-	return [InputHint.make(&"grab", &"poop_gold" if poop.golden else &"poop")]
+	return [InputHint.make(&"interact", &"poop_gold" if poop.golden else &"poop")]
 
 
-## Ramasser le caca (il faut avoir les mains libres) : on va le tenir.
-func interact(press: bool, grab: bool, hands_free: bool) -> Use:
-	if not (press or grab) or not hands_free:
+## Ramasser le caca (même avec un objet en main) : l'hôte le range dans une case libre.
+func interact(press: bool, grab: bool, _hands_free: bool) -> Use:
+	if not (press or grab) or poop.holder_peer_id != 0:
 		return Use.NONE
 	poop.request_pick.rpc_id(1)
-	return Use.CLAIM
-
-
-func get_claim() -> Node:
-	return poop
+	return Use.DONE
 
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:

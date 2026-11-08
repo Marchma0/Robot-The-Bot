@@ -255,7 +255,8 @@ func _on_catch_zone_body_entered(body: Node) -> void:
 			store_node(poop, "poop_gold" if poop.golden else "poop")
 	elif body is CargoCrate:
 		var crate: CargoCrate = body as CargoCrate
-		store_node(crate, crate.item_kind)
+		if crate.holder_peer_id == 0:
+			store_node(crate, crate.item_kind)
 
 
 func _on_session_ended(_reason: String) -> void:

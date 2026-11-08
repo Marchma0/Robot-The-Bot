@@ -3,8 +3,11 @@ extends RayCast3D
 ## Rayon de visée du nain local (enfant de sa caméra).
 ## Trouve la commande visée, la surligne et lui passe les appuis (`Interactable.interact`) : c'est la
 ## commande qui envoie sa demande à l'hôte. Une nouvelle commande n'a donc rien à changer ici.
-## Garde aussi ce que le joueur tient ou occupe (`_claim` : levier, siège, corde, caca ou fléchettes,
+## Garde aussi ce que le joueur tient ou occupe (`_claim` : levier, siège ou corde,
 ## un seul à la fois, voir Possession), attend que l'hôte le confirme, et gère les touches tant qu'on le tient.
+## Avec un objet de l'inventaire en main (voir Inventory) : clic = le lancer, G = le poser, E = ramasser ou
+## appuyer ; prendre un levier, la corde ou s'asseoir range l'objet (`Interactable.stows_hand_item`), sauf un
+## objet lourd (caisse) : clic ou G la pose, et il faut la poser avant de prendre une commande.
 ## Actif uniquement pour le joueur local.
 
 ## Les indices à afficher (touche → icône) ont changé (liste vide = rien à afficher).
@@ -83,8 +86,6 @@ func begin_claim(node: Node) -> void:
 	_claim_wait = 0.0
 	if node is Lever:
 		_wanted = (node as Lever).value
-	elif node is Poop or node is DartsGame:
-		button_pressed.emit()   # prendre en main : même geste qu'un appui
 
 
 ## Vrai quand le joueur tient un levier (confirmé par l'hôte).
@@ -108,14 +109,19 @@ func release_rope() -> void:
 		_release_claim()
 
 
-## Vrai quand le joueur a les fléchettes du robot en main (confirmé par l'hôte).
-func is_holding_darts() -> bool:
-	return _claim is DartsGame and _holds_claim()
+## Vrai quand le joueur a un objet de l'inventaire en main (caca, fléchettes…).
+func has_item_in_hand() -> bool:
+	return not _hand_item().is_empty()
 
 
-## Vrai quand le joueur tient un caca (confirmé par l'hôte).
-func is_holding_poop() -> bool:
-	return _claim is Poop and _holds_claim()
+## Vrai quand le joueur tient un levier, la corde, ou est assis (ou attend la réponse de l'hôte).
+func has_claim() -> bool:
+	return _claim != null
+
+
+## L'objet de l'inventaire en main ({} = main vide), voir Inventory.slots_of.
+func _hand_item() -> Dictionary:
+	return Inventory.item_in_hand(get_tree(), multiplayer.get_unique_id())
 
 
 ## Inclinaison affichée du levier tenu, en radians (x = côté, y = avant/arrière), ZERO si on ne tient rien.
@@ -187,8 +193,6 @@ func _release_claim() -> void:
 		(_claim as Rope).request_release.rpc_id(1)
 	elif _claim is Seat:
 		(_claim as Seat).request_leave.rpc_id(1)
-	elif _claim is DartsGame:
-		(_claim as DartsGame).request_release.rpc_id(1)
 	_claim = null
 
 
@@ -248,16 +252,21 @@ func _set_target(target: Interactable) -> void:
 func _handle_actions() -> void:
 	var press: bool = Input.is_action_just_pressed("interact")
 	var grab: bool = Input.is_action_just_pressed("grab")
-	if is_holding_poop() or is_holding_darts():
-		# Caca ou fléchettes en main : clic = lancer dans la direction du regard ;
-		# E = appuyer sur la commande visée (bouton…), sinon poser.
+	var item: Dictionary = _hand_item() if _claim == null else {}
+	var stows: bool = _target != null and _target.stows_hand_item()
+	if not item.is_empty() and not (stows and not item["heavy"]):
+		# Objet en main : clic = le lancer dans la direction du regard (objet lourd : le poser), G = le poser ;
+		# E = ramasser ou appuyer sur la commande visée. Levier, siège, corde : on passe à la suite (l'objet
+		# se range tout seul), sauf avec un objet lourd.
 		if grab:
-			_throw()
-		elif press:
-			if _target != null and _target.interact(true, false, false) == Interactable.Use.DONE:
+			item["node"].call(&"throw_from_hand", global_position, -global_basis.z)
+			if not item["heavy"]:
+				thrown.emit()
+		elif Input.is_action_just_pressed("drop"):
+			item["node"].call(&"drop_from_hand")
+		elif press and _target != null and not stows:
+			if _target.interact(true, false, false) == Interactable.Use.DONE:
 				button_pressed.emit()
-			else:
-				_drop()
 		return
 	if _target != null and (press or grab):
 		match _target.interact(press, grab, _claim == null):
@@ -266,23 +275,6 @@ func _handle_actions() -> void:
 			Interactable.Use.CLAIM:
 				begin_claim(_target.get_claim())
 	if _claim is Lever and Input.is_action_just_released("grab"):
-		_release_claim()
-
-
-func _throw() -> void:
-	if _claim is Poop:
-		(_claim as Poop).request_throw.rpc_id(1, -global_basis.z)
-		_claim = null
-	else:
-		(_claim as DartsGame).request_throw.rpc_id(1, global_position, -global_basis.z)   # on garde les fléchettes
-	thrown.emit()
-
-
-func _drop() -> void:
-	if _claim is Poop:
-		(_claim as Poop).request_throw.rpc_id(1, Vector3.ZERO)
-		_claim = null
-	else:
 		_release_claim()
 
 
@@ -317,8 +309,16 @@ func _update_spring_stick(lever: Lever, delta: float) -> void:
 
 func _update_prompt() -> void:
 	var hints: Array[InputHint] = []
-	if is_holding_darts() or is_holding_poop():
-		hints = [InputHint.make(&"grab", &"throw"), InputHint.make(&"interact", &"drop")]
+	var item: Dictionary = _hand_item() if _claim == null else {}
+	var stows: bool = _target != null and _target.stows_hand_item()
+	if stows and not item.is_empty() and not item["heavy"]:
+		hints = _target.get_hints()   # levier, siège, corde : l'objet en main se rangera
+	elif not item.is_empty():
+		if _target != null and not stows:
+			hints.append_array(_target.get_hints())   # ramasser, appuyer…
+		if not item["heavy"]:
+			hints.append(InputHint.make(&"grab", &"throw"))
+		hints.append(InputHint.make(&"drop", &"drop"))
 	elif _claim is Interactable and _claim_confirmed:
 		hints = (_claim as Interactable).get_hints()
 		if _claim is Seat and _target != null:

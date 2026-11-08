@@ -95,6 +95,11 @@ func get_hints() -> Array[InputHint]:
 	return [InputHint.make(&"grab", &"hand_grab")]
 
 
+## Range l'objet de l'inventaire en main (voir Interactable.stows_hand_item).
+func stows_hand_item() -> bool:
+	return true
+
+
 ## Attraper (clic / RT maintenu, mains libres) : on va le tenir.
 func interact(_press: bool, grab: bool, hands_free: bool) -> Use:
 	if not grab or not hands_free:
