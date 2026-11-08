@@ -74,6 +74,9 @@
 ## Les nains
 - Nain de 1,2 m, vue à la première personne (on voit son corps, pas sa tête), clavier + manette.
 - Marcher, sauter, s'accroupir, roue d'emotes (8 gestes), bulle d'état avec mini-portrait animé en haut à droite.
+- **Vue à la première personne façon Lethal Company** : les yeux suivent la tête (la vue vit avec la marche,
+  l'accroupi, l'assise), on ne voit de soi que ses bras et ses mains (avancés dans le champ pour bien voir les
+  gestes), pas son torse ; pendant une emote, la caméra passe en troisième personne de trois quarts devant le nain.
 - **Vie à bord** : salon dans le ventre (canapé où s'asseoir, télé animée qu'on allume et éteint avec son bouton, lampe qui se balance),
   toilettes dans la tête (mini-jeu « Poussée », cacas qu'on ramasse et qu'on lance, caca légendaire doré).
   Intérieur usé et encombré, jamais vide.

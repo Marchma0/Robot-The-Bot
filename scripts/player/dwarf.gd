@@ -234,6 +234,10 @@ func _physics_process(delta: float) -> void:
 			global_position = (_glide_seat.global_transform * _sit_from).origin
 			_glide_seat = null
 	_camera_rig.update_view(seat)
+	# Emote vue de l'extérieur : on ne vise plus rien (le viseur part avec la caméra).
+	var third_person: bool = _camera_rig.is_third_person()
+	if _interactor.enabled == third_person:
+		_interactor.set_active(not third_person)
 	_route_hints()
 	if not (seat is Toilet) and _hud.poop_game.is_active():
 		_hud.poop_game.stop()   # on s'est levé en pleine partie

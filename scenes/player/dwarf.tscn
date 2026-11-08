@@ -118,13 +118,14 @@ body_model = NodePath("../BodyModel")
 head_model = NodePath("../BodyModel/DwarfRig/Skeleton3D/HeadBone/HeadPitch/HeadModel")
 name_label = NodePath("../NameLabel")
 
-[node name="CameraRig" type="Node" parent="." node_paths=PackedStringArray("dwarf", "head", "camera", "look")]
+[node name="CameraRig" type="Node" parent="." node_paths=PackedStringArray("dwarf", "head", "camera", "look", "head_bone")]
 unique_name_in_owner = true
 script = ExtResource("15_camera")
 dwarf = NodePath("..")
 head = NodePath("../Head")
 camera = NodePath("../Head/Camera")
 look = NodePath("../Look")
+head_bone = NodePath("../BodyModel/DwarfRig/Skeleton3D/HeadBone/HeadPitch")
 
 [node name="Climb" type="Node" parent="." node_paths=PackedStringArray("dwarf")]
 unique_name_in_owner = true
