@@ -39,6 +39,7 @@ addons/            # plugins tiers (GodotSteam, etc.) — ne pas modifier, NON v
 assets/
   models/          # .glb exportés depuis Blender
   textures/ audio/ fonts/
+  translations/    # texts.csv : tous les textes du jeu, français + anglais
 blender/           # fichiers sources .blend (pas importés par Godot, voir .gdignore)
 scenes/
   main/            # menus, lobby, scène de jeu racine
@@ -73,6 +74,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (
 - Ordre dans un script : `class_name`, `extends`, signaux, enums, constantes, `@export`, variables, `_ready`, `_physics_process`, méthodes publiques, méthodes privées (`_prefixe`).
 - Toute la logique de gameplay physique dans `_physics_process`, pas `_process`.
 - Les inputs sont déclarés dans la Input Map (`project.godot`), jamais de touches codées en dur. Prévoir la manette dès le début.
+- **Deux langues (français, anglais)** : tout texte visible par le joueur passe par `tr("texte en français")` (le texte français sert de clé) et a sa ligne dans `assets/translations/texts.csv` (colonnes `keys,fr,en`). Pour un texte avec des valeurs : `tr("Joueur %d") % n`. Les boutons et étiquettes des scènes sont traduits tout seuls, mais leur texte doit aussi être dans le tableau. `run_tests.sh` vérifie qu'aucun texte n'est oublié. Les textes de debug restent en français.
 
 ## Pipeline Blender → Godot
 - Échelle : 1 unité Blender = 1 mètre. Appliquer les transforms (Ctrl+A) avant export. +Y up géré par l'export glTF.
@@ -215,7 +217,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
   - [x] Nain découpé (2026-11-08) : apparence (`DwarfLook`, où iront les skins), caméra (`DwarfCamera`), corde (`DwarfClimb`) ; interface du joueur dans `scenes/ui/player_hud.tscn`, créée seulement pour le joueur local ; `dwarf.gd` passe de 780 à 590 lignes
   - [ ] Fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte et sauvegarde — conception à valider avec le porteur du projet
   - [x] Base commune des bras (2026-11-08) : `MechaArm` (visée depuis le poste, limites, caméra, remise à zéro), `DrillArm` et `GrabberArm` n'ont plus que leur outil
-  - [ ] Traduction : tout texte visible passe par `tr()`, français + anglais
+  - [x] Traduction (2026-11-08) : textes visibles passés par `tr()`, tableau `assets/translations/texts.csv` (54 textes, fr + en), le jeu suit la langue du système (menu de langue : 6.2), vérification dans `run_tests.sh`
   - [ ] Dette de `mecha.blend` (après 3.4) : retirer les anciens bras et l'ancienne console de `mecha_shell.py`, découper le vieux décor en objets avec leur collision, supprimer `MechaArmUtils.strip_*`
 
 ### Phase 2 — Les nains

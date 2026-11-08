@@ -132,6 +132,10 @@ toggle_help={
 ]
 }
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://assets/translations/texts.en.translation", "res://assets/translations/texts.fr.translation")
+
 [layer_names]
 
 3d_physics/layer_1="world"

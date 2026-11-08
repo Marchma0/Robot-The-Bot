@@ -43,20 +43,20 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_steam_host_pressed() -> void:
 	_set_buttons_disabled(true)
-	_status_label.text = "Création du lobby Steam..."
+	_status_label.text = tr("Création du lobby Steam...")
 	NetworkManager.host_game_steam()
 
 
 func _on_steam_join_pressed() -> void:
 	_set_buttons_disabled(true)
-	_status_label.text = "Connexion au lobby Steam..."
+	_status_label.text = tr("Connexion au lobby Steam...")
 	NetworkManager.join_game_steam(_steam_code_edit.text)
 
 
 func _on_host_pressed() -> void:
 	var err: Error = NetworkManager.host_game()
 	if err != OK:
-		_status_label.text = "Impossible d'héberger (%s)." % error_string(err)
+		_status_label.text = tr("Impossible d'héberger (%s).") % error_string(err)
 
 
 func _on_join_pressed() -> void:
@@ -65,14 +65,14 @@ func _on_join_pressed() -> void:
 		address = "127.0.0.1"
 	var err: Error = NetworkManager.join_game(address)
 	if err != OK:
-		_status_label.text = "Impossible de rejoindre (%s)." % error_string(err)
+		_status_label.text = tr("Impossible de rejoindre (%s).") % error_string(err)
 		return
 	_set_buttons_disabled(true)
-	_status_label.text = "Connexion à %s..." % address
+	_status_label.text = tr("Connexion à %s...") % address
 
 
 func _on_session_started() -> void:
-	var role: String = "hôte" if multiplayer.is_server() else "client %d" % multiplayer.get_unique_id()
+	var role: String = tr("hôte") if multiplayer.is_server() else "client %d" % multiplayer.get_unique_id()
 	get_window().title = "Robot-The-Bot — %s" % role
 	_center.visible = false
 	if NetworkManager.is_steam_session() and not multiplayer.is_server():
@@ -82,7 +82,7 @@ func _on_session_started() -> void:
 
 
 func _on_steam_lobby_created(code: String) -> void:
-	get_window().title = "Robot-The-Bot — hôte Steam (code %s)" % code
+	get_window().title = "Robot-The-Bot — " + tr("hôte Steam (code %s)") % code
 	# Le code reste écrit (il faut pouvoir le donner) ; il est aussi copié dans le presse-papiers.
 	_lobby_code_label.text = code
 	_lobby_code_label.visible = true

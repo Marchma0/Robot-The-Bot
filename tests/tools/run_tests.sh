@@ -1,5 +1,5 @@
 #!/bin/sh
-# Lance tous les tests sans fenêtre : le test réseau, puis chaque scène de test (tests/sandbox_*.tscn).
+# Lance tous les tests sans fenêtre : chaque scène de test (tests/sandbox_*.tscn), les traductions, puis le test réseau.
 # Usage : sh tests/tools/run_tests.sh   (GODOT_PATH doit pointer vers Godot 4.7.2)
 # Une scène échoue si elle plante, affiche une erreur de script, une « [test] ÉCHEC », ou dépasse le temps.
 # Journaux complets dans build/tests/<scène>.log. Sortie : « TOUS LES TESTS OK » ou la liste des échecs.
@@ -30,6 +30,15 @@ for scene in tests/sandbox_*.tscn; do
 		echo "OK     $name"
 	fi
 done
+
+echo "--- traductions"
+if timeout 60 "$GODOT_PATH" --headless --path . -s res://tests/tools/check_translations.gd > build/tests/translations.log 2>&1; then
+	echo "OK     traductions"
+else
+	echo "ÉCHEC  traductions"
+	grep "ÉCHEC" build/tests/translations.log | sed 's/^/        /'
+	failed="$failed traductions"
+fi
 
 echo "--- test réseau"
 if sh tests/tools/net_test.sh | grep -q "NET TEST OK"; then

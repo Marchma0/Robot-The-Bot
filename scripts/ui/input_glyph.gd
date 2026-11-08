@@ -139,7 +139,7 @@ func _part_for_event(event: InputEvent) -> Dictionary:
 		if key.physical_keycode != KEY_NONE:
 			code = DisplayServer.keyboard_get_keycode_from_physical(key.physical_keycode)
 		var text: String = OS.get_keycode_string(code)
-		text = KEY_NAMES.get(text, text)
+		text = tr(KEY_NAMES.get(text, text))
 		var font: Font = get_theme_default_font()
 		var text_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _key_font_size(text)).x
 		return _part(&"key", text, maxf(HEIGHT, text_width + 18.0))

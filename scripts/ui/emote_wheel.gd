@@ -94,7 +94,7 @@ func _draw() -> void:
 		draw_line(center + Vector2(cos(a0), sin(a0)) * RADIUS_INNER,
 			center + Vector2(cos(a0), sin(a0)) * RADIUS_OUTER, COLOR_LINE, 2.0)
 		var mid: float = a0 + step / 2.0
-		var label: String = Emotes.LIST[i]["label"]
+		var label: String = tr(Emotes.LIST[i]["label"])
 		var font_size: int = 17
 		var text_size: Vector2 = font.get_string_size(label, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
 		var pos: Vector2 = center + Vector2(cos(mid), sin(mid)) * (RADIUS_INNER + RADIUS_OUTER) / 2.0

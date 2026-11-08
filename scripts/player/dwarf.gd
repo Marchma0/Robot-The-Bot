@@ -80,9 +80,8 @@ var anim_pooping: bool = false
 var anim_throw_count: int = 0
 ## Augmente à chaque caca reçu (animation "hit" chez tout le monde).
 var anim_hit_count: int = 0
-## Mini-jeu des toilettes : raté (soupir) / caca légendaire réussi.
+## Mini-jeu des toilettes raté (soupir).
 var anim_sigh_count: int = 0
-var anim_golden_count: int = 0
 ## Accroupi (maintenir Ctrl / B). Change aussi la collision du nain, chez tout le monde.
 var anim_crouching: bool = false:
 	set(value):
@@ -346,7 +345,7 @@ func setup(p_peer_id: int, p_slot: int) -> void:
 func get_display_name() -> String:
 	var shown: String = player_name.strip_edges()
 	if shown.is_empty():
-		return "Joueur %d" % (slot + 1)
+		return tr("Joueur %d") % (slot + 1)
 	if shown.length() > MAX_NAME_LENGTH:
 		return shown.left(MAX_NAME_LENGTH - 1) + "…"
 	return shown
@@ -402,8 +401,6 @@ func _on_poop_game_finished(success: bool) -> void:
 	toilet.submit_result.rpc_id(1, _poop_round, success)
 	if not success:
 		anim_sigh_count += 1
-	elif toilet.local_round_golden:
-		anim_golden_count += 1
 
 
 func _on_thrown() -> void:

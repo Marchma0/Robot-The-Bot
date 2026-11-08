@@ -64,19 +64,19 @@ func _process(delta: float) -> void:
 		return
 	var mission: Dictionary = _mission()
 	var locked: bool = mission["id"] == &""
-	_title.text = mission["title"]
+	_title.text = tr(mission["title"])
 	_title.modulate = COLOR_LOCKED if locked else Color.WHITE
 	_pager.text = "◄  %d / %d  ►" % [selected + 1, MissionDirector.MISSIONS.size()]
 	var count: Vector2i = director.count_aboard()
-	_crew.text = "à bord : %d / %d" % [count.x, count.y]
+	_crew.text = tr("à bord : %d / %d") % [count.x, count.y]
 	_blink += delta
 	if countdown > 0.0:
-		_status.text = "Montez à bord !  %d" % ceili(countdown)
+		_status.text = tr("Montez à bord !  %d") % ceili(countdown)
 		_status.modulate = COLOR_ARMED
 		_beacon.light_color = COLOR_ARMED
 		_beacon.light_energy = 2.5 if fmod(_blink, 0.6) < 0.3 else 0.2
 	else:
-		_status.text = "Verrouillée" if locked else "Bouton vert : partir"
+		_status.text = tr("Verrouillée") if locked else tr("Bouton vert : partir")
 		_status.modulate = COLOR_LOCKED if locked else COLOR_IDLE
 		_beacon.light_color = COLOR_IDLE
 		_beacon.light_energy = 0.8

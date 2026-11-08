@@ -197,7 +197,7 @@ func _animate_dart(i: int, delta: float) -> void:
 
 func _score_text() -> String:
 	var lines: PackedStringArray = PackedStringArray()
-	lines.append("FLÉCHETTES")
+	lines.append(tr("FLÉCHETTES"))
 	if thrower_name != "":
 		lines.append(thrower_name)
 		var marks: PackedStringArray = PackedStringArray()

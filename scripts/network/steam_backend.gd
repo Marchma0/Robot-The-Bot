@@ -35,7 +35,7 @@ var _steam: Object = null
 
 func _ready() -> void:
 	if not Engine.has_singleton("Steam") or not ClassDB.class_exists("SteamMultiplayerPeer"):
-		status_text = "Steam indisponible (addon GodotSteam absent)"
+		status_text = tr("Steam indisponible (addon GodotSteam absent)")
 		return
 	_steam = Engine.get_singleton("Steam")
 	# Normalement déjà initialisé au lancement par GodotSteam (section [steam] de project.godot) :
@@ -44,12 +44,12 @@ func _ready() -> void:
 	if int(_steam.call("getSteamID")) == 0:
 		var result: Dictionary = _steam.call("steamInitEx", APP_ID, true)
 		if int(result.get("status", 1)) != 0:
-			status_text = "Steam indisponible : lance le client Steam puis relance le jeu"
+			status_text = tr("Steam indisponible : lance le client Steam puis relance le jeu")
 			push_warning("Steam : %s" % result.get("verbal", "échec de l'initialisation"))
 			return
 	available = true
 	persona_name = _steam.call("getPersonaName")
-	status_text = "Steam : connecté en tant que %s" % persona_name
+	status_text = tr("Steam : connecté en tant que %s") % persona_name
 	_steam.connect("lobby_created", _on_lobby_created)
 	_steam.connect("lobby_joined", _on_lobby_joined)
 	_steam.connect("join_requested", _on_join_requested)
@@ -70,7 +70,7 @@ func join(code: String) -> void:
 		return
 	var id: int = code.strip_edges().to_int()
 	if id <= 0:
-		failed.emit("Code de lobby invalide")
+		failed.emit(tr("Code de lobby invalide"))
 		return
 	_steam.call("joinLobby", id)
 
@@ -97,17 +97,17 @@ func leave() -> void:
 
 func _on_lobby_created(result: int, new_lobby_id: int) -> void:
 	if result != LOBBY_CREATED_OK:
-		failed.emit("Création du lobby Steam impossible (code %d)" % result)
+		failed.emit(tr("Création du lobby Steam impossible (code %d)") % result)
 		return
 	lobby_id = new_lobby_id
 	_steam.call("setLobbyJoinable", lobby_id, true)
-	_steam.call("setLobbyData", lobby_id, "name", "Mécha de %s" % _steam.call("getPersonaName"))
+	_steam.call("setLobbyData", lobby_id, "name", tr("Mécha de %s") % _steam.call("getPersonaName"))
 	# Permet aux amis de rejoindre depuis la liste d'amis Steam ("Rejoindre la partie").
 	_steam.call("setRichPresence", "connect", "+connect_lobby %d" % lobby_id)
 	var peer: MultiplayerPeer = _new_peer()
 	var err: Error = peer.call("create_host", VIRTUAL_PORT)
 	if err != OK:
-		failed.emit("Hôte Steam impossible (%s)" % error_string(err))
+		failed.emit(tr("Hôte Steam impossible (%s)") % error_string(err))
 		leave()
 		return
 	host_ready.emit(peer, lobby_id)
@@ -115,7 +115,7 @@ func _on_lobby_created(result: int, new_lobby_id: int) -> void:
 
 func _on_lobby_joined(joined_lobby_id: int, _permissions: int, _locked: bool, response: int) -> void:
 	if response != ENTER_RESPONSE_SUCCESS:
-		failed.emit("Impossible de rejoindre le lobby (code %d)" % response)
+		failed.emit(tr("Impossible de rejoindre le lobby (code %d)") % response)
 		return
 	var owner_id: int = _steam.call("getLobbyOwner", joined_lobby_id)
 	if owner_id == _steam.call("getSteamID"):
@@ -124,7 +124,7 @@ func _on_lobby_joined(joined_lobby_id: int, _permissions: int, _locked: bool, re
 	var peer: MultiplayerPeer = _new_peer()
 	var err: Error = peer.call("create_client", owner_id, VIRTUAL_PORT)
 	if err != OK:
-		failed.emit("Connexion Steam impossible (%s)" % error_string(err))
+		failed.emit(tr("Connexion Steam impossible (%s)") % error_string(err))
 		leave()
 		return
 	client_ready.emit(peer)
