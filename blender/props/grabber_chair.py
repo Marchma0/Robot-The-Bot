@@ -7,7 +7,7 @@ Fiche
 - Budget : 2500 triangles.
 - Pièces : piètement étoile à 5 branches avec patins, colonne, assise et dossier rembourrés (Cushion) avec coutures,
   cadre de dossier (IronDark), appui-tête, accoudoirs (Wood) sur supports, petit manche en cuivre à droite.
-- Pas de collision solide (comme l'ancien siège) : l'interaction est dans Controls/Grabber_Seat.
+- Collision : scenes/mecha/props/grabber_chair.tscn (assise + dossier) ; l'interaction est dans Controls/Grabber_Seat.
 
     blender -b --factory-startup --python blender/props/grabber_chair.py
 """

@@ -106,6 +106,10 @@ func _station_run(seat: Seat, label: String, fire: bool) -> void:
 	await _capture_at(0.25, "%s_6_leve" % label)
 	await _capture_at(0.6, "%s_7_debout" % label)
 	TestCheck.expect(seat.occupant_peer_id == 0 and interactor.get_seat() == null, "%s : E pour se lever" % label)
+	# La chaise a une collision : debout, le nain doit être au sol à côté, pas coincé dedans ni perché dessus.
+	var stand_height: float = _dwarf.position.y - seat.position.y
+	print("%s : debout à %.2f m au-dessus du sol du poste" % [label, stand_height])
+	TestCheck.expect(absf(stand_height) < 0.15, "%s : debout au sol, pas sur la chaise" % label)
 
 
 func _tap(action: StringName) -> void:
