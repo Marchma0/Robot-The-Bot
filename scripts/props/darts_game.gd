@@ -5,12 +5,12 @@ extends Node3D
 ## libres d'un coup, puis on lance au regard (clic), de n'importe où dans le robot. La fléchette part en cloche
 ## et se plante là où elle tape : la cible (points selon l'anneau, « Dans le mille ! » au centre), un mur,
 ## un meuble… ou un autre nain : il a la vue brouillée tant qu'elle est plantée, et un autre nain doit venir
-## la lui retirer (elle retourne sur la cible). Après le dernier lancer, le total s'affiche quelques secondes.
+## la lui retirer (elle retourne sur la cible). Les scores s'écrivent à la craie sur l'ardoise d'à côté (`ChalkScoreboard`).
 ##
 ## Réseau : prendre, poser, lancer et retirer passent par des RPC vers l'hôte, qui vérifie, calcule le vol
 ## (rayons contre le monde et les nains) et le score, puis envoie le vol à tout le monde (`_show_throw`) :
-## chaque peer anime la fléchette lui-même. L'hôte tient (synchronisé) qui lance, les scores de la manche
-## et la place de chaque fléchette (`dart_where`, `dart_pos`, `dart_dir`, `dart_peer`).
+## chaque peer anime la fléchette lui-même. L'hôte tient (synchronisé) qui lance, les scores de la manche,
+## les dernières manches et la place de chaque fléchette (`dart_where`, `dart_pos`, `dart_dir`, `dart_peer`).
 ## Repère : celui de la cible (centre de la cible contre le mur, elle regarde vers -Z).
 
 enum Where { PLANTED, IN_HAND, IN_DWARF }
@@ -35,13 +35,19 @@ const MAX_FLIGHT_TIME: float = 1.5
 ## Fléchette dans un nain : plantée dans sa tête, du côté d'où elle arrive (repère de l'os de la tête).
 const HEAD_CENTER: Vector3 = Vector3(0.0, 0.03, -0.02)
 const HEAD_RADIUS: float = 0.24
-const SCORE_SHOW_TIME: float = 4.0
+## Manches gardées sur l'ardoise.
+const HISTORY_SIZE: int = 4
 
 ## Joueur qui a les fléchettes en main (0 = personne). Autorité : hôte.
 var thrower_peer_id: int = 0
 var thrower_name: String = ""
 ## Points de chaque lancer de la manche en cours. Autorité : hôte.
 var round_scores: PackedInt32Array = PackedInt32Array()
+## La manche affichée est finie (toutes les fléchettes lancées, ou reposées). Autorité : hôte.
+var round_done: bool = false
+## Dernières manches finies, la plus récente en premier : lanceur et total. Autorité : hôte.
+var history_names: PackedStringArray = PackedStringArray()
+var history_totals: PackedInt32Array = PackedInt32Array()
 ## Place de chaque fléchette (Where). Autorité : hôte.
 var dart_where: PackedInt32Array = PackedInt32Array()
 ## Pointe et direction de chaque fléchette : repère du jeu (PLANTED) ou de la tête du nain touché (IN_DWARF).
@@ -56,12 +62,9 @@ var _hand_dart: Node3D
 ## Hôte : fin de manche dans ce temps (s), -1 = pas de manche qui se termine.
 var _round_end_timer: float = -1.0
 var _blind_shown: bool = false
-var _score_timer: float = 0.0
-var _cheer_timer: float = 0.0
+var _flash_timer: float = 0.0
 
 @onready var _board_body: CollisionObject3D = %BoardBody
-@onready var _score_pop: Label3D = %ScorePop
-@onready var _cheer: Label3D = %Cheer
 @onready var _confetti: CPUParticles3D = %Confetti
 @onready var _flash: OmniLight3D = %Flash
 
@@ -80,11 +83,6 @@ func _ready() -> void:
 	_hand_dart.visible = false
 	add_child(_hand_dart)
 	add_to_group(Possession.GROUP)
-	var font: Font = preload("res://assets/fonts/fredoka.tres")
-	_score_pop.font = font
-	_cheer.font = font
-	_score_pop.visible = false
-	_cheer.visible = false
 	NetworkManager.session_ended.connect(_on_session_ended)
 
 
@@ -94,12 +92,11 @@ func _physics_process(delta: float) -> void:
 	if _round_end_timer >= 0.0:
 		_round_end_timer -= delta
 		if _round_end_timer < 0.0:
-			_show_score.rpc(thrower_name, _total())
-			thrower_peer_id = 0
+			_end_round()
 	# Joueur parti : ses fléchettes retournent sur la cible.
 	if thrower_peer_id != 0 and Dwarf.of_peer(thrower_peer_id) == null:
 		_return_held_darts()
-		thrower_peer_id = 0
+		_end_round()
 	for i: int in DART_COUNT:
 		if dart_where[i] == Where.IN_DWARF and Dwarf.of_peer(dart_peer[i]) == null:
 			_put_on_board(i)
@@ -169,6 +166,7 @@ func request_take() -> void:
 	thrower_peer_id = sender
 	thrower_name = dwarf.get_display_name()
 	round_scores = PackedInt32Array()
+	round_done = false
 
 
 ## Poser : les fléchettes encore en main retournent sur la cible.
@@ -179,7 +177,7 @@ func request_release() -> void:
 	if _round_end_timer >= 0.0:
 		return   # la manche se termine déjà
 	_return_held_darts()
-	thrower_peer_id = 0
+	_end_round()
 
 
 ## Lancer (hôte) : `origin` = les yeux du lanceur, `direction` = où il regarde (global).
@@ -228,14 +226,6 @@ func _show_throw(index: int, origin: Vector3, velocity: Vector3, time: float, bu
 		return
 	_flights[index] = {"origin": origin, "velocity": velocity, "time": time, "t": 0.0, "bullseye": bullseye}
 	_darts[index].visible = true
-
-
-## Chez tout le monde : le total de la manche s'affiche quelques secondes au-dessus de la cible.
-@rpc("authority", "call_local", "reliable")
-func _show_score(player_name: String, total: int) -> void:
-	_score_pop.text = tr("%s : %d points") % [player_name, total]
-	_score_pop.visible = true
-	_score_timer = SCORE_SHOW_TIME
 
 
 ## Vol en cloche (hôte), pas à pas, avec un rayon à chaque pas contre le monde et les nains (sauf le lanceur).
@@ -382,48 +372,60 @@ func _animate_flight(i: int, delta: float) -> bool:
 	return true
 
 
-## « Dans le mille ! » : confettis, éclair de lumière et texte qui saute au-dessus de la cible (chez chacun).
+## « Dans le mille ! » : confettis et éclair de lumière sur la cible (chez chacun) ; l'ardoise l'entoure.
 func _celebrate() -> void:
 	_confetti.restart()
 	_confetti.emitting = true
-	_cheer_timer = 1.8
-	_cheer.visible = true
+	_flash_timer = 0.6
 
 
 func _update_effects(delta: float) -> void:
-	if _cheer_timer > 0.0:
-		_cheer_timer -= delta
-		var age: float = 1.8 - _cheer_timer
-		var pop: float = minf(age / 0.15, 1.0)
-		_cheer.scale = Vector3.ONE * (0.4 + 0.8 * pop - 0.2 * clampf((age - 0.15) / 0.2, 0.0, 1.0))
-		_cheer.position.y = 0.38 + age * 0.12
-		_cheer.modulate.a = clampf(_cheer_timer / 0.5, 0.0, 1.0)
-		_cheer.outline_modulate.a = _cheer.modulate.a
-		_flash.light_energy = maxf(0.0, 3.0 * (1.0 - age / 0.6))
-		if _cheer_timer <= 0.0:
-			_cheer.visible = false
-			_flash.light_energy = 0.0
-	if _score_timer > 0.0:
-		_score_timer -= delta
-		var age_s: float = SCORE_SHOW_TIME - _score_timer
-		_score_pop.scale = Vector3.ONE * (0.5 + 0.5 * minf(age_s / 0.2, 1.0))
-		_score_pop.modulate.a = clampf(_score_timer / 0.6, 0.0, 1.0)
-		_score_pop.outline_modulate.a = _score_pop.modulate.a
-		if _score_timer <= 0.0:
-			_score_pop.visible = false
+	if _flash_timer > 0.0:
+		_flash_timer = maxf(_flash_timer - delta, 0.0)
+		_flash.light_energy = 3.0 * _flash_timer / 0.6
 
 
-func _total() -> int:
+## Nombre de fléchettes en vol (leur lancer n'est pas encore écrit sur l'ardoise).
+func flying_count() -> int:
+	var count: int = 0
+	for flight: Dictionary in _flights:
+		if not flight.is_empty():
+			count += 1
+	return count
+
+
+## Total de la manche affichée.
+func round_total() -> int:
 	var total: int = 0
 	for s: int in round_scores:
 		total += s
 	return total
 
 
+## Hôte : la manche se termine (toutes lancées, ou fléchettes reposées) ; elle passe dans l'historique.
+func _end_round() -> void:
+	thrower_peer_id = 0
+	if round_scores.is_empty() or round_done:
+		return
+	round_done = true
+	var names: PackedStringArray = history_names
+	var totals: PackedInt32Array = history_totals
+	names.insert(0, thrower_name)
+	totals.insert(0, round_total())
+	if names.size() > HISTORY_SIZE:
+		names.resize(HISTORY_SIZE)
+		totals.resize(HISTORY_SIZE)
+	history_names = names
+	history_totals = totals
+
+
 func _on_session_ended(_reason: String) -> void:
 	thrower_peer_id = 0
 	thrower_name = ""
 	round_scores = PackedInt32Array()
+	round_done = false
+	history_names = PackedStringArray()
+	history_totals = PackedInt32Array()
 	_round_end_timer = -1.0
 	for i: int in DART_COUNT:
 		_flights[i] = {}
