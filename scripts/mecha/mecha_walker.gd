@@ -82,7 +82,7 @@ var swinging_left: bool = false
 var swinging_right: bool = false
 ## Jauge d'erreur (0 = tout va bien, 1 = chute) et phase. Autorité : hôte (synchronisés).
 var error_gauge: float = 0.0
-var phase: int = Phase.WALKING
+var phase: Phase = Phase.WALKING
 ## À qui le tour de faire un pas (voyant vert sur la console) : 0 = gauche, 1 = droite, -1 = les deux.
 ## Autorité : hôte (synchronisé).
 var next_leg: int = -1
@@ -90,9 +90,10 @@ var next_leg: int = -1
 var _phase_time: float = 0.0
 var _last_error_time: float = -10.0
 
-var _feet: Array[Dictionary] = []
+var _feet: Array[Foot] = []
 var _armed: Array[bool] = [true, true]
-var _pending: Array[float] = [-1.0, -1.0]      # angle demandé en attente (NAN = rien)
+## Angle de pas demandé par chaque joystick, en attente (NAN = rien).
+var _pending: Array[float] = [NAN, NAN]
 var _pending_time: Array[float] = [0.0, 0.0]
 var _last_step_time: float = -10.0
 var _last_step_angle: float = 0.0
@@ -112,7 +113,6 @@ func _ready() -> void:
 	for node: Node3D in _foot_nodes:
 		node.top_level = true
 		(node.get_node("NetSmoother") as NetSmoother).world_space = true   # les pieds restent dans le monde
-	_pending = [NAN, NAN]
 	if recovery_qte != null:
 		recovery_qte.completed.connect(_on_recovery_completed)
 	# Les pieds se posent au sol une fois le mécha placé (après le premier tour de physique).
@@ -192,8 +192,7 @@ func _init_feet() -> void:
 	for leg: int in 2:
 		var hip: Vector3 = body.global_position + basis * HIP_LOCAL[leg]
 		var ground: Vector3 = _ground_at(hip)
-		_feet.append({"pos": ground, "yaw": _yaw, "swing": false, "t": 0.0,
-			"from": ground, "to": ground, "from_yaw": _yaw, "to_yaw": _yaw})
+		_feet.append(Foot.new(ground, _yaw))
 	_ready_done = true
 	if multiplayer.is_server():
 		_place_body(1.0)
@@ -220,7 +219,7 @@ func _try_pending(leg: int) -> void:
 		_pending[leg] = NAN
 		return
 	var other: int = 1 - leg
-	if _feet[leg]["swing"] or _feet[other]["swing"]:
+	if _feet[leg].swing or _feet[other].swing:
 		return   # deux pieds en l'air : interdit, on attend
 	var angle: float = _pending[leg]
 	_pending[leg] = NAN
@@ -269,19 +268,19 @@ func _start_step(leg: int, angle: float) -> void:
 	# Vers la droite (angle positif) = rotation horaire vue de dessus = lacet négatif.
 	# La rotation part du pied resté au sol : en alternant, chaque pas tourne le robot de `turn` ;
 	# un seul joueur ne peut pas dépasser `turn` d'écart avec l'autre pied (il piétine).
-	var other_yaw: float = _feet[other]["yaw"]
+	var other_yaw: float = _feet[other].yaw
 	var new_yaw: float = other_yaw - side * deg_to_rad(turn)
 	var basis: Basis = Basis(Vector3.UP, new_yaw)
 	var lateral: float = (HIP_LOCAL[leg].x - HIP_LOCAL[other].x)
-	var target: Vector3 = _feet[other]["pos"] + basis * Vector3(lateral, 0.0, -advance)
+	var target: Vector3 = _feet[other].pos + basis * Vector3(lateral, 0.0, -advance)
 	target = _ground_at(target)
-	var foot: Dictionary = _feet[leg]
-	foot["swing"] = true
-	foot["t"] = 0.0
-	foot["from"] = foot["pos"]
-	foot["to"] = target
-	foot["from_yaw"] = foot["yaw"]
-	foot["to_yaw"] = new_yaw
+	var foot: Foot = _feet[leg]
+	foot.swing = true
+	foot.t = 0.0
+	foot.from = foot.pos
+	foot.to = target
+	foot.from_yaw = foot.yaw
+	foot.to_yaw = new_yaw
 	_last_step_time = _time
 	_last_step_angle = angle
 	_last_step_leg = leg
@@ -290,50 +289,50 @@ func _start_step(leg: int, angle: float) -> void:
 
 
 func _advance_swing(leg: int, delta: float) -> void:
-	var foot: Dictionary = _feet[leg]
-	if not foot["swing"]:
+	var foot: Foot = _feet[leg]
+	if not foot.swing:
 		return
-	var t: float = minf(1.0, foot["t"] + delta / step_time)
-	foot["t"] = t
+	var t: float = minf(1.0, foot.t + delta / step_time)
+	foot.t = t
 	var eased: float = t * t * (3.0 - 2.0 * t)
-	var pos: Vector3 = (foot["from"] as Vector3).lerp(foot["to"], eased)
+	var pos: Vector3 = (foot.from as Vector3).lerp(foot.to, eased)
 	pos.y += sin(PI * t) * lift_height
-	foot["pos"] = pos
-	foot["yaw"] = lerp_angle(foot["from_yaw"], foot["to_yaw"], eased)
+	foot.pos = pos
+	foot.yaw = lerp_angle(foot.from_yaw, foot.to_yaw, eased)
 	if t >= 1.0:
-		foot["swing"] = false
-		foot["pos"] = foot["to"]
+		foot.swing = false
+		foot.pos = foot.to
 
 
 ## Le corps se place entre les pieds, à la bonne hauteur, et regarde dans leur direction moyenne.
 ## Élan : un pied qui part compte déjà en partie là où il va se poser (le corps part dès la poussée),
 ## et le corps suit cette cible avec un ressort amorti qui garde sa vitesse d'un pas à l'autre.
 func _place_body(delta: float) -> void:
-	var left: Dictionary = _feet[Leg.LEFT]
-	var right: Dictionary = _feet[Leg.RIGHT]
+	var left: Foot = _feet[Leg.LEFT]
+	var right: Foot = _feet[Leg.RIGHT]
 	var mid: Vector3 = (_lead_pos(left) + _lead_pos(right)) / 2.0
 	var roll: float = 0.0
 	var dip: float = 0.0
 	for leg: int in 2:
-		var foot: Dictionary = _feet[leg]
-		if foot["swing"]:
-			var s: float = sin(PI * float(foot["t"]))
-			var planted: Vector3 = _feet[1 - leg]["pos"]
+		var foot: Foot = _feet[leg]
+		if foot.swing:
+			var s: float = sin(PI * float(foot.t))
+			var planted: Vector3 = _feet[1 - leg].pos
 			mid = mid.lerp(Vector3(planted.x, mid.y, planted.z), 0.12 * s)   # un peu de poids sur le pied d'appui
 			roll += (-1.0 if leg == Leg.RIGHT else 1.0) * deg_to_rad(3.0) * s
 			dip += 0.06 * s
-	var target_yaw: float = lerp_angle(left["yaw"], right["yaw"], 0.5)
+	var target_yaw: float = lerp_angle(left.yaw, right.yaw, 0.5)
 	var k: float = 1.0 - exp(-10.0 * delta)
 	_yaw = lerp_angle(_yaw, target_yaw, k)
 	# Hauteur : hanches à HIP_HEIGHT au-dessus du sol moyen, sans dépasser la portée des jambes.
-	var ground_y: float = (minf(left["pos"].y, left["to"].y) + minf(right["pos"].y, right["to"].y)) / 2.0
+	var ground_y: float = (minf(left.pos.y, left.to.y) + minf(right.pos.y, right.to.y)) / 2.0
 	var hip_y: float = ground_y + HIP_HEIGHT - dip
 	var basis: Basis = Basis(Vector3.UP, _yaw)
 	for leg: int in 2:
-		if _feet[leg]["swing"]:
+		if _feet[leg].swing:
 			continue
 		var hip: Vector3 = mid + basis * Vector3(HIP_LOCAL[leg].x, 0.0, 0.0)
-		var ankle: Vector3 = (_feet[leg]["pos"] as Vector3) + Vector3.UP * ANKLE_HEIGHT
+		var ankle: Vector3 = (_feet[leg].pos as Vector3) + Vector3.UP * ANKLE_HEIGHT
 		var flat: float = Vector2(hip.x - ankle.x, hip.z - ankle.z).length()
 		hip_y = minf(hip_y, ankle.y + sqrt(maxf(0.0, MAX_REACH * MAX_REACH - flat * flat)))
 	# Effondrement (M7.2) : il tombe à genoux, penché vers l'avant, et se relève après le QTE.
@@ -365,10 +364,10 @@ func _place_body(delta: float) -> void:
 
 
 ## Position d'un pied pour placer le corps : s'il est en l'air, on regarde déjà vers où il va.
-func _lead_pos(foot: Dictionary) -> Vector3:
-	if not foot["swing"]:
-		return foot["pos"]
-	return (foot["pos"] as Vector3).lerp(foot["to"], step_lead)
+func _lead_pos(foot: Foot) -> Vector3:
+	if not foot.swing:
+		return foot.pos
+	return (foot.pos as Vector3).lerp(foot.to, step_lead)
 
 
 ## Ressort amorti (au sol, x et z) : le corps accélère vers sa place et garde un peu d'élan,
@@ -400,17 +399,17 @@ func _slump_amount() -> float:
 	return 0.0
 
 
-func _set_phase(new_phase: int) -> void:
+func _set_phase(new_phase: Phase) -> void:
 	phase = new_phase
 	_phase_time = 0.0
 	next_leg = -1
 	if new_phase == Phase.FALLING:
 		# Un pied en l'air se repose là où il est.
-		for foot: Dictionary in _feet:
-			if foot["swing"]:
-				foot["to"] = _ground_at(foot["pos"])
-				foot["from"] = foot["pos"]
-				foot["t"] = 0.5
+		for foot: Foot in _feet:
+			if foot.swing:
+				foot.to = _ground_at(foot.pos)
+				foot.from = foot.pos
+				foot.t = 0.5
 
 
 func _on_recovery_completed() -> void:
@@ -422,12 +421,12 @@ func _on_recovery_completed() -> void:
 
 func _publish() -> void:
 	for leg: int in 2:
-		var foot: Dictionary = _feet[leg]
-		_foot_nodes[leg].global_transform = Transform3D(Basis(Vector3.UP, foot["yaw"]), foot["pos"])
-	swinging_left = _feet[Leg.LEFT]["swing"]
-	swinging_right = _feet[Leg.RIGHT]["swing"]
-	landing_left = _feet[Leg.LEFT]["to"]
-	landing_right = _feet[Leg.RIGHT]["to"]
+		var foot: Foot = _feet[leg]
+		_foot_nodes[leg].global_transform = Transform3D(Basis(Vector3.UP, foot.yaw), foot.pos)
+	swinging_left = _feet[Leg.LEFT].swing
+	swinging_right = _feet[Leg.RIGHT].swing
+	landing_left = _feet[Leg.LEFT].to
+	landing_right = _feet[Leg.RIGHT].to
 
 
 ## Point du sol sous `point` (rayon vertical qui ignore le mécha lui-même).
@@ -448,3 +447,24 @@ func _own_bodies() -> Array[RID]:
 		if node is CollisionObject3D:
 			rids.append((node as CollisionObject3D).get_rid())
 	return rids
+
+
+## Un pied (hôte) : place et orientation au sol, et le pas en cours quand il est en l'air.
+class Foot:
+	var pos: Vector3
+	var yaw: float
+	## En l'air, avancement du pas (0..1), départ et arrivée.
+	var swing: bool = false
+	var t: float = 0.0
+	var from: Vector3
+	var to: Vector3
+	var from_yaw: float
+	var to_yaw: float
+
+	func _init(ground: Vector3, ground_yaw: float) -> void:
+		pos = ground
+		from = ground
+		to = ground
+		yaw = ground_yaw
+		from_yaw = ground_yaw
+		to_yaw = ground_yaw

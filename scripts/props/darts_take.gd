@@ -5,6 +5,18 @@ extends Interactable
 @export var game: DartsGame
 
 
+## Prendre les 3 fléchettes (mains libres) : on va les tenir.
+func interact(press: bool, grab: bool, hands_free: bool) -> Use:
+	if not (press or grab) or not hands_free or game == null:
+		return Use.NONE
+	game.request_take.rpc_id(1)
+	return Use.CLAIM
+
+
+func get_claim() -> Node:
+	return game
+
+
 func get_hints() -> Array[InputHint]:
 	if game == null:
 		return []

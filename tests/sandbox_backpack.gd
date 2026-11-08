@@ -61,8 +61,8 @@ func _physics_process(delta: float) -> void:
 
 	if _backpack.get_item_count() >= 4 and _time >= 6.8:
 		_shoot("3_jauge_remplie", _cam_back)
-		if quit_when_done:
-			get_tree().quit()
+		if quit_when_done or TestCheck.is_auto():
+			TestCheck.finish(get_tree())
 
 
 func _deposit_one() -> void:
@@ -114,7 +114,7 @@ func _shoot(shot_name: String, camera: Camera3D) -> void:
 	_shots_done[shot_name] = true
 	var prev_cam: Camera3D = _cam_top_well if _use_top_cam else _cam_back
 	camera.current = true
-	await RenderingServer.frame_post_draw
-	await RenderingServer.frame_post_draw
-	get_viewport().get_texture().get_image().save_png("res://build/views/backpack_%s.png" % shot_name)
+	await TestCheck.frame_drawn(get_tree())
+	await TestCheck.frame_drawn(get_tree())
+	TestCheck.save_view(get_viewport(), "res://build/views/backpack_%s.png" % shot_name)
 	prev_cam.current = true

@@ -31,11 +31,10 @@ func request_collect() -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
-	var dwarves: Array[Node] = get_tree().get_nodes_in_group(&"dwarves")
-	if not dwarves.is_empty():
-		var dwarf: Node3D = _find_dwarf(sender)
-		if dwarf == null or dwarf.global_position.distance_to(global_position) > COLLECT_REACH:
-			return
+	# Sans aucun nain (bac à sable), pas de vérification de portée.
+	var any_dwarf: bool = not get_tree().get_nodes_in_group(&"dwarves").is_empty()
+	if any_dwarf and not Dwarf.is_peer_near(sender, global_position, COLLECT_REACH):
+		return
 	var backpack: Backpack = _find_nearest_backpack()
 	if backpack == null:
 		return
@@ -46,13 +45,6 @@ func request_collect() -> void:
 
 func get_model() -> Node3D:
 	return _model
-
-
-func _find_dwarf(peer_id: int) -> Node3D:
-	for node: Node in get_tree().get_nodes_in_group(&"dwarves"):
-		if node.name == str(peer_id):
-			return node as Node3D
-	return null
 
 
 func _find_nearest_backpack() -> Backpack:

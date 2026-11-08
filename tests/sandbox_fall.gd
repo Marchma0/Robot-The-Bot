@@ -53,8 +53,10 @@ func _physics_process(delta: float) -> void:
 		_end_time = _time + 1.0
 	if _end_time > 0.0 and _time > _end_time:
 		print("[%5.2f s] fin : jauge %.2f, appuis QTE %d" % [_time, _walker.error_gauge, _qte_presses])
-		if quit_when_done:
-			get_tree().quit()
+		TestCheck.expect(_qte_presses > 0, "le robot est tombé et le QTE a été joué")
+		TestCheck.expect(_walker.phase == MechaWalker.Phase.WALKING and _walker.error_gauge == 0.0, "QTE réussi : il est relevé, jauge à zéro")
+		if quit_when_done or TestCheck.is_auto():
+			TestCheck.finish(get_tree())
 
 
 ## Joue le QTE comme deux joueurs : la bonne flèche toutes les 0,4 s, une fausse au 3e appui.
@@ -108,6 +110,6 @@ func _shoot(name: String, camera: Camera3D) -> void:
 		return
 	_shots_done[name] = true
 	camera.current = true
-	await RenderingServer.frame_post_draw
-	await RenderingServer.frame_post_draw
-	get_viewport().get_texture().get_image().save_png("res://build/views/fall_%s.png" % name)
+	await TestCheck.frame_drawn(get_tree())
+	await TestCheck.frame_drawn(get_tree())
+	TestCheck.save_view(get_viewport(), "res://build/views/fall_%s.png" % name)

@@ -11,6 +11,9 @@ extends Interactable
 ## l'occupant arrivent en unreliable_ordered ; l'hôte ignore celles des autres.
 ## L'image brouillée (écran et plein écran) est calculée localement par chaque peer.
 
+## Hôte : l'occupant a cliqué pendant un mini-jeu joué assis (game, ex. bras de fer).
+signal game_pushed(peer_id: int)
+
 ## Viseur dessiné en plein écran : pince du grappin ou cible de la foreuse.
 enum Reticle { CLAW, DRILL }
 
@@ -33,7 +36,7 @@ const SCREEN_VIEW_FILL: float = 0.9
 @export var reticle: Reticle = Reticle.CLAW
 ## Vrai si le saut lance quelque chose depuis ce poste (grappin) : affiche l'icône correspondante.
 @export var can_launch: bool = false
-## Mini-jeu joué assis (bras de fer) : chaque clic de l'occupant lui est envoyé (`submit_push`).
+## Mini-jeu joué assis (bras de fer) : chaque clic de l'occupant est signalé par `game_pushed` (sur l'hôte).
 @export var game: Node
 
 ## Peer installé sur le siège (0 = libre). Autorité : hôte.
@@ -61,7 +64,7 @@ var _overlay_layer: CanvasLayer = null
 
 func _ready() -> void:
 	super()
-	add_to_group(&"seats")
+	add_to_group(Possession.GROUP)
 	_feed_viewport.size = feed_resolution
 	if not has_screen:
 		_screen.visible = false
@@ -116,6 +119,14 @@ func get_hints() -> Array[InputHint]:
 	return [InputHint.make(&"grab", &"sit")]
 
 
+## S'asseoir (E ou clic, mains libres) : on va l'occuper.
+func interact(press: bool, grab: bool, hands_free: bool) -> Use:
+	if not (press or grab) or not hands_free:
+		return Use.NONE
+	request_sit.rpc_id(1)
+	return Use.CLAIM
+
+
 func is_seated_locally() -> bool:
 	return occupant_peer_id != 0 and occupant_peer_id == multiplayer.get_unique_id()
 
@@ -159,9 +170,8 @@ func request_sit() -> void:
 	var sender: int = multiplayer.get_remote_sender_id()
 	if occupant_peer_id != 0 or not is_peer_in_reach(sender, reach):
 		return
-	for node: Node in get_tree().get_nodes_in_group(&"seats"):
-		if (node as Seat).occupant_peer_id == sender:
-			return
+	if Possession.is_peer_busy(get_tree(), sender):
+		return   # il tient ou occupe déjà autre chose
 	occupant_peer_id = sender
 
 
@@ -169,6 +179,13 @@ func request_sit() -> void:
 func request_leave() -> void:
 	if multiplayer.is_server() and multiplayer.get_remote_sender_id() == occupant_peer_id:
 		_free_seat()
+
+
+## Occupant -> hôte : un clic pendant le mini-jeu de ce siège.
+@rpc("any_peer", "call_local", "reliable")
+func request_game_push() -> void:
+	if multiplayer.is_server() and game != null and multiplayer.get_remote_sender_id() == occupant_peer_id:
+		game_pushed.emit(occupant_peer_id)
 
 
 @rpc("any_peer", "call_local", "unreliable_ordered")

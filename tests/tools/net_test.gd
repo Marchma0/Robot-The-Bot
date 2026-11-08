@@ -84,6 +84,7 @@ func _run_host() -> void:
 	await _client_step("levier attrapé (client)", "Mecha/Controls/LegL_Stick", "request_grab")
 	await _client_step("levier lâché (client)", "Mecha/Controls/LegL_Stick", "request_release")
 	await _client_step("assis au grappin (client)", "Mecha/Controls/Grabber_Seat", "request_sit")
+	await _client_refused("déjà assis : la foreuse voisine est refusée (client)", "Mecha/Controls/Drill_Seat", "request_sit")
 	await _client_step("grappin piloté (client)", "Mecha/Controls/Grabber_Seat", "drive", [Vector2(0.0, 1.0), true])
 	await _client_step("levé du grappin (client)", "Mecha/Controls/Grabber_Seat", "request_leave")
 	await _client_step("assis à la foreuse (client)", "Mecha/Controls/Drill_Seat", "request_sit")
@@ -107,6 +108,8 @@ func _run_host() -> void:
 	await _client_step("terminal : mission suivante (client)", "Level/Lobby/MissionTerminal/Next", "request_press")
 	await _client_step("fléchettes prises (client)", "Level/Lobby/Minigames/Darts", "request_take")
 	await _client_step("fléchette lancée (client)", "Level/Lobby/Minigames/Darts", "throw")
+	await _client_refused("fléchettes en main : le bras de fer est refusé (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit", false)
+	await _client_step("fléchettes reposées (client)", "Level/Lobby/Minigames/Darts", "request_release")
 	await _client_step("bras de fer : assis (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit")
 	await _client_step("bras de fer : levé (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_leave")
 
@@ -134,6 +137,22 @@ func _client_step(step: String, path: String, action: String, args: Array = []) 
 		_log("ÉCHEC  %s : la demande du client n'a rien changé chez l'hôte" % step)
 		return
 	await _check(step)
+
+
+## Fait faire au client une demande que l'hôte doit refuser : rien ne doit changer.
+## `stay` : le client ne se rapproche pas de l'objet (sinon il se place à portée, comme une étape normale).
+func _client_refused(step: String, path: String, action: String, stay: bool = true) -> void:
+	var before: Dictionary = NetAudit.snapshot(_world, true)
+	_client_action.rpc_id(_client_id, path, ("stay:" if stay else "") + action, [])
+	await get_tree().create_timer(STEP_WAIT).timeout
+	var diffs: PackedStringArray = NetAudit.diff(before, NetAudit.snapshot(_world, true))
+	if diffs.is_empty():
+		_log("OK     %s" % step)
+	else:
+		_failures += 1
+		_log("ÉCHEC  %s : l'hôte a accepté la demande" % step)
+		for line: String in diffs:
+			_log("         %s" % line)
 
 
 ## Envoie l'état de l'hôte au client, qui compare et répond.
@@ -181,6 +200,9 @@ func _client_action(path: String, action: String, args: Array) -> void:
 	if target == null:
 		_log("client : %s introuvable" % path)
 		return
+	if action.begins_with("stay:"):
+		target.callv(&"rpc_id", [1, action.trim_prefix("stay:")] + args)
+		return
 	match action:
 		"drive":
 			# Assis : on envoie les commandes du poste pendant une seconde, comme le nain assis.
@@ -189,8 +211,14 @@ func _client_action(path: String, action: String, args: Array) -> void:
 				await get_tree().create_timer(1.0 / 30.0).timeout
 			(target as Seat).submit_controls.rpc_id(1, Vector2.ZERO, Vector2.ZERO, false, 0)
 		"throw":
-			target.request_throw.rpc_id(1, target.global_position + target.global_basis.z * 2.5 + Vector3.UP * 1.5,
-				-target.global_basis.z)
+			# Derrière la ligne de tir, les yeux à hauteur de nain, visée sur la cible.
+			var thrower: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
+			var stand: Vector3 = target.to_global(Vector3(0.0, 0.0, DartsGame.LINE_Z - 0.5))
+			thrower.global_position = stand
+			thrower.set(&"_world_position", stand)
+			await get_tree().create_timer(0.6).timeout
+			var eye: Vector3 = stand + Vector3.UP * 0.95
+			target.request_throw.rpc_id(1, eye, (target.to_global(DartsGame.BOARD_CENTER) - eye).normalized())
 		_:
 			# On se place à portée (le nain glisse avec le robot : repère local au mécha), puis on demande.
 			var dwarf: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D

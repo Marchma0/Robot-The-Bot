@@ -52,6 +52,7 @@ func _ready() -> void:
 	_hand_dart.top_level = true
 	_hand_dart.visible = false
 	add_child(_hand_dart)
+	add_to_group(Possession.GROUP)
 	_score.font = preload("res://assets/fonts/fredoka.tres")
 	NetworkManager.session_ended.connect(_on_session_ended)
 
@@ -69,7 +70,7 @@ func _process(delta: float) -> void:
 	for i: int in _darts.size():
 		_animate_dart(i, delta)
 	# Fléchette dans la main de celui qui lance (s'il lui en reste).
-	var holder: Dwarf = _find_dwarf(thrower_peer_id)
+	var holder: Dwarf = Dwarf.of_peer(thrower_peer_id)
 	_hand_dart.visible = holder != null and round_scores.size() < DARTS_PER_ROUND and _round_timer < 0.0
 	if _hand_dart.visible:
 		_hand_dart.global_transform = holder.get_hold_transform()
@@ -86,15 +87,15 @@ func request_take() -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
-	var dwarf: Dwarf = _find_dwarf(sender)
+	var dwarf: Dwarf = Dwarf.of_peer(sender)
 	if dwarf == null or (thrower_peer_id != 0 and thrower_peer_id != sender) or _round_timer >= 0.0:
 		return
 	if dwarf.global_position.distance_to(to_global(Vector3(0.0, 0.0, LINE_Z))) > TAKE_REACH + 1.0:
 		return
-	if thrower_peer_id == sender:
+	if thrower_peer_id == sender or Possession.is_peer_busy(get_tree(), sender, self):
 		return
 	thrower_peer_id = sender
-	thrower_name = str(dwarf.player_name) if str(dwarf.player_name) != "" else "Nain %d" % sender
+	thrower_name = dwarf.get_display_name()
 	round_scores = PackedInt32Array()
 	_clear_darts.rpc()
 
@@ -111,7 +112,7 @@ func request_throw(origin: Vector3, direction: Vector3) -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
-	var dwarf: Dwarf = _find_dwarf(sender)
+	var dwarf: Dwarf = Dwarf.of_peer(sender)
 	if sender != thrower_peer_id or dwarf == null or round_scores.size() >= DARTS_PER_ROUND or _round_timer >= 0.0:
 		return
 	if dwarf.global_position.distance_to(origin) > 2.0 or to_local(dwarf.global_position).z > LINE_Z + 0.3:
@@ -247,15 +248,6 @@ func _make_dart() -> Node3D:
 	flight2.rotation.z = PI / 2.0
 	dart.add_child(flight2)
 	return dart
-
-
-func _find_dwarf(peer_id: int) -> Dwarf:
-	if peer_id == 0:
-		return null
-	for node: Node in get_tree().get_nodes_in_group(&"dwarves"):
-		if node.name == str(peer_id):
-			return node as Dwarf
-	return null
 
 
 func _on_session_ended(_reason: String) -> void:

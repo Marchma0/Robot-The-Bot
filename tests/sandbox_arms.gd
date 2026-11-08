@@ -111,8 +111,8 @@ func _physics_process(delta: float) -> void:
 		_shoot("5_grappin_ramene", _cam_ext)
 
 	if _cycle_time >= 9.50:
-		if quit_when_done:
-			get_tree().quit()
+		if quit_when_done or TestCheck.is_auto():
+			TestCheck.finish(get_tree())
 			return
 		_reset_cycle()
 
@@ -214,8 +214,8 @@ func _shoot(shot_name: String, camera: Camera3D) -> void:
 	_shots_done[shot_name] = true
 	var prev_cam: Camera3D = get_viewport().get_camera_3d()
 	camera.current = true
-	await RenderingServer.frame_post_draw
-	await RenderingServer.frame_post_draw
-	get_viewport().get_texture().get_image().save_png("res://build/views/arms_%s.png" % shot_name)
+	await TestCheck.frame_drawn(get_tree())
+	await TestCheck.frame_drawn(get_tree())
+	TestCheck.save_view(get_viewport(), "res://build/views/arms_%s.png" % shot_name)
 	if prev_cam != null:
 		prev_cam.current = true

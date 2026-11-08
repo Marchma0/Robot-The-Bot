@@ -20,7 +20,11 @@ var _stumbles: int = 0
 @onready var _camera: Camera3D = $Camera3D
 
 
+var _start: Vector3 = Vector3.ZERO
+
+
 func _ready() -> void:
+	_start = _mecha.global_position
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://build/views"))
 	_walker.stumbled.connect(func() -> void: _stumbles += 1)
 	var t: float = 1.0
@@ -72,8 +76,12 @@ func _physics_process(delta: float) -> void:
 	while _phase_index < _phases.size() and _time >= _phases[_phase_index][1]:
 		_report(_phases[_phase_index][0])
 		_phase_index += 1
-		if _phase_index >= _phases.size() and quit_when_done:
-			get_tree().quit()
+		if _phase_index == _phases.size():
+			var moved: float = Vector2(_mecha.global_position.x - _start.x, _mecha.global_position.z - _start.z).length()
+			TestCheck.expect(moved > 3.0, "le robot a avancé (%.1f m)" % moved)
+			TestCheck.expect(_stumbles >= 1, "le désaccord fait trébucher")
+		if _phase_index >= _phases.size() and (quit_when_done or TestCheck.is_auto()):
+			TestCheck.finish(get_tree())
 	var center: Vector3 = _mecha.global_position + Vector3.UP * 1.6
 	var side: Vector3 = _mecha.global_basis.x
 	_camera.global_position = center + side * 8.5 + _mecha.global_basis.z * 3.0 + Vector3.UP * 0.6
@@ -90,5 +98,5 @@ func _report(name: String) -> void:
 
 
 func _capture(index: int) -> void:
-	await RenderingServer.frame_post_draw
-	get_viewport().get_texture().get_image().save_png("res://build/views/walk_%d.png" % index)
+	await TestCheck.frame_drawn(get_tree())
+	TestCheck.save_view(get_viewport(), "res://build/views/walk_%d.png" % index)

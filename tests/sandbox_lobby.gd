@@ -22,6 +22,8 @@ func _ready() -> void:
 	var dwarf: Dwarf = mecha.get_node("Players").get_child(0) as Dwarf
 	var level: Node3D = director.get_level()
 	print("Niveau : %s, nain en %s, à bord %s" % [director.current_level, dwarf.global_position, director.count_aboard()])
+	TestCheck.expect(director.in_lobby(), "on démarre au camp")
+	TestCheck.expect(director.count_aboard() == Vector2i(0, 1), "le nain apparaît dehors")
 	await _shot("1_apparition")
 	_cam = Camera3D.new()
 	add_child(_cam)
@@ -41,6 +43,8 @@ func _ready() -> void:
 		darts.request_throw.rpc_id(1, eye, (aim - eye).normalized())
 		await _wait(0.7)
 	print("Fléchettes : %s, record %d (%s)" % [darts.round_scores, darts.record, darts.record_name])
+	TestCheck.expect(darts.round_scores.size() == 3, "fléchettes : 3 lancers comptés")
+	TestCheck.expect(darts.record > 0 and darts.record_name == dwarf.get_display_name(), "fléchettes : record au nom du joueur")
 	await _shot_from("3_flechettes", darts.to_global(Vector3(-0.4, 1.4, -2.4)), darts.to_global(Vector3(0.45, 1.25, 0.0)))
 
 	# Bras de fer : le nain s'assoit à gauche, un adversaire simulé à droite (peer 99)
@@ -50,14 +54,15 @@ func _ready() -> void:
 	await _wait(3.4)
 	print("Bras de fer : état %d (2 = combat), occupants %d / %d" % [arm.state, arm.seat_left.occupant_peer_id, arm.seat_right.occupant_peer_id])
 	for k: int in 12:
-		arm.submit_push.rpc_id(1)
+		arm.seat_left.game_pushed.emit(1)
 		await _wait(0.05)
 	await _shot_from("4_bras_de_fer", arm.to_global(Vector3(0.2, 1.5, 2.2)), arm.to_global(Vector3(0.0, 0.9, 0.0)))
 	for k: int in 30:
-		arm.submit_push.rpc_id(1)
+		arm.seat_left.game_pushed.emit(1)
 		await _wait(0.05)
 	await _wait(0.2)
 	print("Bras de fer : état %d (3 = gagné), rapport %.2f, gagnant « %s »" % [arm.state, arm.balance, arm.winner_name])
+	TestCheck.expect(arm.state == ArmwrestleGame.State.WIN and arm.winner_name == dwarf.get_display_name(), "bras de fer : le joueur qui martèle gagne")
 	arm.seat_left.occupant_peer_id = 0
 	arm.seat_right.occupant_peer_id = 0
 
@@ -68,24 +73,28 @@ func _ready() -> void:
 	terminal.get_node("Next").pressed.emit(1)
 	await _wait(0.2)
 	print("Flèche suivante : mission %d" % terminal.selected)
+	TestCheck.expect(terminal.selected == 1, "terminal : flèche suivante")
 	await _shot_from("5_terminal_verrouille", terminal.to_global(Vector3(0.15, 1.15, -1.0)), terminal.to_global(Vector3(0.0, 0.75, 0.0)))
 	terminal.get_node("Prev").pressed.emit(1)
 	terminal.get_node("Launch").pressed.emit(1)
 	await _wait(0.3)
 	print("Bouton vert : mission %d, compte à rebours %.1f s" % [terminal.selected, terminal.countdown])
+	TestCheck.expect(terminal.selected == 0 and terminal.countdown > 0.0, "terminal : bouton vert lance le compte à rebours")
 	await _shot_from("6_terminal_lance", terminal.to_global(Vector3(0.15, 1.15, -1.0)), terminal.to_global(Vector3(0.0, 0.75, 0.0)))
 
 	# Le nain monte à bord : la mission part toute seule
 	dwarf.position = (mecha.get_node("SpawnPoints").get_child(0) as Node3D).position
 	await _wait(2.5)
 	print("Après montée à bord : niveau %s, robot en %s" % [director.current_level, mecha.global_position])
+	TestCheck.expect(director.current_level == &"test_ground", "tout le monde à bord : la mission part")
 	await _shot("7_mission")
 	var button: PushButton = mecha.get_node("Controls/ReturnToCamp")
 	button.pressed.emit(1)
 	await _wait(2.5)
 	print("Après retour : niveau %s, robot en %s, bouton visible %s" % [director.current_level, mecha.global_position, button.visible])
-	if quit_when_done:
-		get_tree().quit()
+	TestCheck.expect(director.in_lobby() and not button.visible, "bouton retour : on revient au camp, bouton caché")
+	if quit_when_done or TestCheck.is_auto():
+		TestCheck.finish(get_tree())
 
 
 ## Place le nain (dehors, dans le monde) en `at`, tourné vers `look`.
@@ -110,5 +119,5 @@ func _shot_from(shot_name: String, from: Vector3, look: Vector3) -> void:
 
 func _shot(shot_name: String) -> void:
 	await _wait(0.4)
-	await RenderingServer.frame_post_draw
-	get_viewport().get_texture().get_image().save_png("res://build/views/lobby_%s.png" % shot_name)
+	await TestCheck.frame_drawn(get_tree())
+	TestCheck.save_view(get_viewport(), "res://build/views/lobby_%s.png" % shot_name)

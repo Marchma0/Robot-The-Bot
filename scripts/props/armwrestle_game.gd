@@ -5,7 +5,7 @@ extends Node3D
 ## qui revient doucement au centre. Le premier qui la fait basculer à fond a gagné. Une nouvelle manche
 ## repart toute seule tant que les deux joueurs restent assis.
 ##
-## Réseau : les clics arrivent sur l'hôte par RPC (`submit_push`, envoyé par le nain assis, voir Seat.game).
+## Réseau : les clics arrivent sur l'hôte par le siège (`Seat.game_pushed`, qui vérifie que c'est bien l'occupant).
 ## L'hôte est autoritaire sur `state`, `balance`, `timer` et les noms (répliqués) ; chaque peer anime la
 ## machine et le panneau à partir de cet état.
 
@@ -43,6 +43,10 @@ var _shake: float = 0.0
 
 func _ready() -> void:
 	_sign.font = FONT
+	if seat_left != null:
+		seat_left.game_pushed.connect(_on_push.bind(-1.0))
+	if seat_right != null:
+		seat_right.game_pushed.connect(_on_push.bind(1.0))
 	NetworkManager.session_ended.connect(func(_reason: String) -> void: _reset(State.WAITING))
 
 
@@ -91,16 +95,10 @@ func _process(delta: float) -> void:
 	_sign.text = _sign_text()
 
 
-## Clic d'un joueur assis (hôte). Pousse la machine du côté de son tonneau.
-@rpc("any_peer", "call_local", "reliable")
-func submit_push() -> void:
-	if not multiplayer.is_server() or state != State.FIGHT:
-		return
-	var sender: int = multiplayer.get_remote_sender_id()
-	if seat_left != null and sender == seat_left.occupant_peer_id:
-		balance = maxf(balance - PUSH, -1.0)
-	elif seat_right != null and sender == seat_right.occupant_peer_id:
-		balance = minf(balance + PUSH, 1.0)
+## Clic d'un joueur assis (hôte, déjà vérifié par son siège). Pousse la machine du côté de son tonneau (-1 gauche, +1 droite).
+func _on_push(_peer_id: int, side: float) -> void:
+	if state == State.FIGHT:
+		balance = clampf(balance + side * PUSH, -1.0, 1.0)
 
 
 func _sign_text() -> String:
@@ -124,10 +122,4 @@ func _reset(new_state: int) -> void:
 
 
 func _name_of(peer_id: int) -> String:
-	if peer_id == 0:
-		return ""
-	for node: Node in get_tree().get_nodes_in_group(&"dwarves"):
-		if node.name == str(peer_id):
-			var player: String = str(node.get(&"player_name"))
-			return player if player != "" else "Nain %d" % peer_id
-	return "Nain %d" % peer_id
+	return Dwarf.name_of_peer(peer_id)

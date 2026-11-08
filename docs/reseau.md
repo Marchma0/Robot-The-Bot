@@ -41,8 +41,12 @@ restait derrière quand le robot était téléporté).
 ## Recettes
 
 ### Une commande dans le robot (bouton, levier, siège…)
-Hériter d'`Interactable` (ou d'une commande existante), une RPC `request_xxx` vers l'hôte qui
-vérifie `is_peer_in_reach`, les variables d'état dans le `MultiplayerSynchronizer` de sa scène.
+Hériter d'`Interactable` (ou d'une commande existante) et surcharger `interact(press, grab, hands_free)` :
+elle envoie la RPC `request_xxx` vers l'hôte et renvoie `Use.DONE` (action instantanée) ou `Use.CLAIM`
+(objet qu'on va tenir ou occuper). L'`Interactor` n'a pas à changer. L'hôte vérifie `is_peer_in_reach` ;
+les variables d'état vont dans le `MultiplayerSynchronizer` de sa scène.
+Un objet qu'on **tient ou occupe** (levier, siège, corde, caca, fléchettes) : groupe `Possession.GROUP`,
+une ligne dans `Possession.holder_of`, et l'hôte refuse la demande si `Possession.is_peer_busy` (une seule chose à la fois).
 Le robot est dans `main.tscn` : ses commandes existent déjà chez tout le monde.
 
 ### Un objet qu'on ramasse, qui casse, qui apparaît (caisse, caca…)
@@ -72,7 +76,7 @@ le `LevelSpawner` s'occupe d'envoyer le niveau à tout le monde, y compris en co
   Après chaque étape : l'hôte compare ce qu'il voit et ce que voit le client (`NetAudit`), et vérifie
   qu'une demande du client a bien eu un effet. Sortie : `NET TEST OK` ou la liste des écarts.
   Journaux complets dans `build/net_test_host.log` et `build/net_test_client.log`.
-  **Une nouvelle interaction = une étape de plus dans `tests/tools/net_test.gd`** (`_client_step`).
+  **Une nouvelle interaction = une étape de plus dans `tests/tools/net_test.gd`** (`_client_step` : la demande doit changer quelque chose chez l'hôte ; `_client_refused` : une demande interdite ne change rien).
 - **F9 en partie** (même en Steam, chez n'importe quel joueur) : l'hôte envoie sa « photo » du monde,
   chaque client la compare à la sienne ; « OK » ou le nombre d'écarts s'affiche en haut à gauche, le
   détail dans la console. À faire quand quelque chose a l'air différent chez l'autre.
