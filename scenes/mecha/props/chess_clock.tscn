@@ -10,6 +10,7 @@ size = Vector3(0.17, 0.12, 0.075)
 script = ExtResource("1_script")
 display_name = "Pendule (nouvelle partie)"
 reach = 2.2
+usable_seated = true
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)

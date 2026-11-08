@@ -85,7 +85,7 @@
   (confettis) ; les scores s'écrivent à la craie sur l'ardoise d'à côté (lancers, total, 3 manches précédentes ;
   rien n'est gardé après la partie). Un nain touché a la
   fléchette plantée dans le casque et la vue brouillée : un autre nain doit venir la lui retirer.
-- **Jeu de dames** sur la table basse du salon, à deux (ou seul contre soi-même) : on vise un pion puis sa case
+- **Jeu de dames** sur la table basse du salon, à deux (ou seul contre soi-même), debout ou assis sur le canapé (clic) : on vise un pion puis sa case
   d'arrivée ; règles à la française simplifiées (prise obligatoire en avant et en arrière, rafles, dame volante),
   le premier qui joue un côté le garde ; une pendule d'échecs à côté du damier montre à qui de jouer, sonne en fin
   de partie, et on appuie dessus pour une nouvelle partie.

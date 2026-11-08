@@ -82,7 +82,8 @@ func _process(delta: float) -> void:
 		_last_throw = dwarf.anim_throw_count
 		_hold_timer = maxf(_hold_timer, THROW_HOLD)
 	_hold_timer = maxf(_hold_timer - delta, 0.0)
-	var wanted: bool = not dwarf.anim_seated and (dwarf.anim_emote != Emotes.NONE or dwarf.anim_holding \
+	# (assis à un poste à écran, la caméra n'est plus celle des yeux : les bras ne se voient pas)
+	var wanted: bool = (dwarf.anim_emote != Emotes.NONE or dwarf.anim_holding \
 			or _hold_timer > 0.0)
 	_raise = move_toward(_raise, 1.0 if wanted else 0.0, delta / RAISE_TIME)
 	visible = _raise > 0.0

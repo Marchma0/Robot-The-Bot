@@ -42,7 +42,7 @@ shape = SubResource("Shape_0")
 script = ExtResource("2_checkers")
 
 [node name="ChessClock" parent="Checkers" node_paths=PackedStringArray("game") instance=ExtResource("3_clock")]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -0.08, 0.34, -0.19)
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.17, 0.34, 0)
 game = NodePath("..")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="Checkers"]

@@ -14,6 +14,7 @@ func setup(p_game: CheckersGame, p_cell: int, size: float, marker_material: Mate
 	cell = p_cell
 	display_name = "Dames"
 	reach = CheckersGame.REACH
+	usable_seated = true
 	var shape: CollisionShape3D = CollisionShape3D.new()
 	var box: BoxShape3D = BoxShape3D.new()
 	box.size = Vector3(size, 0.03, size)

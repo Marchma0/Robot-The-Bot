@@ -11,10 +11,12 @@ extends Node3D
 ## Chaque peer anime lui-même les pions d'après les changements du damier (glissade en cloche, pièce
 ## prise qui saute hors du plateau). Repère : celui de la table (origine au sol, au centre).
 
-## Damier du modèle (blender/props/coffee_table.py) : 0,3 m de côté, centré à 6 cm du centre de la table.
+## Damier du modèle (blender/props/coffee_table.py) : 0,3 m de côté, centré sur la table en profondeur, un peu
+## vers le canapé (la pendule est de l'autre côté).
 const CELL: float = 0.0375
 const BOARD_TOP: float = 0.349
-const BOARD_CENTER_Z: float = 0.06
+const BOARD_CENTER_X: float = -0.03
+const BOARD_CENTER_Z: float = 0.0
 const REACH: float = 2.2
 const PIECE_RADIUS: float = 0.015
 const PIECE_HEIGHT: float = 0.008
@@ -102,7 +104,7 @@ func cell_position(cell: int) -> Vector3:
 	var col: int = cell % CheckersRules.SIZE
 	@warning_ignore("integer_division")
 	var row: int = cell / CheckersRules.SIZE
-	return Vector3(-0.15 + (col + 0.5) * CELL, BOARD_TOP, BOARD_CENTER_Z + 0.15 - (row + 0.5) * CELL)
+	return Vector3(BOARD_CENTER_X - 0.15 + (col + 0.5) * CELL, BOARD_TOP, BOARD_CENTER_Z + 0.15 - (row + 0.5) * CELL)
 
 
 ## Vrai si le joueur `peer_id` peut jouer le côté `side`.
