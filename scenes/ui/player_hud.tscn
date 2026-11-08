@@ -7,9 +7,21 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/state_bubble.tscn" id="5_bubble"]
 [ext_resource type="Script" path="res://scripts/ui/splat_overlay.gd" id="6_splat"]
 [ext_resource type="Script" path="res://scripts/ui/poop_minigame.gd" id="7_poopgame"]
+[ext_resource type="Script" path="res://scripts/ui/dart_blind_overlay.gd" id="8_dartblind"]
 
 [node name="PlayerHud" type="CanvasLayer"]
 script = ExtResource("1_hud")
+
+[node name="DartBlind" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("8_dartblind")
 
 [node name="Crosshair" type="CenterContainer" parent="."]
 unique_name_in_owner = true

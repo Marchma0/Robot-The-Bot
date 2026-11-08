@@ -105,7 +105,7 @@ func release_rope() -> void:
 		_release_claim()
 
 
-## Vrai quand le joueur a les fléchettes du camp en main (confirmé par l'hôte).
+## Vrai quand le joueur a les fléchettes du robot en main (confirmé par l'hôte).
 func is_holding_darts() -> bool:
 	return _claim is DartsGame and _holds_claim()
 

@@ -116,10 +116,11 @@ func _run_host() -> void:
 	await get_tree().create_timer(STEP_WAIT * 2.0).timeout
 	await _check("retour au camp")
 	await _client_step("terminal : mission suivante (client)", "Level/Lobby/MissionTerminal/Next", "request_press")
-	await _client_step("fléchettes prises (client)", "Level/Lobby/Minigames/Darts", "request_take")
-	await _client_step("fléchette lancée (client)", "Level/Lobby/Minigames/Darts", "throw")
+	await _client_step("fléchettes du robot prises (client)", "Mecha/Controls/Darts", "darts_take")
+	await _client_step("fléchette lancée (client)", "Mecha/Controls/Darts", "throw")
 	await _client_refused("fléchettes en main : le bras de fer est refusé (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit", false)
-	await _client_step("fléchettes reposées (client)", "Level/Lobby/Minigames/Darts", "request_release")
+	await _client_step("fléchettes reposées (client)", "Mecha/Controls/Darts", "request_release")
+	await _dart_in_client_step()
 	await _client_step("bras de fer : assis (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit")
 	await _client_step("bras de fer : levé (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_leave")
 
@@ -134,6 +135,22 @@ func _run_host() -> void:
 	_log("NET TEST %s (%d étape(s) en échec)" % ["OK" if _failures == 0 else "ÉCHEC", _failures])
 	await get_tree().create_timer(0.5).timeout
 	get_tree().quit(0 if _failures == 0 else 1)
+
+
+## Fléchette plantée dans le nain du client (l'hôte simule le coup), puis le nain de l'hôte la lui retire.
+func _dart_in_client_step() -> void:
+	var darts: DartsGame = _world.get_node("Mecha/Controls/Darts") as DartsGame
+	var client: Dwarf = Dwarf.of_peer(_client_id)
+	var host: Dwarf = Dwarf.of_peer(1)
+	darts._land(0, {"point": client.global_position, "dir": client.global_basis.z, "dwarf": client, "time": 0.1})
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _check("fléchette plantée dans le nain du client")
+	host.global_position = client.global_position + client.global_basis.x * 0.8
+	host.set(&"_world_position", host.global_position)   # dehors, le nain garde sa place dans le monde
+	await get_tree().create_timer(0.6).timeout
+	darts.request_pull.rpc_id(1, 0)
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _check("fléchette retirée par l'hôte")
 
 
 ## Fait faire une action au client, vérifie que l'hôte l'a appliquée, puis compare.
@@ -220,15 +237,18 @@ func _client_action(path: String, action: String, args: Array) -> void:
 				(target as Seat).submit_controls.rpc_id(1, args[0], Vector2.ZERO, args[1], 0)
 				await get_tree().create_timer(1.0 / 30.0).timeout
 			(target as Seat).submit_controls.rpc_id(1, Vector2.ZERO, Vector2.ZERO, false, 0)
-		"throw":
-			# Derrière la ligne de tir, les yeux à hauteur de nain, visée sur la cible.
+		"darts_take", "throw":
+			# Devant la cible du salon (au sol du ventre), puis : prendre, ou lancer vers la cible.
 			var thrower: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
-			var stand: Vector3 = target.to_global(Vector3(0.0, 0.0, DartsGame.LINE_Z - 0.5))
+			var stand: Vector3 = target.to_global(Vector3(0.0, -1.2, -1.6))
 			thrower.global_position = stand
-			thrower.set(&"_world_position", stand)
 			await get_tree().create_timer(0.6).timeout
-			var eye: Vector3 = stand + Vector3.UP * 0.95
-			target.request_throw.rpc_id(1, eye, (target.to_global(DartsGame.BOARD_CENTER) - eye).normalized())
+			if action == "darts_take":
+				target.request_take.rpc_id(1)
+			else:
+				var eye: Vector3 = stand + target.global_basis.y * 0.95
+				var aim: Vector3 = target.to_global(Vector3(0.0, 0.15, 0.0))
+				target.request_throw.rpc_id(1, eye, (aim - eye).normalized())
 		_:
 			# On se place à portée (le nain glisse avec le robot : repère local au mécha), puis on demande.
 			var dwarf: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D

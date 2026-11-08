@@ -243,7 +243,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 
 ### Phase 4 — Le camp de base (lobby)
 - [x] 4.1 Camp minier dans un canyon, robot au centre, terminal de mission (flèches + bouton), retour au camp (M12, M12.1)
-- [x] 4.2 Mini-jeux : fléchettes, bras de fer (M12.1)
+- [x] 4.2 Mini-jeux : bras de fer (M12.1) ; les fléchettes sont passées dans le robot (3.9)
 - [ ] 4.3 Monnaie et sauvegarde de la partie (économie reportée par le porteur du projet le 2026-11-08) : fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte, sauvegarde **chez l'hôte** (validé) ; argent par nain ou commun : à décider
 - [ ] 4.4 Plus de mini-jeux (les wagonnets sont déjà en décor ; pistes dans `docs/ideas.md`)
 - [ ] 4.5 Marchands de skins : un pour les nains (2.4), un pour le robot (3.8)

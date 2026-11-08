@@ -1,12 +1,12 @@
-"""Cible de fléchettes décorative, au mur du fond du salon (ventre du mécha), avec trois fléchettes plantées.
+"""Cible du jeu de fléchettes, au mur du fond du salon (ventre du mécha). Les fléchettes sont à part (dart.py).
 
 Fiche
-- Taille : 0,50 m de diamètre, 4 cm d'épaisseur (fléchettes : 12 cm de plus).
+- Taille : 0,50 m de diamètre, 4 cm d'épaisseur.
 - Origine : sur le mur, au centre de la cible ; l'avant regarde vers +Y (l'arrière est contre le mur, en y = 0).
   Placée en Godot (0.0, 3.85, 1.9), tournée vers l'avant du mécha.
 - Budget : 1600 triangles.
 - Pièces : planche de fond (Wood), cible en anneaux (DartBlack / Cream / DartRed / DartGreen), fil de cuivre,
-  3 fléchettes (Iron, DartRed).
+  pas de fléchettes (objets à part, placés par DartsGame : scenes/mecha/props/darts_board.tscn).
 
     blender -b --factory-startup --python blender/props/dartboard_wall.py
 """
@@ -42,14 +42,6 @@ def main():
         p0 = (math.cos(a) * 0.19, y + 0.006, math.sin(a) * 0.19)
         p1 = (-math.cos(a) * 0.19, y + 0.006, -math.sin(a) * 0.19)
         b.cylinder(p0, p1, 0.002, "Copper", 4)
-    # 3 fléchettes plantées, légèrement de biais
-    for x, z, tilt in ((0.05, 0.06, 0.15), (-0.08, -0.02, -0.1), (0.015, -0.11, 0.05)):
-        tip = (x, y, z)
-        back = (x + tilt * 0.12, y + 0.12, z + 0.02)
-        b.cylinder(tip, back, 0.005, "Iron", 6)
-        bx, by, bz = back
-        b.box((bx - 0.022, by - 0.04, bz - 0.002), (bx + 0.022, by, bz + 0.002), "DartRed")
-        b.box((bx - 0.002, by - 0.04, bz - 0.022), (bx + 0.002, by, bz + 0.022), "DartRed")
     b.finish()
     kit.save_and_export("dartboard_wall", budget_tris=1600)
 
