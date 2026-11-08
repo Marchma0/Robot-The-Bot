@@ -45,6 +45,9 @@ const WALK_THRESHOLD: float = 0.3
 @export var preview_state: String = ""
 ## Bac à sable : rejoue cette emote (index dans Emotes.LIST) toutes les 2,5 s, -1 = non.
 @export var preview_emote: int = Emotes.NONE
+## Bras de vue (première personne) : le bas du corps ne bouge pas (pas de balancement des bras en marchant,
+## en l'air, en grimpant) ; seuls les gestes, les objets tenus et la danse animent les bras.
+@export var view_arms: bool = false
 
 var _tree: AnimationTree
 var _playback: AnimationNodeStateMachinePlayback
@@ -120,6 +123,8 @@ func _process(delta: float) -> void:
 		target = &"air"
 	elif speed > WALK_THRESHOLD:
 		target = &"walk"
+	if view_arms and not (target in [&"dance", &"sit", &"poop"]):
+		target = &"idle"
 	if _playback.get_current_node() != target:
 		_playback.travel(target)
 	_tree.set("parameters/base/walk/scale/scale", clampf(speed / walk_reference_speed, 0.6, 2.0))
