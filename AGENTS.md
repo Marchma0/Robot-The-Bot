@@ -200,7 +200,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 > Avant de commencer une tâche : la marquer `[en cours — pseudo]` et pousser tout de suite. La cocher quand elle est fusionnée dans `main`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0) · 3.9 Fléchettes dans le robot (Marchma0)
+**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0)
 
 ### Phase 1 — Fondations (moteur, réseau, outils)
 - [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet (héberger / rejoindre en local), 4 nains (M0)
@@ -239,7 +239,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 3.6 Grappin : pince articulée, caméra sur le bras, lancer au bout d'un câble ; postes assis des deux bras, image brouillée, bras bornés hors de la coque (M9, M9.5)
 - [x] 3.7 Sac à dos : rangement automatique animé, contenu synchronisé (M10)
 - [ ] 3.8 Skins du robot : peinture, décorations, choix synchronisé et sauvegardé — vendus en 4.5
-- [ ] 3.9 Fléchettes dans le robot `[en cours — Marchma0]` : le jeu quitte le camp pour la cible du salon (ramasser, lancer, « dans le mille », score après 3 lancers, fléchette plantée dans un allié qui doit la lui retirer)
+- [x] 3.9 Fléchettes dans le robot (2026-11-08) : le jeu quitte le camp pour la cible du salon (ramasser, lancer, « dans le mille », score après 3 lancers, fléchette plantée dans un allié qui doit la lui retirer)
 
 ### Phase 4 — Le camp de base (lobby)
 - [x] 4.1 Camp minier dans un canyon, robot au centre, terminal de mission (flèches + bouton), retour au camp (M12, M12.1)
