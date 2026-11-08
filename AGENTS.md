@@ -198,7 +198,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 
 > **À faire en priorité (Kamel / Marchma0)** : tâche S1 ci-dessous, avant toute nouvelle fonctionnalité.
 
-- [ ] **S1 — Synchro de toutes les interactions (PRIORITÉ, à faire par Kamel)** : aujourd'hui, certaines actions ne sont pas vues pareil par tous les joueurs. À vérifier et corriger en multi (2 à 4 instances, hôte + clients), pour que chaque joueur voie exactement la même chose :
+- [ ] **S1 — Synchro de toutes les interactions (PRIORITÉ, à faire par Kamel)** `[en cours — Marchma0]` : aujourd'hui, certaines actions ne sont pas vues pareil par tous les joueurs. À vérifier et corriger en multi (2 à 4 instances, hôte + clients), pour que chaque joueur voie exactement la même chose :
   - casser des objets avec le robot (foreuse qui mine les rochers, éclats, caisse de minerai qui apparaît) ;
   - ramasser des objets (caisses, cacas, grappin, rangement dans le sac à dos) ;
   - plus généralement toutes les interactions : boutons, leviers, sièges, portes, mini-jeux du camp, terminal de mission.
