@@ -1,13 +1,13 @@
 class_name DrillArm
-extends Node3D
+extends MechaArm
 ## Bras droit du mécha : foreuse télescopique orientable (M8 — Foreuse, poste assis en M9.5).
-## Pilotée par le nain assis au poste `seat` (`Drill_Seat`), comme le grappin :
+## Pilotée par le nain assis au poste `seat` (`Drill_Seat`), comme le grappin (visée commune : MechaArm) :
 ## - souris / stick droit (`control_look`) et Q/D (`control_move.x`) : orientent le bras (lacet + tangage),
 ##   sans jamais pouvoir rentrer dans la coque (`MechaArmUtils`) ;
 ## - Z/S (`control_move.y`) : étendent ou replient le fût télescopique (0 → 3 m) ;
 ## - clic gauche / RT maintenu (`control_grab`) : fait tourner la mèche et fore les blocs `MineableRock`.
 ##
-## Réseau : l'hôte est seul autoritaire sur `arm_yaw`, `arm_pitch`, `extension`, `spinning` et `drilling`
+## Réseau : l'hôte est seul autoritaire sur `arm_yaw`, `arm_pitch`, `extension` (MechaArm), `spinning` et `drilling`
 ## (répliqués par MultiplayerSynchronizer). Chaque peer anime localement la rotation
 ## de la mèche, le coulissement du fût, les vibrations et les étincelles de forage.
 
@@ -25,22 +25,11 @@ const BITE_DEPTH: float = 0.35
 const BIT_SPIN_MAX: float = 20.0
 const BIT_ACCEL: float = 28.0
 const SPARK_COUNT: int = 6
-const REST_PITCH: float = -0.12
 ## Emprise (repère du mécha) des restes de l'ancienne console dans Int_Head, effacés au démarrage.
 const OLD_CONSOLE_DECOR: AABB = AABB(Vector3(0.75, 6.1, -1.56), Vector3(0.6, 0.2, 0.33))
 
-@export var seat: Seat
-@export var extend_speed: float = 2.4
-@export var yaw_key_speed: float = 1.1
-@export var look_sensitivity: float = 0.65
 @export var mining_dps: float = 48.0
 
-## Lacet du bras (rad). Autorité : hôte.
-var arm_yaw: float = 0.0
-## Tangage du bras (rad, négatif = vers le bas). Autorité : hôte.
-var arm_pitch: float = REST_PITCH
-## Extension actuelle du fût télescopique en mètres (0.0 .. 3.0). Autorité : hôte.
-var extension: float = 0.0
 ## Vrai quand le moteur de la mèche tourne (bouton maintenu au poste). Autorité : hôte.
 var spinning: bool = false
 ## Vrai quand la mèche en rotation attaque un bloc minable. Autorité : hôte.
@@ -50,42 +39,30 @@ var _spin_rate: float = 0.0
 var _vib_phase: float = 0.0
 var _sparks: Array[MeshInstance3D] = []
 
-@onready var _elbow_pivot: Node3D = %ElbowPivot
 @onready var _mid_sleeve: MeshInstance3D = %MidSleeve
 @onready var _slider_pivot: Node3D = %SliderPivot
 @onready var _bit_pivot: Node3D = %BitPivot
 @onready var _sparks_root: Node3D = %Sparks
 @onready var _work_light: OmniLight3D = %WorkLight
-@onready var _camera_anchor: Marker3D = %CameraAnchor
 
 
 func _ready() -> void:
+	super()
 	var parent_node: Node = get_parent()
 	if parent_node != null:
-		var ext_details: MeshInstance3D = parent_node.get_node_or_null("Ext_Details") as MeshInstance3D
-		if ext_details != null:
-			MechaArmUtils.strip_static_arm(ext_details, SIDE_SIGN)
 		# Petit tableau de l'ancienne console de la foreuse, resté dans Int_Head : il traverserait l'établi.
 		var head_decor: MeshInstance3D = parent_node.get_node_or_null("Int_Head") as MeshInstance3D
 		if head_decor != null:
 			MechaArmUtils.strip_box(head_decor, OLD_CONSOLE_DECOR)
-	if seat != null:
-		seat.camera_anchor = _camera_anchor
 	_build_sparks()
-	NetworkManager.session_ended.connect(_on_session_ended)
 
 
 func _physics_process(delta: float) -> void:
 	if not multiplayer.is_server():
 		return
 	var target_ext: float = extension
-	if seat != null and seat.occupant_peer_id != 0:
-		var look: Vector2 = seat.control_look
-		seat.control_look = Vector2.ZERO
-		var move: Vector2 = seat.control_move
-		arm_yaw = MechaArmUtils.clamp_yaw(arm_yaw - look.x * look_sensitivity - move.x * yaw_key_speed * delta, SIDE_SIGN)
-		arm_pitch = MechaArmUtils.clamp_pitch(arm_pitch + look.y * look_sensitivity)
-		target_ext = clampf(extension + move.y * extend_speed * delta, 0.0, MAX_EXTENSION)
+	if get_occupant() != 0:
+		target_ext = _steer(delta)
 		spinning = seat.control_grab
 	else:
 		spinning = false
@@ -120,7 +97,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
-	_elbow_pivot.rotation = Vector3(arm_pitch, arm_yaw, 0.0)
+	_show_aim()
 	var target_spin: float = BIT_SPIN_MAX if spinning else 0.0
 	_spin_rate = move_toward(_spin_rate, target_spin, BIT_ACCEL * delta)
 	_bit_pivot.rotation.z += _spin_rate * delta
@@ -144,9 +121,19 @@ func _process(delta: float) -> void:
 	_update_sparks(delta)
 
 
-## Point d'ancrage de la caméra embarquée sur la tête de forage.
-func get_camera_anchor() -> Marker3D:
-	return _camera_anchor
+func reset_arm() -> void:
+	super()
+	spinning = false
+	drilling = false
+	_spin_rate = 0.0
+
+
+func _side_sign() -> float:
+	return SIDE_SIGN
+
+
+func _max_extension() -> float:
+	return MAX_EXTENSION
 
 
 func _build_sparks() -> void:
@@ -181,12 +168,3 @@ func _update_sparks(_delta: float) -> void:
 		)
 		spark.rotation = Vector3(angle, phase * 4.0, angle * 0.7)
 		spark.scale = Vector3.ONE * (1.1 - phase * 0.85)
-
-
-func _on_session_ended(_reason: String) -> void:
-	arm_yaw = 0.0
-	arm_pitch = REST_PITCH
-	extension = 0.0
-	spinning = false
-	drilling = false
-	_spin_rate = 0.0

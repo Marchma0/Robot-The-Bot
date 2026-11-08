@@ -214,7 +214,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
   - [x] Système d'interaction (2026-11-08) : chaque commande gère son utilisation (`Interactable.interact`), l'Interactor n'a plus de liste de types ; l'hôte refuse qu'un joueur tienne ou occupe deux choses à la fois (`Possession`) ; le test réseau vérifie vraiment que chaque demande a un effet
   - [x] Nain découpé (2026-11-08) : apparence (`DwarfLook`, où iront les skins), caméra (`DwarfCamera`), corde (`DwarfClimb`) ; interface du joueur dans `scenes/ui/player_hud.tscn`, créée seulement pour le joueur local ; `dwarf.gd` passe de 780 à 590 lignes
   - [ ] Fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte et sauvegarde — conception à valider avec le porteur du projet
-  - [ ] Base commune des bras (foreuse, grappin)
+  - [x] Base commune des bras (2026-11-08) : `MechaArm` (visée depuis le poste, limites, caméra, remise à zéro), `DrillArm` et `GrabberArm` n'ont plus que leur outil
   - [ ] Traduction : tout texte visible passe par `tr()`, français + anglais
   - [ ] Dette de `mecha.blend` (après 3.4) : retirer les anciens bras et l'ancienne console de `mecha_shell.py`, découper le vieux décor en objets avec leur collision, supprimer `MechaArmUtils.strip_*`
 
