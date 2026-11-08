@@ -1,6 +1,6 @@
 class_name MechaWalker
 extends Node
-## Marche en rythme du mécha (M7.1, voir docs/design_jambes.md).
+## Marche en rythme du mécha (M7.1, voir docs/jeu.md « Les jambes »).
 ## Un coup de joystick = un pas de la jambe de ce joystick. Les pas alternés font avancer le robot.
 ##
 ## Réseau : tout est calculé sur l'hôte. Les clients n'envoient que leurs joysticks (Lever, déjà en place).
