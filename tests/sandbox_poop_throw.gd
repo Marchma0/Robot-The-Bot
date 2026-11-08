@@ -41,8 +41,8 @@ func _physics_process(_delta: float) -> void:
 
 func _throw_next() -> void:
 	if _index >= AIMS.size():
-		if quit_when_done:
-			get_tree().quit()
+		if quit_when_done or TestCheck.is_auto():
+			TestCheck.finish(get_tree())
 		return
 	_poop = POOP_SCENE.instantiate() as Poop
 	_poop.golden = _index == 1
@@ -56,6 +56,6 @@ func _throw_next() -> void:
 func _capture() -> void:
 	for i: int in 9:
 		await get_tree().process_frame
-	get_viewport().get_texture().get_image().save_png("res://build/views/poop_puff_%d.png" % _index)
+	TestCheck.save_view(get_viewport(), "res://build/views/poop_puff_%d.png" % _index)
 	await get_tree().create_timer(0.8).timeout
 	_throw_next()

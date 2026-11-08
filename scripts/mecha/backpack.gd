@@ -95,7 +95,7 @@ func store_node(item: Node3D, item_kind: String = "crate") -> bool:
 	next_items.append(item_kind)
 	stored_items = next_items
 	if item is Poop:
-		(item as Poop).set("_thrown", false)
+		(item as Poop).disarm()
 	item.queue_free()
 	play_store_animation.rpc(item_kind, start_local_pos, start_local_rot)
 	item_stored.emit(item_kind, stored_items.size())

@@ -133,7 +133,8 @@ tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (
 
 ## Façon de travailler
 1. Pour toute feature : proposer un plan court (fichiers touchés, nœuds créés, impact réseau) → l'humain valide → implémentation.
-2. Prototyper chaque mécanique dans une scène isolée `tests/sandbox_<feature>.tscn` avant de l'intégrer.
+2. Prototyper chaque mécanique dans une scène isolée `tests/sandbox_<feature>.tscn` avant de l'intégrer. Une scène scriptée vérifie elle-même son résultat avec `TestCheck` (`tests/tools/test_check.gd` : `expect`, `finish`, captures ignorées sans fenêtre).
+   **Tous les tests d'un coup** (scènes de test + test réseau, sans fenêtre) : `sh tests/tools/run_tests.sh` → `TOUS LES TESTS OK`, à lancer avant de fusionner une branche qui touche au code.
 3. Tester le multi en local : Godot → Debug → *Customize Run Instances* → 2 à 4 instances (une hôte, les autres clients).
    - À distance : exporter l'exe (`Godot --headless --path . --export-release "Windows Desktop" build/windows/Robot-The-Bot.exe`, puis copier `steam_appid.txt` à côté), envoyer le dossier `build/windows/` zippé, et passer par Steam (lobby / invitation) ou par un VPN type Tailscale en mode local.
    - Les deux joueurs doivent avoir **exactement la même version** (même commit de `main`, ou le même `.exe` exporté), sinon la synchro casse.
@@ -209,7 +210,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 1.5 Steam (M5) : GodotSteam (App ID 480), lobby, invitation ou code de lobby, export Windows `.exe` pour les testeurs — en place, reste à valider à distance (avec 1.4)
 - [x] 1.6 Pipeline 3D : un script Python par objet (`blender/props/`), palette partagée, planche de vues, refus des faces superposées, captures `interior_shots` (M6.7)
 - [ ] 1.7 **Rationalisation du code** `[en cours — Marchma0]` : rendre le code prêt pour le camp et les missions, sans rien changer en jeu (test réseau vert à chaque étape)
-  - [ ] Ménage : une seule façon de retrouver le nain d'un joueur, script à la racine du robot, petites bidouilles retirées, scènes de test à jour et lancées d'un coup
+  - [x] Ménage (2026-11-08) : une seule façon de retrouver le nain d'un joueur (`Dwarf.of_peer`) et son nom (« Joueur N » partout), petites bidouilles retirées, pieds du robot typés, scènes de test obsolètes supprimées, vérifications automatiques + `tests/tools/run_tests.sh`. Le script à la racine du robot attend les skins du robot (3.8)
   - [ ] Système d'interaction : chaque objet gère son utilisation, l'hôte tient à un seul endroit ce que chaque joueur tient ou occupe
   - [ ] Nain découpé en composants (déplacement, caméra, corde, apparence), interface du joueur dans une scène à part
   - [ ] Fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte et sauvegarde — conception à valider avec le porteur du projet

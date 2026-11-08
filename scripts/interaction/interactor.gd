@@ -111,12 +111,12 @@ func release_rope() -> void:
 		_rope_pending = false
 
 
-## Vrai quand le joueur tient un caca (confirmé par l'hôte).
 ## Vrai quand le joueur a les fléchettes du camp en main (confirmé par l'hôte).
 func is_holding_darts() -> bool:
 	return _darts != null and is_instance_valid(_darts) and _darts.is_thrower_locally()
 
 
+## Vrai quand le joueur tient un caca (confirmé par l'hôte).
 func is_holding_poop() -> bool:
 	return _poop != null and is_instance_valid(_poop) and _poop.is_held_locally()
 

@@ -32,8 +32,8 @@ func _ready() -> void:
 	await get_tree().create_timer(0.6).timeout
 	await _station_run(_drill_seat, "foreuse", false)
 	await _joystick_run()
-	if quit_when_done:
-		get_tree().quit()
+	if quit_when_done or TestCheck.is_auto():
+		TestCheck.finish(get_tree())
 
 
 ## Joystick de la jambe gauche à la souris : on le prend (clic maintenu), 4 coups de souris vers l'avant
@@ -116,10 +116,8 @@ func _tap(action: StringName) -> void:
 
 func _capture_at(delay: float, shot_name: String) -> void:
 	await get_tree().create_timer(delay).timeout
-	await RenderingServer.frame_post_draw
-	get_viewport().get_texture().get_image().save_png("res://build/views/stations_%s.png" % shot_name)
-
-
+	await TestCheck.frame_drawn(get_tree())
+	TestCheck.save_view(get_viewport(), "res://build/views/stations_%s.png" % shot_name)
 ## Appui réel sur une touche du clavier (comme un joueur), relâchée juste après.
 func _tap_key(key: Key) -> void:
 	for pressed: bool in [true, false]:

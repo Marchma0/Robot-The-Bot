@@ -129,6 +129,9 @@ var anim_flags: int:
 		anim_crouching = value & FLAG_CROUCHING != 0
 		anim_pooping = value & FLAG_POOPING != 0
 
+## Nains présents dans la partie, par peer id (chaque peer tient le sien : même contenu partout).
+static var _by_peer: Dictionary[int, Dwarf] = {}
+
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3 = Vector3.ZERO
 ## Regard accumulé pendant qu'on est assis (envoyé à la station à chaque frame physique).
@@ -197,6 +200,7 @@ func _enter_tree() -> void:
 	# Le nom est fixé par le spawner avant l'ajout à l'arbre, sur tous les peers.
 	peer_id = name.to_int()
 	set_multiplayer_authority(peer_id)
+	_by_peer[peer_id] = self
 
 
 func _ready() -> void:
@@ -242,6 +246,8 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	if _by_peer.get(peer_id) == self:
+		_by_peer.erase(peer_id)
 	if is_multiplayer_authority():
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
@@ -367,6 +373,24 @@ func _physics_process(delta: float) -> void:
 	_smoother.world_space = _was_outside
 
 
+## Le nain du joueur `id`, ou null (pas encore apparu, parti, ou 0 = personne).
+static func of_peer(id: int) -> Dwarf:
+	var dwarf: Dwarf = _by_peer.get(id) as Dwarf
+	return dwarf if is_instance_valid(dwarf) else null
+
+
+## Vrai si le nain du joueur `id` est à moins de `max_distance` de `point`. Sert à l'hôte pour valider une demande.
+static func is_peer_near(id: int, point: Vector3, max_distance: float) -> bool:
+	var dwarf: Dwarf = of_peer(id)
+	return dwarf != null and dwarf.global_position.distance_to(point) <= max_distance
+
+
+## Nom affiché du joueur `id` (pseudo, sinon « Joueur N »), "" pour personne.
+static func name_of_peer(id: int) -> String:
+	var dwarf: Dwarf = of_peer(id)
+	return dwarf.get_display_name() if dwarf != null else ""
+
+
 ## Appelé par le spawner avant add_child, avec les mêmes données sur tous les peers.
 func setup(p_peer_id: int, p_slot: int) -> void:
 	peer_id = p_peer_id
@@ -466,7 +490,7 @@ func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 		_look(Vector2(-stick_look.x, stick_look.y))
 		# Mini-jeu assis (bras de fer) : chaque clic part vers le jeu, sur l'hôte.
 		if seat.game != null and Input.is_action_just_pressed("grab"):
-			seat.game.rpc_id(1, &"submit_push")
+			seat.request_game_push.rpc_id(1)
 			anim_press_count += 1
 		sit = seat.get_sit_transform() * Transform3D(Basis(Vector3.UP, _seat_yaw), Vector3.ZERO)
 	if _sit_glide < 1.0:
@@ -743,13 +767,18 @@ func _apply_slot_visuals() -> void:
 	_update_name_label()
 
 
-func _update_name_label() -> void:
+## Pseudo du joueur (raccourci s'il est trop long), sinon « Joueur N ».
+func get_display_name() -> String:
 	var shown: String = player_name.strip_edges()
 	if shown.is_empty():
-		shown = "Joueur %d" % (slot + 1)
-	elif shown.length() > MAX_NAME_LENGTH:
-		shown = shown.left(MAX_NAME_LENGTH - 1) + "…"
-	_name_label.text = shown
+		return "Joueur %d" % (slot + 1)
+	if shown.length() > MAX_NAME_LENGTH:
+		return shown.left(MAX_NAME_LENGTH - 1) + "…"
+	return shown
+
+
+func _update_name_label() -> void:
+	_name_label.text = get_display_name()
 
 
 func _model_meshes() -> Array[MeshInstance3D]:

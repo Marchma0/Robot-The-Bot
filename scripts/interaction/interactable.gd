@@ -41,11 +41,7 @@ func set_highlighted(highlighted: bool) -> void:
 ## Vrai si le nain du joueur `peer_id` est à moins de `max_distance` de la commande.
 ## Utilisé par l'hôte pour valider les demandes.
 func is_peer_in_reach(peer_id: int, max_distance: float) -> bool:
-	for node: Node in get_tree().get_nodes_in_group(&"dwarves"):
-		if node.name == str(peer_id):
-			var dwarf: Node3D = node as Node3D
-			return dwarf.global_position.distance_to(global_position) <= max_distance
-	return false
+	return Dwarf.is_peer_near(peer_id, global_position, max_distance)
 
 
 ## À surcharger : les meshes à surligner quand la commande est visée.

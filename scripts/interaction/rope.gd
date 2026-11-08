@@ -99,12 +99,9 @@ func request_release() -> void:
 
 
 func _is_peer_near_rope(peer_id: int, max_distance: float) -> bool:
-	for node: Node in get_tree().get_nodes_in_group(&"dwarves"):
-		if node.name == str(peer_id):
-			# Mesuré depuis la poitrine du nain.
-			var dwarf: Node3D = node as Node3D
-			return distance_to_rope(dwarf.global_position + dwarf.global_basis.y * 0.7) <= max_distance
-	return false
+	var dwarf: Dwarf = Dwarf.of_peer(peer_id)
+	# Mesuré depuis la poitrine du nain.
+	return dwarf != null and distance_to_rope(dwarf.global_position + dwarf.global_basis.y * 0.7) <= max_distance
 
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:

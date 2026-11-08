@@ -94,7 +94,7 @@ func _process(_delta: float) -> void:
 		physics_interpolation_mode = held_mode
 		reset_physics_interpolation()
 	if holder_peer_id != 0:
-		var dwarf: Dwarf = _find_dwarf(holder_peer_id)
+		var dwarf: Dwarf = Dwarf.of_peer(holder_peer_id)
 		if dwarf != null:
 			global_transform = dwarf.get_hold_transform()
 	if _gold_material != null:
@@ -102,6 +102,11 @@ func _process(_delta: float) -> void:
 		var shine: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.006)
 		_gold_material.emission_energy_multiplier = 0.4 + 0.8 * shine
 		_gold_light.light_energy = 0.25 + 0.25 * shine
+
+
+## Hôte : il ne fera plus de nuage au prochain contact (il vient d'être rangé dans le sac).
+func disarm() -> void:
+	_thrown = false
 
 
 func is_held_locally() -> bool:
@@ -113,7 +118,7 @@ func request_pick() -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
-	var dwarf: Dwarf = _find_dwarf(sender)
+	var dwarf: Dwarf = Dwarf.of_peer(sender)
 	if holder_peer_id != 0 or _flying or dwarf == null:
 		return
 	if dwarf.global_position.distance_to(global_position) > PICK_REACH:
@@ -134,7 +139,7 @@ func request_throw(direction: Vector3) -> void:
 	var sender: int = multiplayer.get_remote_sender_id()
 	if sender != holder_peer_id:
 		return
-	var dwarf: Dwarf = _find_dwarf(sender)
+	var dwarf: Dwarf = Dwarf.of_peer(sender)
 	if dwarf != null:
 		global_transform = dwarf.get_hold_transform()
 	holder_peer_id = 0
@@ -199,10 +204,3 @@ func _land() -> void:
 	_flying = false
 	_age = 0.0
 	freeze = true
-
-
-func _find_dwarf(peer_id: int) -> Dwarf:
-	for node: Node in get_tree().get_nodes_in_group(&"dwarves"):
-		if node.name == str(peer_id):
-			return node as Dwarf
-	return null
