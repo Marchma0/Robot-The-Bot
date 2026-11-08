@@ -43,7 +43,10 @@ func get_hints() -> Array[InputHint]:
 		return [InputHint.make(&"grab", &"hand_grab")]
 	if game.thrower_peer_id == 0:
 		return [InputHint.make(&"grab", &"hand_grab")]
-	return [] if game.is_thrower_locally() else [InputHint.state(&"locked")]
+	# Pas de « a if c else b » ici : avec des tableaux, GDScript renvoie un Array non typé.
+	if game.is_thrower_locally():
+		return []
+	return [InputHint.state(&"locked")]
 
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:
