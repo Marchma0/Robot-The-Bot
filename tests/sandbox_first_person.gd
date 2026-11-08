@@ -46,6 +46,14 @@ func _ready() -> void:
 		TestCheck.expect(arms.visible and arms.is_raised(), "emote « %s » : on voit ses bras, à la première personne" % Emotes.LIST[i]["label"])
 		_dwarf.anim_emote = Emotes.NONE
 		await _wait(0.4)
+	var wheel: EmoteWheel = _dwarf._hud.emote_wheel
+	Input.action_press("emote_wheel")   # touche maintenue, sinon le nain referme la roue
+	await _wait(0.1)
+	wheel.push_mouse(Vector2(80.0, -40.0))
+	await _shot("4_roue", 0.2)
+	TestCheck.expect(wheel._icons.size() == Emotes.count(), "roue d'emotes : une image par emote")
+	Input.action_release("emote_wheel")
+	await _wait(0.1)
 	if quit_when_done or TestCheck.is_auto():
 		TestCheck.finish(get_tree())
 
