@@ -4,8 +4,9 @@ extends Node3D
 ## la cible au départ. On vise la cible (DartsTake) ou une fléchette plantée pour prendre toutes les fléchettes
 ## libres d'un coup, puis on lance au regard (clic), de n'importe où dans le robot. La fléchette part en cloche
 ## et se plante là où elle tape : la cible (points selon l'anneau, « Dans le mille ! » au centre), un mur,
-## un meuble… ou un autre nain : il a la vue brouillée tant qu'elle est plantée, et un autre nain doit venir
-## la lui retirer (elle retourne sur la cible). Les scores s'écrivent à la craie sur l'ardoise d'à côté (`ChalkScoreboard`).
+## un meuble… ou un autre nain : plantée au visage (de face, à hauteur de tête), il a la vue brouillée ; ailleurs
+## (casque, corps), il a juste un flash rouge de douleur. Dans tous les cas, un autre nain doit venir la lui
+## retirer (elle retourne sur la cible). Les scores s'écrivent à la craie sur l'ardoise d'à côté (`ChalkScoreboard`).
 ##
 ## Réseau : prendre, poser, lancer et retirer passent par des RPC vers l'hôte, qui vérifie, calcule le vol
 ## (rayons contre le monde et les nains) et le score, puis envoie le vol à tout le monde (`_show_throw`) :
@@ -14,6 +15,8 @@ extends Node3D
 ## Repère : celui de la cible (centre de la cible contre le mur, elle regarde vers -Z).
 
 enum Where { PLANTED, IN_HAND, IN_DWARF }
+## Où une fléchette est plantée dans un nain : casque (côté, arrière), visage (vue brouillée), corps.
+enum Spot { HEAD, FACE, BODY }
 
 const DART_SCENE: PackedScene = preload("res://scenes/mecha/props/dart.tscn")
 const DART_MODEL: PackedScene = preload("res://assets/models/props/dart.glb")
@@ -35,6 +38,12 @@ const MAX_FLIGHT_TIME: float = 1.5
 ## Fléchette dans un nain : plantée dans sa tête, du côté d'où elle arrive (repère de l'os de la tête).
 const HEAD_CENTER: Vector3 = Vector3(0.0, 0.03, -0.02)
 const HEAD_RADIUS: float = 0.24
+## Touché à partir de cette hauteur (m, depuis les pieds) : la tête, sinon le corps (repère de l'os du torse).
+const HEAD_ZONE_HEIGHT: float = 0.78
+const TORSO_CENTER: Vector3 = Vector3(0.0, 0.15, 0.0)
+const TORSO_RADIUS: float = 0.3
+## Au visage : la fléchette arrive de face, à moins de 60° de l'axe du regard du nain.
+const FACE_CONE_COS: float = 0.5
 ## Manches gardées sur l'ardoise.
 const HISTORY_SIZE: int = 4
 
@@ -55,6 +64,8 @@ var dart_pos: PackedVector3Array = PackedVector3Array()
 var dart_dir: PackedVector3Array = PackedVector3Array()
 ## Nain dans lequel la fléchette est plantée (IN_DWARF), sinon 0.
 var dart_peer: PackedInt32Array = PackedInt32Array()
+## Où elle est plantée dans ce nain (Spot), si IN_DWARF.
+var dart_spot: PackedInt32Array = PackedInt32Array()
 
 var _darts: Array[DartHandle] = []
 var _flights: Array[Dictionary] = []
@@ -117,13 +128,14 @@ func _process(delta: float) -> void:
 				dart.visible = false
 			Where.IN_DWARF:
 				var dwarf: Dwarf = Dwarf.of_peer(dart_peer[i])
-				# Le nain touché ne voit pas sa propre fléchette (elle lui rentrerait dans l'œil) : il a l'écran brouillé.
+				# Le nain touché ne voit pas sa propre fléchette (elle lui rentrerait dans l'œil). Au visage, il a
+				# l'écran brouillé ; ailleurs, il a seulement eu le flash de douleur en la recevant.
 				dart.visible = dwarf != null and dart_peer[i] != me
 				if dwarf != null:
-					var head: Node3D = dwarf.get_head_attach()
-					dart.global_transform = _dart_transform(head.global_transform * dart_pos[i],
-						(head.global_basis * dart_dir[i]).normalized())
-				blind = blind or dart_peer[i] == me
+					var attach: Node3D = _attach_of(dwarf, dart_spot[i])
+					dart.global_transform = _dart_transform(attach.global_transform * dart_pos[i],
+						(attach.global_basis * dart_dir[i]).normalized())
+				blind = blind or (dart_peer[i] == me and dart_spot[i] == Spot.FACE)
 		dart.set_pickable(dart_where[i] != Where.IN_HAND)
 	if blind != _blind_shown:
 		var local: Dwarf = Dwarf.of_peer(me)
@@ -267,12 +279,17 @@ func _land(index: int, result: Dictionary) -> void:
 	var pos: PackedVector3Array = dart_pos
 	var dir: PackedVector3Array = dart_dir
 	var peer: PackedInt32Array = dart_peer
+	var spots: PackedInt32Array = dart_spot
 	if result.has("dwarf"):
 		var dwarf: Dwarf = result["dwarf"]
-		var head: Node3D = dwarf.get_head_attach()
-		var local_dir: Vector3 = (head.global_basis.inverse() * (result["dir"] as Vector3)).normalized()
+		var spot: int = _spot_of(dwarf, result["point"], result["dir"])
+		var attach: Node3D = _attach_of(dwarf, spot)
+		var local_dir: Vector3 = (attach.global_basis.inverse() * (result["dir"] as Vector3)).normalized()
+		var center: Vector3 = TORSO_CENTER if spot == Spot.BODY else HEAD_CENTER
+		var radius: float = TORSO_RADIUS if spot == Spot.BODY else HEAD_RADIUS
 		where[index] = Where.IN_DWARF
-		pos[index] = HEAD_CENTER - local_dir * (HEAD_RADIUS - EMBED)
+		pos[index] = center - local_dir * (radius - EMBED)
+		spots[index] = spot
 		dir[index] = local_dir
 		peer[index] = dwarf.peer_id
 		get_tree().create_timer(result["time"]).timeout.connect(_hit_dwarf.bind(dwarf.peer_id))
@@ -285,12 +302,27 @@ func _land(index: int, result: Dictionary) -> void:
 	dart_pos = pos
 	dart_dir = dir
 	dart_peer = peer
+	dart_spot = spots
 
 
 func _hit_dwarf(peer_id: int) -> void:
 	var dwarf: Dwarf = Dwarf.of_peer(peer_id)
 	if dwarf != null:
 		dwarf.receive_dart.rpc()
+
+
+## Où se plante une fléchette qui touche `dwarf` en `point`, en allant vers `dir` (global).
+func _spot_of(dwarf: Dwarf, point: Vector3, dir: Vector3) -> int:
+	var height: float = (dwarf.global_transform.affine_inverse() * point).y
+	if height < HEAD_ZONE_HEIGHT:
+		return Spot.BODY
+	var facing: Vector3 = -dwarf.view_transform().basis.z   # là où le nain regarde
+	return Spot.FACE if dir.normalized().dot(facing) < -FACE_CONE_COS else Spot.HEAD
+
+
+## Os qui porte une fléchette plantée à cet endroit (tête ou torse).
+static func _attach_of(dwarf: Dwarf, spot: int) -> Node3D:
+	return dwarf.get_torso_attach() if spot == Spot.BODY else dwarf.get_head_attach()
 
 
 func _ring_score(r: float) -> int:
@@ -305,11 +337,13 @@ func _put_all_on_board() -> void:
 	dart_pos = PackedVector3Array()
 	dart_dir = PackedVector3Array()
 	dart_peer = PackedInt32Array()
+	dart_spot = PackedInt32Array()
 	for i: int in DART_COUNT:
 		dart_where.append(Where.PLANTED)
 		dart_pos.append(Vector3.ZERO)
 		dart_dir.append(Vector3.FORWARD)
 		dart_peer.append(0)
+		dart_spot.append(Spot.HEAD)
 		_put_on_board(i)
 
 
@@ -329,6 +363,9 @@ func _put_on_board(index: int) -> void:
 	dart_pos = pos
 	dart_dir = dir
 	dart_peer = peer
+	var spots: PackedInt32Array = dart_spot
+	spots[index] = Spot.HEAD
+	dart_spot = spots
 
 
 func _return_held_darts() -> void:

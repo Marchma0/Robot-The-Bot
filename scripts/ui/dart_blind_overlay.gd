@@ -1,7 +1,7 @@
 class_name DartBlindOverlay
 extends Control
-## Vue brouillée tant qu'une fléchette est plantée dans le nain du joueur local (DartsGame) : image floue,
-## dédoublée et qui tangue, bords sombres, et un mot pour dire qu'un allié doit venir la retirer.
+## Vue brouillée tant qu'une fléchette est plantée dans le visage du nain du joueur local (DartsGame) : image floue,
+## dédoublée et qui tangue, bords sombres. Pas de texte : la vue suffit (un allié doit venir la retirer).
 ## Joueur local uniquement ; placée sous le reste de l'interface (les touches restent nettes).
 
 const SHADER_CODE: String = """
@@ -26,7 +26,6 @@ void fragment() {
 var _active: bool = false
 var _amount: float = 0.0
 var _material: ShaderMaterial
-var _label: Label
 
 
 func _ready() -> void:
@@ -40,16 +39,6 @@ func _ready() -> void:
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(rect)
-	_label = Label.new()
-	_label.text = tr("Une fléchette dans la tête ! Un allié doit te l'enlever.")
-	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_label.add_theme_font_override(&"font", preload("res://assets/fonts/fredoka.tres"))
-	_label.add_theme_font_size_override(&"font_size", 30)
-	_label.add_theme_color_override(&"font_outline_color", Color(0.15, 0.05, 0.02))
-	_label.add_theme_constant_override(&"outline_size", 10)
-	_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	_label.position.y = 90.0
-	add_child(_label)
 	visible = false
 
 
@@ -64,8 +53,5 @@ func _process(delta: float) -> void:
 		return
 	_amount = move_toward(_amount, 1.0 if _active else 0.0, delta * (3.0 if _active else 1.5))
 	_material.set_shader_parameter(&"amount", _amount)
-	_label.modulate.a = _amount * (0.75 + 0.25 * sin(Time.get_ticks_msec() * 0.006))
-	_label.size.x = size.x
-	_label.position.x = 0.0
 	if _amount <= 0.0 and not _active:
 		visible = false

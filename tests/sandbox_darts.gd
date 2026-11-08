@@ -60,11 +60,14 @@ func _ready() -> void:
 	await _wait(0.3)
 	TestCheck.expect(in_ally >= 0 and _darts.dart_where[in_ally] == DartsGame.Where.PLANTED, "on retire la fléchette de l'allié : elle retourne sur la cible")
 
-	# Une fléchette plantée dans son propre nain : vue brouillée, et on ne peut pas se l'enlever soi-même.
-	_darts._land(0, {"point": _dwarf.global_position + _mecha.global_basis.y * 1.0, "dir": _mecha.global_basis.z, "dwarf": _dwarf, "time": 0.05})
+	# Une fléchette en plein visage (elle arrive de face) : vue brouillée, et on ne peut pas se l'enlever soi-même.
+	var facing: Vector3 = -_dwarf.view_transform().basis.z
+	var head_point: Vector3 = _dwarf.global_position + _mecha.global_basis.y * 1.0
+	_darts._land(0, {"point": head_point, "dir": -facing, "dwarf": _dwarf, "time": 0.05})
 	await _wait(0.6)
-	TestCheck.expect(_dwarf._hud.dart_blind._active, "fléchette dans son nain : vue brouillée")
-	_cam.current = false
+	TestCheck.expect(_darts.dart_spot[0] == DartsGame.Spot.FACE, "de face, à hauteur de tête : plantée au visage")
+	TestCheck.expect(_dwarf._hud.dart_blind._active, "fléchette au visage : vue brouillée")
+	(_dwarf.get_node("%Camera") as Camera3D).current = true   # la vue du joueur
 	await _wait(0.4)
 	await TestCheck.frame_drawn(get_tree())
 	TestCheck.save_view(get_viewport(), "res://build/views/darts_4_vue_brouillee.png")
@@ -74,6 +77,24 @@ func _ready() -> void:
 	_darts._put_on_board(0)
 	await _wait(0.4)
 	TestCheck.expect(not _dwarf._hud.dart_blind._active, "fléchette retirée : la vue redevient nette")
+
+	# Dans le dos (casque) puis dans le corps : pas de vue brouillée, seulement le flash rouge de douleur.
+	_darts._land(1, {"point": head_point, "dir": facing, "dwarf": _dwarf, "time": 0.05})
+	await _wait(0.2)
+	TestCheck.expect(_darts.dart_spot[1] == DartsGame.Spot.HEAD, "de dos, à hauteur de tête : plantée dans le casque")
+	TestCheck.expect(_dwarf._hud.hurt_overlay.is_flashing(), "fléchette dans le casque : flash rouge de douleur")
+	(_dwarf.get_node("%Camera") as Camera3D).current = true
+	await TestCheck.frame_drawn(get_tree())
+	TestCheck.save_view(get_viewport(), "res://build/views/darts_5_douleur.png")
+	await _wait(0.5)
+	TestCheck.expect(not _dwarf._hud.dart_blind._active, "fléchette dans le casque : la vue reste nette")
+	_darts._land(2, {"point": _dwarf.global_position + _mecha.global_basis.y * 0.5, "dir": -facing, "dwarf": _dwarf, "time": 0.05})
+	await _wait(0.6)
+	TestCheck.expect(_darts.dart_spot[2] == DartsGame.Spot.BODY and not _dwarf._hud.dart_blind._active, "fléchette dans le ventre : plantée dans le corps, vue nette")
+	TestCheck.expect(_darts.dart_where[1] == DartsGame.Where.IN_DWARF and _darts.dart_where[2] == DartsGame.Where.IN_DWARF, "elles restent plantées (un allié doit les retirer)")
+	await _shot("6_plantees_allie_vue", Vector3(0.6, 3.6, -1.6), _mecha.to_local(_dwarf.global_position) + Vector3(0.0, 0.7, 0.0))
+	_darts._put_on_board(1)
+	_darts._put_on_board(2)
 	if quit_when_done or TestCheck.is_auto():
 		TestCheck.finish(get_tree())
 
