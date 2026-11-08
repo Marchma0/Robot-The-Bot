@@ -50,10 +50,13 @@
   diagonale = avance en tournant, côté = pivote sur place, bas = recule.
 - **Pas alternés** des deux joueurs dans la même direction = le robot avance (plus vite s'ils enchaînent).
   Seul, on piétine. Deux pieds en l'air en même temps : interdit. Une marque lumineuse montre où le pied va se poser.
-- Le voyant « à toi » de la console dit à qui c'est le tour.
+- Chaque console a l'allure d'une **manette géante** : joystick sur socle rond, croix directionnelle (4 flèches),
+  cadran rond de la jauge d'erreur et petit écran. Le voyant vert « à toi » dit à qui c'est le tour de marcher.
 - **Jauge d'erreur** sur les consoles : un pas décalé ou dans une autre direction la fait monter ; pleine =
-  le robot **s'effondre à genoux**. Pour le relever : un **QTE à tour de rôle** sur les pads à 4 flèches
-  (la flèche s'allume sur la console de celui dont c'est le tour, rien à l'écran).
+  le robot **s'effondre à genoux**. Pour le relever : un **QTE à tour de rôle** sur les 4 flèches de la croix :
+  le **petit écran de chaque console**, façon « Just Dance », fait défiler les flèches à faire
+  jusqu'à une cible (les siennes en grand et en cyan, celles de l'autre en petit et en violet), flash rouge à
+  chaque erreur, « Bravo ! » à la fin.
 - **À venir** : **panneaux muraux** dans le ventre (s'accroupir, se relever…) par des **combinaisons à deux**
   gravées sur les murs par l'ancien propriétaire (aucun QTE affiché à l'écran) ; **saut directionnel**
   (un joueur tient la direction au joystick pendant que l'autre fait la combinaison ; réception ratée = jauge d'erreur ou chute).
