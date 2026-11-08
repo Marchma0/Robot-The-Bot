@@ -170,6 +170,7 @@ func _ready() -> void:
 	_apply_crouch_shape()
 	# Permet à l'hôte de retrouver le nain d'un joueur (validation de portée des commandes).
 	add_to_group(&"dwarves")
+	get_torso_attach()   # prêt avant qu'une fléchette s'y plante (sa place doit déjà suivre l'os)
 
 	var is_local: bool = is_multiplayer_authority()
 	set_physics_process(is_local)
@@ -383,18 +384,31 @@ func receive_splat() -> void:
 	_hud.splat_overlay.splat()
 
 
-## Envoyé par l'hôte quand une fléchette plante ce nain : animation "hit" (la vue brouillée suit l'état
-## synchronisé du jeu de fléchettes, voir `set_dart_blind`).
+## Envoyé par l'hôte quand une fléchette plante ce nain : animation "hit" et flash rouge de douleur chez le
+## joueur touché (la vue brouillée, seulement au visage, suit l'état synchronisé du jeu, voir `set_dart_blind`).
 @rpc("any_peer", "call_local", "reliable")
 func receive_dart() -> void:
 	if multiplayer.get_remote_sender_id() != 1 or not is_multiplayer_authority():
 		return
 	anim_hit_count += 1
+	_hud.hurt_overlay.flash()
 
 
 ## Os de la tête (suit les animations) : une fléchette qui touche ce nain s'y plante.
 func get_head_attach() -> Node3D:
 	return get_node("BodyModel/DwarfRig/Skeleton3D/HeadBone") as Node3D
+
+
+## Os du torse (suit les animations) : une fléchette qui touche le corps s'y plante. Créé à la demande.
+func get_torso_attach() -> Node3D:
+	var skeleton: Skeleton3D = get_node("BodyModel/DwarfRig/Skeleton3D") as Skeleton3D
+	var attach: BoneAttachment3D = skeleton.get_node_or_null(^"TorsoBone") as BoneAttachment3D
+	if attach == null:
+		attach = BoneAttachment3D.new()
+		attach.name = "TorsoBone"
+		skeleton.add_child(attach)
+		attach.bone_name = "torso"
+	return attach
 
 
 ## Joueur local : vue brouillée tant qu'une fléchette est plantée dans son nain (appelé par DartsGame).

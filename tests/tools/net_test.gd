@@ -148,7 +148,15 @@ func _dart_in_client_step() -> void:
 	var host: Dwarf = Dwarf.of_peer(1)
 	darts._land(0, {"point": client.global_position, "dir": client.global_basis.z, "dwarf": client, "time": 0.1})
 	await get_tree().create_timer(STEP_WAIT).timeout
-	await _check("fléchette plantée dans le nain du client")
+	await _check("fléchette plantée dans le corps du client")
+	var face: Vector3 = client.global_position + client.global_basis.y * 1.0
+	darts._land(1, {"point": face, "dir": client.view_transform().basis.z, "dwarf": client, "time": 0.1})
+	await get_tree().create_timer(STEP_WAIT).timeout
+	if darts.dart_spot[1] != DartsGame.Spot.FACE:
+		_failures += 1
+		_log("ÉCHEC  fléchette de face : pas plantée au visage")
+	await _check("fléchette plantée au visage du client")
+	darts._put_on_board(1)
 	host.global_position = client.global_position + client.global_basis.x * 0.8
 	host.set(&"_world_position", host.global_position)   # dehors, le nain garde sa place dans le monde
 	await get_tree().create_timer(0.6).timeout

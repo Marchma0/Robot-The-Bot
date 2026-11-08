@@ -1,6 +1,6 @@
 class_name DartBlindOverlay
 extends Control
-## Vue brouillée tant qu'une fléchette est plantée dans le nain du joueur local (DartsGame) : image floue,
+## Vue brouillée tant qu'une fléchette est plantée dans le visage du nain du joueur local (DartsGame) : image floue,
 ## dédoublée et qui tangue, bords sombres, et un mot pour dire qu'un allié doit venir la retirer.
 ## Joueur local uniquement ; placée sous le reste de l'interface (les touches restent nettes).
 
@@ -41,7 +41,7 @@ func _ready() -> void:
 	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(rect)
 	_label = Label.new()
-	_label.text = tr("Une fléchette dans la tête ! Un allié doit te l'enlever.")
+	_label.text = tr("Une fléchette en plein visage ! Un allié doit te l'enlever.")
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.add_theme_font_override(&"font", preload("res://assets/fonts/fredoka.tres"))
 	_label.add_theme_font_size_override(&"font_size", 30)
