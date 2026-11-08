@@ -61,6 +61,13 @@ func get_hints() -> Array[InputHint]:
 	return [InputHint.make(&"grab", &"press")]
 
 
+func interact(press: bool, grab: bool, _hands_free: bool) -> Use:
+	if not (press or grab):
+		return Use.NONE
+	request_press.rpc_id(1)
+	return Use.DONE
+
+
 @rpc("any_peer", "call_local", "reliable")
 func request_press() -> void:
 	if not multiplayer.is_server():

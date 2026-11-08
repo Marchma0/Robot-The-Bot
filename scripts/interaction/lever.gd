@@ -51,7 +51,7 @@ var _kick_time: float = 0.0
 
 func _ready() -> void:
 	super()
-	add_to_group(&"levers")
+	add_to_group(Possession.GROUP)
 	var material: StandardMaterial3D = StandardMaterial3D.new()
 	material.albedo_color = knob_color
 	material.roughness = 0.6
@@ -95,6 +95,14 @@ func get_hints() -> Array[InputHint]:
 	return [InputHint.make(&"grab", &"hand_grab")]
 
 
+## Attraper (clic / RT maintenu, mains libres) : on va le tenir.
+func interact(_press: bool, grab: bool, hands_free: bool) -> Use:
+	if not grab or not hands_free:
+		return Use.NONE
+	request_grab.rpc_id(1)
+	return Use.CLAIM
+
+
 func is_held_locally() -> bool:
 	return holder_peer_id != 0 and holder_peer_id == multiplayer.get_unique_id()
 
@@ -121,9 +129,8 @@ func request_grab() -> void:
 	var sender: int = multiplayer.get_remote_sender_id()
 	if holder_peer_id != 0 or not is_peer_in_reach(sender, reach):
 		return
-	for node: Node in get_tree().get_nodes_in_group(&"levers"):
-		if (node as Lever).holder_peer_id == sender:
-			return
+	if Possession.is_peer_busy(get_tree(), sender):
+		return   # il tient ou occupe déjà autre chose
 	holder_peer_id = sender
 
 

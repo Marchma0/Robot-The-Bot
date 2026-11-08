@@ -52,6 +52,7 @@ func _ready() -> void:
 	_hand_dart.top_level = true
 	_hand_dart.visible = false
 	add_child(_hand_dart)
+	add_to_group(Possession.GROUP)
 	_score.font = preload("res://assets/fonts/fredoka.tres")
 	NetworkManager.session_ended.connect(_on_session_ended)
 
@@ -91,7 +92,7 @@ func request_take() -> void:
 		return
 	if dwarf.global_position.distance_to(to_global(Vector3(0.0, 0.0, LINE_Z))) > TAKE_REACH + 1.0:
 		return
-	if thrower_peer_id == sender:
+	if thrower_peer_id == sender or Possession.is_peer_busy(get_tree(), sender, self):
 		return
 	thrower_peer_id = sender
 	thrower_name = dwarf.get_display_name()

@@ -16,6 +16,8 @@ const FLOAT_TOLERANCE: float = 0.05
 
 ## `continuous` : ajoute aussi les propriétés envoyées en continu (bras, jauges…). Elles bougent tout le
 ## temps et ne se comparent pas entre deux joueurs, mais servent à voir si une action a eu un effet.
+## Les flux des NetSmoother (place + horloge) n'y sont jamais : leur horloge avance toute seule, ils feraient croire
+## qu'une demande refusée a changé quelque chose.
 static func snapshot(root: Node, continuous: bool = false) -> Dictionary:
 	var out: Dictionary = {}
 	_walk(root, root, out, continuous)
@@ -71,9 +73,12 @@ static func _add_sync(root: Node, sync: MultiplayerSynchronizer, out: Dictionary
 			continue
 		var found: Array = target.get_node_and_resource(prop)
 		var owner_node: Node = found[0] as Node
-		if owner_node == null:
+		if owner_node == null or (continuous and owner_node is NetSmoother):
 			continue
 		var value: Variant = owner_node.get_indexed(found[2] as NodePath)
+		# Copie : tableaux et dictionnaires sont partagés, la photo « avant » changerait avec l'objet.
+		if typeof(value) == TYPE_ARRAY or typeof(value) == TYPE_DICTIONARY or typeof(value) >= TYPE_PACKED_BYTE_ARRAY:
+			value = value.duplicate()
 		out[str(root.get_path_to(owner_node)) + ":" + str(found[2])] = value
 
 

@@ -3,6 +3,13 @@ extends Area3D
 ## Base des commandes du cockpit (boutons, leviers…).
 ## Se vise au regard (couche physique "interactable"), se surligne, affiche un message.
 ## Toute action passe par une RPC vers l'hôte, qui vérifie que le joueur est à portée.
+##
+## Nouvelle commande : hériter de cette classe et surcharger `interact` (et `get_hints`).
+## L'Interactor n'a pas à changer.
+
+## Résultat de `interact` : rien, action faite tout de suite (bouton…), ou objet demandé
+## qu'on va tenir ou occuper (levier, siège… voir Possession et `get_claim`).
+enum Use { NONE, DONE, CLAIM }
 
 const INTERACTABLE_LAYER: int = 3
 const HIGHLIGHT_COLOR: Color = Color(1.0, 0.95, 0.6, 0.35)
@@ -26,6 +33,17 @@ func _ready() -> void:
 		_highlight_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		_highlight_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		_highlight_material.albedo_color = HIGHLIGHT_COLOR
+
+
+## Joueur local : il vise la commande et vient d'appuyer sur E (`press`) ou clic / RT (`grab`).
+## `hands_free` : il ne tient rien. Envoie sa demande à l'hôte et dit ce qui se passe. À surcharger.
+func interact(_press: bool, _grab: bool, _hands_free: bool) -> Use:
+	return Use.NONE
+
+
+## Après `Use.CLAIM` : l'objet que le joueur va tenir ou occuper (lui-même, ou ex. le caca de sa poignée).
+func get_claim() -> Node:
+	return self
 
 
 ## Indices (touche → icône) affichés quand le joueur vise la commande. À surcharger.

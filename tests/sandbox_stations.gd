@@ -51,10 +51,8 @@ func _joystick_run() -> void:
 	_dwarf.rotation = Vector3.ZERO
 	await get_tree().create_timer(0.5).timeout
 	Input.action_press(&"grab")
-	interactor.set("_held", stick)
-	interactor.set("_grab_pending", true)
-	interactor.set("_wanted", Vector2.ZERO)
 	stick.request_grab.rpc_id(1)
+	interactor.begin_claim(stick)
 	await _capture_at(0.4, "joystick_0_tenu")
 	for i: int in 4:
 		# Un coup de souris vers l'avant étalé sur quelques images, puis plus rien (il revient seul).
@@ -65,6 +63,7 @@ func _joystick_run() -> void:
 			await _capture_at(0.02, "joystick_1_clac")
 		await get_tree().create_timer(0.9).timeout
 	print("Joystick : %d coups de souris, %d « clac », %d pas" % [4, kicks[0], steps[0]])
+	TestCheck.expect(kicks[0] == 4 and steps[0] == 4, "joystick à la souris : 4 coups = 4 « clac » = 4 pas")
 	_tap_event(&"toggle_help")
 	await _capture_at(0.15, "joystick_2_panneau_replie")
 	_tap_event(&"toggle_help")
@@ -82,9 +81,9 @@ func _tap_event(action: StringName) -> void:
 func _station_run(seat: Seat, label: String, fire: bool) -> void:
 	var interactor: Interactor = _dwarf.get_node("%Interactor") as Interactor
 	seat.request_sit.rpc_id(1)
-	interactor.set("_seat", seat)
-	interactor.set("_seat_pending", true)
+	interactor.begin_claim(seat)
 	await _capture_at(0.05, "%s_0_assis" % label)
+	TestCheck.expect(interactor.get_seat() == seat, "%s : assis au poste" % label)
 	await _capture_at(0.35, "%s_1_traveling" % label)
 	await _capture_at(0.35, "%s_2_ecran" % label)
 	await _capture_at(0.2, "%s_3_neige" % label)
@@ -97,6 +96,7 @@ func _station_run(seat: Seat, label: String, fire: bool) -> void:
 		await _capture_at(1.0, "%s_5_ramene" % label)
 		await get_tree().create_timer(1.2).timeout   # aller + retour + rangement ≈ 1,7 s
 		print("Grappin : état %d, sac %d objet(s)" % [_grabber_arm.shot_state, ($Mecha/Backpack as Backpack).stored_items.size()])
+		TestCheck.expect(($Mecha/Backpack as Backpack).stored_items.size() == 1, "grappin lancé : la caisse lointaine finit dans le sac")
 	else:
 		await _capture_at(0.6, "%s_4_vue" % label)
 	_tap_key(KEY_TAB)
@@ -105,6 +105,7 @@ func _station_run(seat: Seat, label: String, fire: bool) -> void:
 	await _tap("interact")
 	await _capture_at(0.25, "%s_6_leve" % label)
 	await _capture_at(0.6, "%s_7_debout" % label)
+	TestCheck.expect(seat.occupant_peer_id == 0 and interactor.get_seat() == null, "%s : E pour se lever" % label)
 
 
 func _tap(action: StringName) -> void:

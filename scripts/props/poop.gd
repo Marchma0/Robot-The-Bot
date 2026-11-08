@@ -61,6 +61,7 @@ var _has_received_place: bool = false
 
 func _ready() -> void:
 	add_to_group(&"poops")
+	add_to_group(Possession.GROUP)
 	freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
 	freeze = true
 	contact_monitor = true
@@ -123,9 +124,8 @@ func request_pick() -> void:
 		return
 	if dwarf.global_position.distance_to(global_position) > PICK_REACH:
 		return
-	for node: Node in get_tree().get_nodes_in_group(&"poops"):
-		if (node as Poop).holder_peer_id == sender:
-			return   # un seul caca à la fois
+	if Possession.is_peer_busy(get_tree(), sender):
+		return   # il tient ou occupe déjà autre chose (un seul caca à la fois)
 	holder_peer_id = sender
 	freeze = true
 	_age = 0.0

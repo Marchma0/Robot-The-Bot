@@ -211,7 +211,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 1.6 Pipeline 3D : un script Python par objet (`blender/props/`), palette partagée, planche de vues, refus des faces superposées, captures `interior_shots` (M6.7)
 - [ ] 1.7 **Rationalisation du code** `[en cours — Marchma0]` : rendre le code prêt pour le camp et les missions, sans rien changer en jeu (test réseau vert à chaque étape)
   - [x] Ménage (2026-11-08) : une seule façon de retrouver le nain d'un joueur (`Dwarf.of_peer`) et son nom (« Joueur N » partout), petites bidouilles retirées, pieds du robot typés, scènes de test obsolètes supprimées, vérifications automatiques + `tests/tools/run_tests.sh`. Le script à la racine du robot attend les skins du robot (3.8)
-  - [ ] Système d'interaction : chaque objet gère son utilisation, l'hôte tient à un seul endroit ce que chaque joueur tient ou occupe
+  - [x] Système d'interaction (2026-11-08) : chaque commande gère son utilisation (`Interactable.interact`), l'Interactor n'a plus de liste de types ; l'hôte refuse qu'un joueur tienne ou occupe deux choses à la fois (`Possession`) ; le test réseau vérifie vraiment que chaque demande a un effet
   - [ ] Nain découpé en composants (déplacement, caméra, corde, apparence), interface du joueur dans une scène à part
   - [ ] Fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte et sauvegarde — conception à valider avec le porteur du projet
   - [ ] Base commune des bras (foreuse, grappin)

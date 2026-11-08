@@ -1,9 +1,10 @@
 class_name Interactor
 extends RayCast3D
 ## Rayon de visée du nain local (enfant de sa caméra).
-## Trouve la commande visée, la surligne, envoie les demandes à l'hôte
-## (appuyer, attraper, lâcher, s'installer, se lever, grimper, ramasser / lancer un caca)
-## et pilote le levier tenu.
+## Trouve la commande visée, la surligne et lui passe les appuis (`Interactable.interact`) : c'est la
+## commande qui envoie sa demande à l'hôte. Une nouvelle commande n'a donc rien à changer ici.
+## Garde aussi ce que le joueur tient ou occupe (`_claim` : levier, siège, corde, caca ou fléchettes,
+## un seul à la fois, voir Possession), attend que l'hôte le confirme, et gère les touches tant qu'on le tient.
 ## Actif uniquement pour le joueur local.
 
 ## Les indices à afficher (touche → icône) ont changé (liste vide = rien à afficher).
@@ -15,7 +16,7 @@ signal thrown
 ## Le joystick à ressort tenu vient d'être poussé assez loin pour faire un pas (« clac »), direction (x droite, y avant).
 signal stick_kicked(direction: Vector2)
 
-## Délai max d'attente de la réponse de l'hôte après une demande (attraper, s'installer).
+## Délai max d'attente de la réponse de l'hôte après une demande (attraper, s'installer…).
 const GRAB_TIMEOUT: float = 1.0
 ## Zone morte du stick de la manette pour un joystick à ressort.
 const STICK_DEADZONE: float = 0.2
@@ -32,26 +33,17 @@ const STICK_RETURN_SPEED: float = 7.0
 @export var stick_lever_speed: float = 2.5
 
 var _target: Interactable = null
-var _held: Lever = null
-var _grab_pending: bool = false
-var _grab_wait: float = 0.0
+## Ce que le joueur a demandé ou tient (voir Possession), et depuis combien de temps il attend l'hôte.
+var _claim: Node = null
+var _claim_confirmed: bool = false
+var _claim_wait: float = 0.0
+## Levier tenu : valeur voulue par le joueur.
 var _wanted: Vector2 = Vector2.ZERO
 ## Le joueur a poussé le levier tenu pendant cette image (sinon un joystick à ressort revient au centre).
 var _pushed: bool = false
 ## Joystick à ressort : temps depuis la dernière poussée, et prêt pour un nouveau « clac » (revenu près du centre).
 var _since_push: float = 0.0
 var _stick_armed: bool = true
-var _seat: Seat = null
-var _seat_pending: bool = false
-var _seat_wait: float = 0.0
-var _rope: Rope = null
-var _rope_pending: bool = false
-var _rope_wait: float = 0.0
-var _poop: Poop = null
-var _poop_wait: float = 0.0
-## Fléchettes du camp prises au seau (en attente de l'hôte, ou en main).
-var _darts: DartsGame = null
-var _darts_wait: float = 0.0
 var _hints_key: String = ""
 
 
@@ -60,20 +52,16 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if _seat != null:
-		# Assis (ou en attente de l'hôte) : seule action possible, se lever.
+	_update_claim(delta)
+	if _claim is Seat or _claim is Rope:
+		# Assis ou sur la corde (ou en attente de l'hôte) : on ne vise rien, seule action possible, en sortir.
 		_set_target(null)
-		_update_seat(delta)
-	elif _rope != null:
-		# Sur la corde (ou en attente de l'hôte) : seule action possible, lâcher.
-		_set_target(null)
-		_update_rope(delta)
+		_update_seat_or_rope()
 	else:
 		_update_target()
 		_handle_actions()
-		_update_held(delta)
-		_update_poop(delta)
-		_update_darts(delta)
+		if is_holding():
+			_update_lever(delta)
 	_update_prompt()
 
 
@@ -84,53 +72,59 @@ func set_active(active: bool) -> void:
 		_set_target(null)
 
 
+## Commence à tenir ou occuper `node` (sa demande vient de partir vers l'hôte) : on attend sa réponse.
+## Appelé après `Interactable.interact` (aussi par les scènes de test).
+func begin_claim(node: Node) -> void:
+	_claim = node
+	_claim_confirmed = false
+	_claim_wait = 0.0
+	if node is Lever:
+		_wanted = (node as Lever).value
+	elif node is Poop or node is DartsGame:
+		button_pressed.emit()   # prendre en main : même geste qu'un appui
+
+
 ## Vrai quand le joueur tient un levier (confirmé par l'hôte).
 func is_holding() -> bool:
-	return _held != null and not _grab_pending and _held.is_held_locally()
+	return _claim is Lever and _holds_claim()
 
 
 ## Le siège où le joueur est installé (confirmé par l'hôte), sinon null.
 func get_seat() -> Seat:
-	if _seat != null and not _seat_pending and _seat.is_seated_locally():
-		return _seat
-	return null
+	return _claim as Seat if _claim is Seat and _holds_claim() else null
 
 
 ## La corde à laquelle le joueur grimpe (confirmé par l'hôte), sinon null.
 func get_rope() -> Rope:
-	if _rope != null and not _rope_pending and _rope.is_held_locally():
-		return _rope
-	return null
+	return _claim as Rope if _claim is Rope and _holds_claim() else null
 
 
 ## Lâche la corde (relâcher le bouton, sauter, ou arrivé en haut).
 func release_rope() -> void:
-	if _rope != null:
-		_rope.request_release.rpc_id(1)
-		_rope = null
-		_rope_pending = false
+	if _claim is Rope:
+		_release_claim()
 
 
 ## Vrai quand le joueur a les fléchettes du camp en main (confirmé par l'hôte).
 func is_holding_darts() -> bool:
-	return _darts != null and is_instance_valid(_darts) and _darts.is_thrower_locally()
+	return _claim is DartsGame and _holds_claim()
 
 
 ## Vrai quand le joueur tient un caca (confirmé par l'hôte).
 func is_holding_poop() -> bool:
-	return _poop != null and is_instance_valid(_poop) and _poop.is_held_locally()
+	return _claim is Poop and _holds_claim()
 
 
 ## Inclinaison affichée du levier tenu, en radians (x = côté, y = avant/arrière), ZERO si on ne tient rien.
 func get_held_tilt() -> Vector2:
 	if not is_holding():
 		return Vector2.ZERO
-	return _wanted * deg_to_rad(_held.max_angle_degrees)
+	return _wanted * deg_to_rad((_claim as Lever).max_angle_degrees)
 
 
 ## Vrai quand le levier tenu est un joystick à ressort (jambes) : la vue ne le suit pas.
 func is_holding_spring_stick() -> bool:
-	return is_holding() and _held.self_centering
+	return is_holding() and (_claim as Lever).self_centering
 
 
 ## Mouvement de souris en pixels (x droite, y haut) pendant qu'on tient un levier.
@@ -145,7 +139,7 @@ func drive_stick(stick: Vector2, delta: float) -> void:
 	if is_holding_spring_stick():
 		# Joystick à ressort : à la manette, il suit directement le stick (relâché = au centre).
 		if InputGlyph.use_gamepad:
-			_wanted = _held.constrain(stick if stick.length() > STICK_DEADZONE else Vector2.ZERO)
+			_wanted = (_claim as Lever).constrain(stick if stick.length() > STICK_DEADZONE else Vector2.ZERO)
 			_pushed = true
 		return
 	_drive(stick * stick_lever_speed * delta)
@@ -153,7 +147,55 @@ func drive_stick(stick: Vector2, delta: float) -> void:
 
 func _drive(change: Vector2) -> void:
 	if is_holding():
-		_wanted = _held.constrain(_wanted + change)
+		_wanted = (_claim as Lever).constrain(_wanted + change)
+
+
+## Vrai si l'hôte nous a donné l'objet demandé (vérifié en direct sur son porteur, répliqué).
+func _holds_claim() -> bool:
+	return _claim != null and is_instance_valid(_claim) and Possession.holder_of(_claim) == multiplayer.get_unique_id()
+
+
+## Attente de la réponse de l'hôte, puis suivi : refusé (délai dépassé ou pris par un autre) ou retiré
+## par l'hôte (trop loin, fin de manche…) = on l'oublie.
+func _update_claim(delta: float) -> void:
+	if _claim == null:
+		return
+	if not is_instance_valid(_claim):
+		_claim = null
+		return
+	var holder: int = Possession.holder_of(_claim)
+	if holder == multiplayer.get_unique_id():
+		_claim_confirmed = true
+		return
+	if _claim_confirmed:
+		_claim = null   # l'hôte nous l'a retiré
+		return
+	_claim_wait += delta
+	if _claim_wait > GRAB_TIMEOUT or holder != 0:
+		_claim = null   # refusé (trop loin, déjà pris, ou on tient déjà autre chose)
+
+
+## Lâche ce qu'on tient. Envoyé même si l'hôte n'a pas encore répondu : les RPC fiables arrivent dans l'ordre,
+## donc un « attraper » accepté juste avant sera bien suivi du « lâcher ».
+func _release_claim() -> void:
+	if _claim is Lever:
+		(_claim as Lever).request_release.rpc_id(1)
+	elif _claim is Rope:
+		(_claim as Rope).request_release.rpc_id(1)
+	elif _claim is Seat:
+		(_claim as Seat).request_leave.rpc_id(1)
+	elif _claim is DartsGame:
+		(_claim as DartsGame).request_release.rpc_id(1)
+	_claim = null
+
+
+## Assis : E pour se lever. Sur la corde : relâcher le bouton = lâcher.
+func _update_seat_or_rope() -> void:
+	if _claim is Seat:
+		if _holds_claim() and Input.is_action_just_pressed("interact"):
+			_release_claim()
+	elif not Input.is_action_pressed("grab"):
+		_release_claim()
 
 
 func _update_target() -> void:
@@ -178,132 +220,58 @@ func _set_target(target: Interactable) -> void:
 func _handle_actions() -> void:
 	var press: bool = Input.is_action_just_pressed("interact")
 	var grab: bool = Input.is_action_just_pressed("grab")
-	if is_holding_poop():
-		# Caca en main : clic = lancer dans la direction du regard, E = le poser.
+	if is_holding_poop() or is_holding_darts():
+		# Caca ou fléchettes en main : clic = lancer dans la direction du regard ;
+		# E = appuyer sur la commande visée (bouton…), sinon poser.
 		if grab:
-			_poop.request_throw.rpc_id(1, -global_basis.z)
-			_poop = null
-			thrown.emit()
-			return
-		if press and not (_target is PushButton or _target is BeamSwitch or _target is DoorHandle):
-			_poop.request_throw.rpc_id(1, Vector3.ZERO)
-			_poop = null
-			return
-	if is_holding_darts():
-		# Fléchettes en main : clic = lancer dans la direction du regard, E = les reposer.
-		if grab:
-			_darts.request_throw.rpc_id(1, global_position, -global_basis.z)
-			thrown.emit()
-			return
-		if press:
-			_darts.request_release.rpc_id(1)
-			_darts = null
-			return
-	var free_hands: bool = _held == null and _poop == null and _darts == null
-	if _target is DartsTake and (press or grab) and free_hands:
-		_darts = (_target as DartsTake).game
-		_darts_wait = 0.0
-		_darts.request_take.rpc_id(1)
-		button_pressed.emit()
-	elif _target is PoopHandle and (press or grab) and free_hands:
-		_poop = (_target as PoopHandle).poop
-		_poop_wait = 0.0
-		_poop.request_pick.rpc_id(1)
-		button_pressed.emit()
-	elif _target is CargoCrateHandle and (press or grab) and free_hands:
-		(_target as CargoCrateHandle).crate.request_collect.rpc_id(1)
-		button_pressed.emit()
-	elif _target is PushButton and (press or grab):
-		(_target as PushButton).request_press.rpc_id(1)
-		button_pressed.emit()
-	elif _target is BeamSwitch and (press or grab):
-		(_target as BeamSwitch).request_press.rpc_id(1)
-		button_pressed.emit()
-	elif _target is DoorHandle and (press or grab):
-		(_target as DoorHandle).request_toggle.rpc_id(1)
-		button_pressed.emit()
-	elif _target is Rope and grab and free_hands:
-		_rope = _target as Rope
-		_rope_pending = true
-		_rope_wait = 0.0
-		_rope.request_grab.rpc_id(1)
-	elif _target is Seat and (press or grab) and free_hands:
-		_seat = _target as Seat
-		_seat_pending = true
-		_seat_wait = 0.0
-		_seat.request_sit.rpc_id(1)
-	elif _target is Lever and grab and free_hands:
-		_held = _target as Lever
-		_grab_pending = true
-		_grab_wait = 0.0
-		_wanted = _held.value
-		_held.request_grab.rpc_id(1)
-	if _held != null and Input.is_action_just_released("grab"):
-		_release()
+			_throw()
+		elif press:
+			if _target != null and _target.interact(true, false, false) == Interactable.Use.DONE:
+				button_pressed.emit()
+			else:
+				_drop()
+		return
+	if _target != null and (press or grab):
+		match _target.interact(press, grab, _claim == null):
+			Interactable.Use.DONE:
+				button_pressed.emit()
+			Interactable.Use.CLAIM:
+				begin_claim(_target.get_claim())
+	if _claim is Lever and Input.is_action_just_released("grab"):
+		_release_claim()
 
 
-func _update_held(delta: float) -> void:
-	if _held == null:
-		return
-	if _grab_pending:
-		_grab_wait += delta
-		if _held.is_held_locally():
-			_grab_pending = false
-		elif _grab_wait > GRAB_TIMEOUT or (_held.holder_peer_id != 0):
-			# Refusé (trop loin, déjà tenu, ou on tient déjà autre chose).
-			_held = null
-			_grab_pending = false
-		return
-	if not _held.is_held_locally():
-		# L'hôte nous l'a retiré (trop loin, etc.).
-		_held = null
-		return
-	if _held.self_centering:
-		_update_spring_stick(delta)
+func _throw() -> void:
+	if _claim is Poop:
+		(_claim as Poop).request_throw.rpc_id(1, -global_basis.z)
+		_claim = null
+	else:
+		(_claim as DartsGame).request_throw.rpc_id(1, global_position, -global_basis.z)   # on garde les fléchettes
+	thrown.emit()
+
+
+func _drop() -> void:
+	if _claim is Poop:
+		(_claim as Poop).request_throw.rpc_id(1, Vector3.ZERO)
+		_claim = null
+	else:
+		_release_claim()
+
+
+## Levier tenu : on envoie la valeur voulue à l'hôte à chaque étape (et on l'affiche tout de suite).
+func _update_lever(delta: float) -> void:
+	var lever: Lever = _claim as Lever
+	if lever.self_centering:
+		_update_spring_stick(lever, delta)
 	_pushed = false
-	_held.set_local_value(_wanted)
-	_held.submit_value.rpc_id(1, _wanted)
-
-
-func _update_seat(delta: float) -> void:
-	if _seat_pending:
-		_seat_wait += delta
-		if _seat.is_seated_locally():
-			_seat_pending = false
-		elif _seat_wait > GRAB_TIMEOUT or _seat.occupant_peer_id != 0:
-			_seat = null   # refusé (occupé, trop loin…)
-			_seat_pending = false
-		return
-	if not _seat.is_seated_locally():
-		_seat = null   # l'hôte nous a libéré
-		return
-	if Input.is_action_just_pressed("interact"):
-		_seat.request_leave.rpc_id(1)
-		_seat = null
-
-
-func _update_rope(delta: float) -> void:
-	if _rope_pending:
-		_rope_wait += delta
-		if _rope.is_held_locally():
-			_rope_pending = false
-		elif not Input.is_action_pressed("grab"):
-			release_rope()
-		elif _rope_wait > GRAB_TIMEOUT or _rope.holder_peer_id != 0:
-			_rope = null   # refusé (trop loin, quelqu'un grimpe déjà)
-			_rope_pending = false
-		return
-	if not _rope.is_held_locally():
-		_rope = null   # l'hôte nous l'a retirée
-		return
-	if not Input.is_action_pressed("grab"):
-		release_rope()
+	lever.set_local_value(_wanted)
+	lever.submit_value.rpc_id(1, _wanted)
 
 
 ## Joystick à ressort : il tient la poussée un instant puis revient au centre ; poussé au-delà du seuil
 ## d'un pas, il part en butée (« clac ») et il faut le laisser revenir près du centre pour le pas suivant
 ## (mêmes seuils que la marche, voir MechaWalker).
-func _update_spring_stick(delta: float) -> void:
+func _update_spring_stick(lever: Lever, delta: float) -> void:
 	_since_push = 0.0 if _pushed else _since_push + delta
 	if _since_push > STICK_HOLD_TIME:
 		_wanted = _wanted.move_toward(Vector2.ZERO, STICK_RETURN_SPEED * delta)
@@ -315,60 +283,17 @@ func _update_spring_stick(delta: float) -> void:
 		var direction: Vector2 = _wanted / amount
 		if not InputGlyph.use_gamepad:
 			_wanted = direction   # en butée
-		_held.kick()
+		lever.kick()
 		stick_kicked.emit(direction)
-
-
-func _release() -> void:
-	# Envoyé même si l'hôte n'a pas encore répondu : les RPC fiables arrivent dans l'ordre,
-	# donc un "attraper" accepté juste avant sera bien suivi du "lâcher".
-	_held.request_release.rpc_id(1)
-	_held = null
-	_grab_pending = false
-
-
-## Fléchettes : on oublie le jeu si l'hôte refuse, ou quand la manche est finie (il les reprend).
-func _update_darts(delta: float) -> void:
-	if _darts == null:
-		return
-	if not is_instance_valid(_darts):
-		_darts = null
-		return
-	if _darts.is_thrower_locally():
-		_darts_wait = 0.0
-		return
-	_darts_wait += delta
-	if _darts_wait > GRAB_TIMEOUT:
-		_darts = null
-
-
-## Attente de la réponse de l'hôte après « ramasser » (refusé = on oublie le caca).
-func _update_poop(delta: float) -> void:
-	if _poop == null:
-		return
-	if not is_instance_valid(_poop):
-		_poop = null
-		return
-	if _poop.is_held_locally():
-		return
-	_poop_wait += delta
-	if _poop_wait > GRAB_TIMEOUT or _poop.holder_peer_id != 0:
-		_poop = null
 
 
 func _update_prompt() -> void:
 	var hints: Array[InputHint] = []
-	if is_holding_darts():
+	if is_holding_darts() or is_holding_poop():
 		hints = [InputHint.make(&"grab", &"throw"), InputHint.make(&"interact", &"drop")]
-	elif is_holding_poop():
-		hints = [InputHint.make(&"grab", &"throw"), InputHint.make(&"interact", &"drop")]
-	elif _seat != null and not _seat_pending:
-		hints = _seat.get_hints()
-	elif _rope != null and not _rope_pending:
-		hints = _rope.get_hints()
-	elif _held != null and not _grab_pending:
-		hints = _held.get_hints()
-	elif _target != null:
+	elif _claim is Interactable and _claim_confirmed:
+		hints = (_claim as Interactable).get_hints()
+	elif _claim == null and _target != null:
 		hints = _target.get_hints()
 	var key: String = InputHint.key_of(hints)
 	if key != _hints_key:

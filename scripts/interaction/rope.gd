@@ -35,6 +35,7 @@ func _ready() -> void:
 	_rope_mesh.material_override = material
 	_knot.material_override = material
 	_fit_to_length()
+	add_to_group(Possession.GROUP)
 	_debug_label.visible = show_debug
 	NetworkManager.player_left.connect(_on_player_left)
 	NetworkManager.session_ended.connect(_on_session_ended)
@@ -60,6 +61,14 @@ func get_hints() -> Array[InputHint]:
 	if holder_peer_id != 0:
 		return [InputHint.state(&"locked")]
 	return [InputHint.make(&"grab", &"climb")]
+
+
+## Attraper la corde (clic / RT maintenu, mains libres) : on y grimpe.
+func interact(_press: bool, grab: bool, hands_free: bool) -> Use:
+	if not grab or not hands_free:
+		return Use.NONE
+	request_grab.rpc_id(1)
+	return Use.CLAIM
 
 
 func is_held_locally() -> bool:
@@ -88,7 +97,7 @@ func request_grab() -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
-	if holder_peer_id == 0 and _is_peer_near_rope(sender, reach):
+	if holder_peer_id == 0 and _is_peer_near_rope(sender, reach) and not Possession.is_peer_busy(get_tree(), sender):
 		holder_peer_id = sender
 
 
