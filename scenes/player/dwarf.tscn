@@ -5,14 +5,11 @@
 [ext_resource type="PackedScene" path="res://assets/models/dwarf_head.glb" id="3_head"]
 [ext_resource type="Script" path="res://scripts/interaction/interactor.gd" id="4_interactor"]
 [ext_resource type="Script" path="res://scripts/player/dwarf_animator.gd" id="5_animator"]
-[ext_resource type="PackedScene" path="res://scenes/ui/emote_wheel.tscn" id="6_wheel"]
-[ext_resource type="PackedScene" path="res://scenes/ui/state_bubble.tscn" id="7_bubble"]
-[ext_resource type="Script" path="res://scripts/ui/splat_overlay.gd" id="8_splat"]
 [ext_resource type="Script" path="res://scripts/network/net_smoother.gd" id="10_smoother"]
-[ext_resource type="Script" path="res://scripts/ui/hint_bar.gd" id="11_hintbar"]
-[ext_resource type="Script" path="res://scripts/ui/hint_panel.gd" id="13_hintpanel"]
+[ext_resource type="Script" path="res://scripts/player/dwarf_look.gd" id="14_look"]
+[ext_resource type="Script" path="res://scripts/player/dwarf_camera.gd" id="15_camera"]
+[ext_resource type="Script" path="res://scripts/player/dwarf_climb.gd" id="16_climb"]
 [ext_resource type="FontVariation" path="res://assets/fonts/fredoka.tres" id="12_font"]
-[ext_resource type="Script" path="res://scripts/ui/poop_minigame.gd" id="9_poopgame"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.35
@@ -91,79 +88,6 @@ collision_mask = 5
 collide_with_areas = true
 script = ExtResource("4_interactor")
 
-[node name="Hud" type="CanvasLayer" parent="."]
-unique_name_in_owner = true
-visible = false
-
-[node name="Crosshair" type="CenterContainer" parent="Hud"]
-unique_name_in_owner = true
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="Dot" type="ColorRect" parent="Hud/Crosshair"]
-custom_minimum_size = Vector2(4, 4)
-layout_mode = 2
-mouse_filter = 2
-color = Color(1, 1, 1, 0.85)
-
-[node name="HintBar" type="HBoxContainer" parent="Hud"]
-unique_name_in_owner = true
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -320.0
-offset_top = -118.0
-offset_right = 320.0
-offset_bottom = -66.0
-grow_horizontal = 2
-grow_vertical = 0
-mouse_filter = 2
-alignment = 1
-script = ExtResource("11_hintbar")
-
-[node name="HintPanel" type="VBoxContainer" parent="Hud"]
-unique_name_in_owner = true
-offset_left = 22.0
-offset_top = 22.0
-offset_right = 222.0
-offset_bottom = 222.0
-mouse_filter = 2
-script = ExtResource("13_hintpanel")
-
-[node name="EmoteWheel" parent="Hud" instance=ExtResource("6_wheel")]
-unique_name_in_owner = true
-
-[node name="StateBubble" parent="Hud" instance=ExtResource("7_bubble")]
-unique_name_in_owner = true
-
-[node name="SplatOverlay" type="Control" parent="Hud"]
-unique_name_in_owner = true
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("8_splat")
-
-[node name="PoopMinigame" type="Control" parent="Hud"]
-unique_name_in_owner = true
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("9_poopgame")
-
 [node name="NameLabel" type="Label3D" parent="."]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
@@ -189,3 +113,23 @@ pitch_node = NodePath("../Head")
 script = ExtResource("5_animator")
 dwarf = NodePath("..")
 body_model = NodePath("../BodyModel")
+
+[node name="Look" type="Node" parent="." node_paths=PackedStringArray("body_model", "head_model", "name_label")]
+unique_name_in_owner = true
+script = ExtResource("14_look")
+body_model = NodePath("../BodyModel")
+head_model = NodePath("../BodyModel/DwarfRig/Skeleton3D/HeadBone/HeadPitch/HeadModel")
+name_label = NodePath("../NameLabel")
+
+[node name="CameraRig" type="Node" parent="." node_paths=PackedStringArray("dwarf", "head", "camera", "look")]
+unique_name_in_owner = true
+script = ExtResource("15_camera")
+dwarf = NodePath("..")
+head = NodePath("../Head")
+camera = NodePath("../Head/Camera")
+look = NodePath("../Look")
+
+[node name="Climb" type="Node" parent="." node_paths=PackedStringArray("dwarf")]
+unique_name_in_owner = true
+script = ExtResource("16_climb")
+dwarf = NodePath("..")
