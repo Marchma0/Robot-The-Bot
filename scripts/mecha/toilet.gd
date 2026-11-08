@@ -94,8 +94,9 @@ func _drop_poop(golden: bool = false) -> void:
 		return
 	var poop: Poop = POOP_SCENE.instantiate()
 	poop.golden = golden
+	# Placé avant add_child : le spawner envoie cette place aux clients dès l'apparition.
+	poop.position = props_root.to_local(_bowl_point.global_position)
 	props_root.add_child(poop, true)
-	poop.global_position = _bowl_point.global_position
 
 
 func _count_ordinary_poops() -> int:

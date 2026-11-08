@@ -171,11 +171,12 @@ func _break_on_host() -> void:
 	play_break_animation.rpc()
 	var crate: CargoCrate = CRATE_SCENE.instantiate() as CargoCrate
 	crate.item_kind = drop_item_kind
-	var parent_node: Node = drops_container if drops_container != null else get_parent()
+	var parent_node: Node3D = drops_container if drops_container != null else get_parent() as Node3D
 	if parent_node != null:
-		parent_node.add_child(crate, true)
-		crate.global_position = global_position + Vector3(0.0, 0.05, 0.0)
+		# Placée avant add_child : le spawner envoie cette place aux clients dès l'apparition.
+		crate.position = parent_node.to_local(global_position + Vector3(0.0, 0.05, 0.0))
 		crate.rotation.y = rotation.y + 0.35
+		parent_node.add_child(crate, true)
 	rock_broken.emit(self, crate)
 
 

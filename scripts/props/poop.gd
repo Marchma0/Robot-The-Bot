@@ -10,6 +10,9 @@ extends RigidBody3D
 ## chez les clients). Les clients ne simulent rien : ils reçoivent la position, et placent
 ## eux-mêmes le caca dans la main de celui qui le tient.
 ## Au repos (ou tenu), le corps est figé et suit le mécha (enfant de Mecha/Props).
+## Sa place (repère de Mecha/Props) est envoyée par `net_place` et appliquée par les clients à chaque
+## étape physique. Figé en mode STATIC : en mode KINEMATIC, Jolt réécrit parfois une ancienne place
+## quand le mécha bouge (le caca restait derrière quand le robot était téléporté).
 
 const PUFF_SCENE: PackedScene = preload("res://scenes/props/poop_puff.tscn")
 ## Portée max pour le ramasser (m).
@@ -34,6 +37,14 @@ var golden: bool = false:
 		if is_node_ready():
 			_apply_look()
 
+## Place du caca dans le repère de son parent. Autorité : hôte (synchronisé en continu).
+var net_place: Transform3D:
+	get:
+		return transform
+	set(value):
+		_received_place = value
+		_has_received_place = true
+
 var _thrower: int = 0
 var _flying: bool = false
 ## Vraiment lancé (pas simplement posé) : disparaît au premier contact.
@@ -42,13 +53,15 @@ var _slow_time: float = 0.0
 var _age: float = 0.0
 var _gold_material: StandardMaterial3D
 var _gold_light: OmniLight3D
+var _received_place: Transform3D
+var _has_received_place: bool = false
 
 @onready var _model: Node3D = %Model
 
 
 func _ready() -> void:
 	add_to_group(&"poops")
-	freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+	freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
 	freeze = true
 	contact_monitor = true
 	max_contacts_reported = 2
@@ -58,6 +71,9 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if not multiplayer.is_server():
+		# Client : on prend la place envoyée par l'hôte (sauf tenu : il est placé dans la main).
+		if _has_received_place and holder_peer_id == 0:
+			transform = _received_place
 		return
 	_age += delta
 	if _flying:

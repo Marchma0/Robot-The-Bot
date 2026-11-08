@@ -22,6 +22,7 @@
 [ext_resource type="PackedScene" path="res://scenes/mecha/props/backpack.tscn" id="20_backpack"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/drill_arm.tscn" id="21_drill_arm"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/grabber_arm.tscn" id="22_grabber_arm"]
+[ext_resource type="Script" path="res://scripts/network/net_spawner.gd" id="90_netspawner"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tv"]
 shader = ExtResource("10_tv")
@@ -477,6 +478,7 @@ backpack = NodePath("../Backpack")
 [node name="Props" type="Node3D" parent="."]
 
 [node name="PropsSpawner" type="MultiplayerSpawner" parent="."]
+script = ExtResource("90_netspawner")
 _spawnable_scenes = PackedStringArray("res://scenes/props/poop.tscn")
 spawn_path = NodePath("../Props")
 
