@@ -19,8 +19,6 @@ const TUNIC_MATERIAL: String = "Tunic"
 @export var head_model: Node3D
 @export var name_label: Label3D
 
-var _body_hidden: bool = false
-
 
 ## Couleur du joueur `slot` sur le corps et la tête, et pseudo au-dessus.
 func apply(slot: int, display_name: String) -> void:
@@ -46,25 +44,13 @@ func tint_model(model: Node3D, slot: int) -> void:
 				mesh.set_surface_override_material(i, tunic)
 
 
-## Joueur local, vue à la première personne : on voit son corps (en baissant les yeux, ses gestes),
-## mais pas sa propre tête, qui boucherait la vue (elle garde son ombre), ni son pseudo.
+## Joueur local, vue à la première personne : son corps et sa tête ne gardent que leur ombre (on ne se voit
+## pas le torse ni les bras qui pendent) ; ses gestes se voient avec les bras de vue (`DwarfViewArms`).
+## Ni son pseudo.
 func set_first_person() -> void:
-	for mesh: MeshInstance3D in meshes_of(head_model):
-		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 	name_label.visible = false
-
-
-## Masque le corps (il garde son ombre) ; la tête l'est toujours, à la première personne.
-## Sert pendant le traveling de caméra vers un poste, qui passe à travers les bras du nain.
-func set_body_hidden(value: bool) -> void:
-	if value == _body_hidden:
-		return
-	_body_hidden = value
 	for mesh: MeshInstance3D in meshes_of(body_model):
-		if head_model.is_ancestor_of(mesh):
-			continue
-		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if value \
-				else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 
 
 static func meshes_of(model: Node3D) -> Array[MeshInstance3D]:

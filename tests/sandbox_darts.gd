@@ -46,8 +46,14 @@ func _ready() -> void:
 	TestCheck.expect(in_ally >= 0 and _darts.dart_where[in_ally] == DartsGame.Where.IN_DWARF, "3e lancer : la fléchette est plantée dans l'allié")
 	await _wait(0.5)
 	TestCheck.expect(_darts.thrower_peer_id == 0, "après 3 lancers, la manche est finie")
-	TestCheck.expect((_darts.get_node("%ScorePop") as Label3D).visible, "le total s'affiche au-dessus de la cible")
-	await _shot("2_score", Vector3(-0.2, 3.8, 0.2), Vector3(0.0, 3.85, 1.9))
+	TestCheck.expect(_darts.round_done and _darts.history_totals.size() == 1 and _darts.history_totals[0] == _darts.round_total(),
+		"le total de la manche est écrit sur l'ardoise")
+	var board_total: Label = null
+	for label: Node in _darts.find_children("*", "Label", true, false):
+		if (label as Label).text == "= %d" % _darts.round_total():
+			board_total = label
+	TestCheck.expect(board_total != null, "l'ardoise affiche « = total »")
+	await _shot("2_score", Vector3(0.1, 3.8, 0.6), Vector3(0.3, 3.85, 1.9))
 	await _shot("3_allie_touche", Vector3(1.75, 3.75, 0.2), _mecha.to_local(ally_head), 0.1)
 
 	_darts.request_pull.rpc_id(1, in_ally)

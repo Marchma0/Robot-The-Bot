@@ -8,7 +8,8 @@ Fiche
 - Écran : rectangle de 0,68 x 0,48 m, centré en z = 0, à poser devant la face avant (y = FRONT, voir plus bas).
 - Budget : 1600 triangles.
 - Pièces : platine et bras de fixation (IronDark), coque (Paint) aux coins chanfreinés, cadre de l'écran (IronDark),
-  panneau de boutons à droite (Cream, boutons Copper, voyant Lamp), grille de haut-parleur, antennes (Iron, Copper).
+  panneau de boutons à droite (Cream, bouton de volume Copper, voyant Lamp ; le bouton marche/arrêt est un
+  PushButton ajouté dans tv_set.tscn, à la place du bouton du haut en z = 0,16), grille de haut-parleur, antennes (Iron, Copper).
 
     blender -b --factory-startup --python blender/props/tv_set.py
 """
@@ -47,7 +48,7 @@ def main():
     # panneau de boutons à droite de l'écran
     px0, px1 = sx1 + t + 0.004, HW - 0.012
     b.box((px0, FRONT, -HH + 0.03), (px1, FRONT + 0.003, HH - 0.03), "Cream")
-    for z in (0.16, 0.04):
+    for z in (0.04,):   # volume (le bouton marche/arrêt, en z = 0.16, est ajouté dans Godot)
         b.cylinder(((px0 + px1) / 2, FRONT + 0.003, z), ((px0 + px1) / 2, FRONT + 0.025, z), 0.016, "Copper", 10)
     b.cylinder(((px0 + px1) / 2, FRONT + 0.003, -0.06), ((px0 + px1) / 2, FRONT + 0.008, -0.06), 0.006, "Lamp", 6)
     for i in range(5):   # grille du haut-parleur

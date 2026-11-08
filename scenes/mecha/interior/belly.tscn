@@ -7,7 +7,6 @@
 [ext_resource type="PackedScene" path="res://scenes/mecha/props/wood_crate.tscn" id="5_crate"]
 [ext_resource type="PackedScene" path="res://assets/models/props/potted_mushroom.glb" id="6_mushroom"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/props/barrel.tscn" id="7_barrel"]
-[ext_resource type="PackedScene" path="res://assets/models/props/chalkboard.glb" id="8_chalkboard"]
 [ext_resource type="PackedScene" path="res://assets/models/props/poster.glb" id="10_poster"]
 [ext_resource type="PackedScene" path="res://assets/models/props/wall_clock.glb" id="11_clock"]
 [ext_resource type="PackedScene" path="res://assets/models/props/coat_rack.glb" id="12_coat_rack"]
@@ -47,9 +46,6 @@ transform = Transform3D(0.7704, 0, 0.3592, 0, 0.85, 0, -0.3592, 0, 0.7704, 0.86,
 
 [node name="Barrel" parent="." instance=ExtResource("7_barrel")]
 transform = Transform3D(-0.7071, 0, 0.7071, 0, 1, 0, -0.7071, 0, -0.7071, 1.9, 2.6, -1.55)
-
-[node name="Chalkboard" parent="." instance=ExtResource("8_chalkboard")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.57, 3.84, 1.9)
 
 [node name="Poster" parent="." instance=ExtResource("10_poster")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 3.95, 1.9)

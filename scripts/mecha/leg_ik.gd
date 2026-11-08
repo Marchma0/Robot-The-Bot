@@ -8,6 +8,9 @@ extends Node3D
 const THIGH: float = 1.25
 const SHIN: float = 1.25
 const ANKLE_HEIGHT: float = 0.35
+## Rayon des collisions de la cuisse et du tibia (le fût peint fait 0,37 à 0,41 m de demi-largeur).
+const THIGH_RADIUS: float = 0.4
+const SHIN_RADIUS: float = 0.37
 const SIDES: Array[String] = ["L", "R"]
 const MARK_COLORS: Array[Color] = [Color(0.3, 0.7, 1.0), Color(1.0, 0.6, 0.2)]
 
@@ -29,6 +32,8 @@ func _ready() -> void:
 	for leg: int in 2:
 		_marks.append(_make_mark(MARK_COLORS[leg]))
 		_add_foot_collision(leg)
+		_add_segment_collision(leg, "thigh", THIGH_RADIUS, THIGH)
+		_add_segment_collision(leg, "shin", SHIN_RADIUS, SHIN)
 
 
 func _process(_delta: float) -> void:
@@ -122,3 +127,26 @@ func _add_foot_collision(leg: int) -> void:
 	shape.transform = Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-90.0)), Vector3(0.0, 0.25, -0.2))
 	foot_body.add_child(shape)
 	attachment.add_child(foot_body)
+
+
+## Collision d'une cuisse ou d'un tibia (`part`) : une gélule le long de l'os, qui le suit
+## (un nain qui saute contre la jambe ne la traverse plus).
+func _add_segment_collision(leg: int, part: String, radius: float, length: float) -> void:
+	var bone_name: String = "leg_%s_%s" % [SIDES[leg], part]
+	var attachment: BoneAttachment3D = _skeleton.find_child(bone_name, false, false) as BoneAttachment3D
+	if attachment == null:
+		attachment = BoneAttachment3D.new()
+		attachment.name = bone_name
+		_skeleton.add_child(attachment)
+		attachment.bone_name = bone_name
+	var body: AnimatableBody3D = AnimatableBody3D.new()
+	body.sync_to_physics = false
+	var shape: CollisionShape3D = CollisionShape3D.new()
+	var capsule: CapsuleShape3D = CapsuleShape3D.new()
+	capsule.radius = radius
+	capsule.height = length + radius   # déborde un peu sur la hanche / le genou : pas de trou à l'articulation
+	shape.shape = capsule
+	# Repère de l'os : Y le long de l'os (de la hanche vers le genou).
+	shape.position = Vector3(0.0, length * 0.5, 0.0)
+	body.add_child(shape)
+	attachment.add_child(body)

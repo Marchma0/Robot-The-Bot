@@ -19,6 +19,8 @@ const HIGHLIGHT_COLOR: Color = Color(1.0, 0.95, 0.6, 0.35)
 @export var reach: float = 2.5
 ## Affiche une étiquette de debug au-dessus de la commande.
 @export var show_debug: bool = false
+## Utilisable assis sur un simple siège (canapé), au clic : ex. le jeu de dames de la table basse.
+@export var usable_seated: bool = false
 
 static var _highlight_material: StandardMaterial3D
 

@@ -1,4 +1,4 @@
-"""Table basse du salon avec un jeu de dames en cours et une tasse (ventre du mécha, devant le canapé).
+"""Table basse du salon avec un damier et une tasse (ventre du mécha, devant le canapé).
 
 Fiche
 - Taille : 0,45 (X) x 0,55 (Y) m, 0,34 m de haut (à hauteur de genou de nain).
@@ -6,7 +6,10 @@ Fiche
   en Godot (-1.025, 2.6, -0.075).
 - Budget : 2400 triangles.
 - Pièces : plateau à chant biseauté, ceinture, 4 pieds fuselés (Wood), tablette basse avec des journaux (Paper),
-  damier 8 x 8 (DartBlack / Cream) sur un socle (IronDark), pions (DartRed, Cream), tasse fumante (Cream, Grime).
+  damier 8 x 8 (DartBlack / Cream) sur un socle (IronDark), tasse fumante (Cream, Grime).
+  Les pions ne sont pas dans le modèle : le jeu de dames les crée et les déplace (scripts/props/checkers_game.gd,
+  mêmes mesures : damier de 0,3 m centré en x = -0,03, y = 0, cases à z = H + 0,009) ; la pendule
+  d'échecs (chess_clock.tscn) est posée de l'autre côté, en x = 0,17.
 
     blender -b --factory-startup --python blender/props/coffee_table.py
 """
@@ -19,6 +22,7 @@ import prop_kit as kit  # noqa: E402
 
 HX, HY, H = 0.225, 0.275, 0.34
 TOP = 0.03
+BOARD_X = -0.03   # centre du damier (même valeur que CheckersGame.BOARD_CENTER_X)
 
 
 def main():
@@ -40,23 +44,15 @@ def main():
     b.box((-0.1, -0.12, 0.103), (0.12, 0.13, 0.11), "Cream")
     # damier : socle + 64 cases (1 mm au-dessus du socle)
     board = 0.3
+    bx = BOARD_X    # damier centré en y, un peu vers le canapé (-X) : la pendule est de l'autre côté
     cell = board / 8
     z = H
-    b.box((-board / 2 - 0.012, -board / 2 - 0.012 - 0.06, z), (board / 2 + 0.012, board / 2 + 0.012 - 0.06, z + 0.008), "IronDark")
+    b.box((bx - board / 2 - 0.012, -board / 2 - 0.012, z), (bx + board / 2 + 0.012, board / 2 + 0.012, z + 0.008), "IronDark")
     for i in range(8):
         for j in range(8):
-            x0 = -board / 2 + i * cell
-            y0 = -board / 2 + j * cell - 0.06
+            x0 = bx - board / 2 + i * cell
+            y0 = -board / 2 + j * cell
             b.box((x0, y0, z + 0.008), (x0 + cell, y0 + cell, z + 0.009), "DartBlack" if (i + j) % 2 else "Cream")
-    # pions : quelques-uns sur les cases noires, deux dames sorties à côté
-    pieces = [(1, 0, "DartRed"), (3, 0, "DartRed"), (0, 1, "DartRed"), (4, 3, "DartRed"), (6, 1, "DartRed"),
-              (1, 6, "Cream"), (5, 6, "Cream"), (7, 6, "Cream"), (2, 5, "Cream"), (6, 7, "Cream")]
-    for i, j, mat in pieces:
-        cx = -board / 2 + (i + 0.5) * cell
-        cy = -board / 2 + (j + 0.5) * cell - 0.06
-        b.cylinder((cx, cy, z + 0.009), (cx, cy, z + 0.019), cell * 0.38, mat, 8)
-    b.cylinder((0.19, -0.2, z), (0.19, -0.2, z + 0.01), cell * 0.38, "DartRed", 8)
-    b.cylinder((0.19, -0.2, z + 0.01), (0.19, -0.2, z + 0.02), cell * 0.38, "DartRed", 8)
     # tasse de café
     mx, my = 0.11, 0.2
     b.cylinder((mx, my, z), (mx, my, z + 0.07), 0.03, "Cream", 10)

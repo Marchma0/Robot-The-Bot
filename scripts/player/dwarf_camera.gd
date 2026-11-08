@@ -1,14 +1,16 @@
 class_name DwarfCamera
 extends Node
-## Caméra du joueur local, à la première personne : place des yeux (ils avancent quand on baisse le regard,
-## descendent quand on s'accroupit), petit à-coup du « clac » des joysticks des jambes, et traveling
-## jusqu'à l'écran d'un poste quand on s'y assoit (puis plein écran sur la caméra du bras).
+## Caméra du joueur local, à la première personne façon Lethal Company : les yeux suivent en partie l'os de
+## la tête (la vue vit avec la marche, l'accroupi, l'assise), on ne voit de soi que ses bras de vue pendant un
+## geste ou une emote (DwarfViewArms), le corps ne garde que son ombre (DwarfLook). Petit à-coup du « clac » des
+## joysticks des jambes, et traveling jusqu'à l'écran d'un poste quand on s'y assoit (puis plein écran sur la
+## caméra du bras).
 ##
 ## Réseau : rien. Purement local, actif seulement sur le nain du joueur (`activate`).
 
 ## Position des yeux devant le centre du corps (m, -Z = devant) : regard droit / regard vers le bas.
 const EYE_FORWARD: float = -0.08
-const EYE_FORWARD_LOOKING_DOWN: float = -0.3
+const EYE_FORWARD_LOOKING_DOWN: float = -0.18
 ## Inclinaison vers le bas (rad) à partir de laquelle les yeux sont tout à fait avancés.
 const LOOK_DOWN_FULL: float = deg_to_rad(60.0)
 ## Hauteur des yeux debout / accroupi (m).
@@ -20,12 +22,18 @@ const CAMERA_TRAVEL_OUT: float = 0.55
 ## « Clac » du joystick des jambes : amplitude de l'à-coup de vue (rad) et vitesse d'amortissement.
 const KICK_NUDGE: float = 0.035
 const KICK_NUDGE_DAMP: float = 9.0
+## Suivi de l'os de la tête : amorti (plus grand = plus collé aux mouvements de l'animation).
+const HEAD_FOLLOW_SHARPNESS: float = 18.0
+## Part du mouvement de la tête suivie par les yeux (1 = tout, la vue balancerait trop en marchant).
+const HEAD_FOLLOW_AMOUNT: float = 0.5
 
 @export var dwarf: Dwarf
 ## Les yeux (tangage du regard) et la caméra qui y est accrochée.
 @export var head: Node3D
 @export var camera: Camera3D
 @export var look: DwarfLook
+## Os de la tête (avec l'inclinaison du regard) : les yeux le suivent.
+@export var head_bone: Node3D
 
 var _crosshair: Control = null
 var _pov_active: bool = false
@@ -37,6 +45,10 @@ var _travel_dir: int = 0
 var _travel_from: Transform3D = Transform3D.IDENTITY
 ## Petit à-coup de la vue (rad, x = lacet, y = tangage) qui s'amortit.
 var _kick_nudge: Vector2 = Vector2.ZERO
+## Place des yeux dans le repère de l'os de la tête, et place lissée des yeux dans le repère du nain.
+var _eye_in_head: Vector3 = Vector3.ZERO
+var _eye_smoothed: Vector3 = Vector3.ZERO
+var _eye_ready: bool = false
 
 
 func _ready() -> void:
@@ -44,16 +56,13 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	# En baissant les yeux, le point de vue avance pour regarder par-dessus le ventre
-	# (sinon le haut de la tunique bouche tout l'écran).
+	# En baissant les yeux, le point de vue avance un peu (on regarde par-dessus son ventre).
 	var looking_down: float = clampf(-head.rotation.x / LOOK_DOWN_FULL, 0.0, 1.0)
 	head.position.z = lerpf(EYE_FORWARD, EYE_FORWARD_LOOKING_DOWN, looking_down)
 	# Les yeux descendent / remontent en douceur quand on s'accroupit / se relève.
 	var eye_height: float = CROUCH_EYE_HEIGHT if dwarf.anim_crouching else EYE_HEIGHT
 	head.position.y = move_toward(head.position.y, eye_height, delta * 2.5)
-	# Le corps est affiché lissé entre deux étapes physiques ; la caméra suit cette
-	# position lissée, mais garde l'orientation la plus récente (souris sans retard).
-	camera.global_transform = dwarf.view_transform()
+	camera.global_transform = _eyes_view(delta)
 	_apply_kick_nudge(delta)
 	_update_travel(delta)
 
@@ -64,6 +73,7 @@ func activate(crosshair: Control) -> void:
 	camera.current = true
 	# La caméra est replacée à chaque image : pas de lissage physique sur elle.
 	camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	_eye_in_head = _rest_eye_in_head()
 	set_process(true)
 
 
@@ -106,8 +116,6 @@ func _update_travel(delta: float) -> void:
 	if _view_seat != null and not is_instance_valid(_view_seat):
 		_view_seat = null
 		_travel_dir = 0
-	# Pendant le traveling, la caméra passe à travers les bras du nain : on ne garde que son ombre.
-	look.set_body_hidden(_view_seat != null)
 	if _travel_dir == 0 or _view_seat == null:
 		return
 	var duration: float = CAMERA_TRAVEL_IN if _travel_dir > 0 else CAMERA_TRAVEL_OUT
@@ -126,3 +134,28 @@ func _update_travel(delta: float) -> void:
 	elif _travel_dir < 0 and _travel <= 0.0:
 		_travel_dir = 0
 		_view_seat = null
+
+
+## Les yeux : sur l'os de la tête (animé), un peu amortis ; orientation = celle du regard (souris sans retard).
+## Le corps est affiché lissé entre deux étapes physiques : on suit cette position lissée.
+func _eyes_view(delta: float) -> Transform3D:
+	var view: Transform3D = dwarf.view_transform()
+	var body: Transform3D = dwarf.get_global_transform_interpolated()
+	var eye_local: Vector3 = body.affine_inverse() * (head_bone.get_global_transform_interpolated() * _eye_in_head)
+	var rest_eye: Vector3 = Vector3(0.0, head.position.y, head.position.z)
+	eye_local = rest_eye.lerp(eye_local, HEAD_FOLLOW_AMOUNT)
+	if not _eye_ready:
+		_eye_smoothed = eye_local
+		_eye_ready = true
+	_eye_smoothed = _eye_smoothed.lerp(eye_local, 1.0 - exp(-HEAD_FOLLOW_SHARPNESS * delta))
+	return Transform3D(view.basis, body * _eye_smoothed)
+
+
+## Place des yeux (`head`, au repos) dans le repère de l'os de la tête au repos.
+func _rest_eye_in_head() -> Vector3:
+	var skeleton: Skeleton3D = head_bone.get_parent().get_parent() as Skeleton3D
+	var bone: int = skeleton.find_bone("head")
+	var head_rest: Transform3D = skeleton.global_transform * skeleton.get_bone_global_rest(bone)
+	var rest_eye: Vector3 = dwarf.global_transform * Vector3(0.0, EYE_HEIGHT, EYE_FORWARD)
+	return head_rest.affine_inverse() * rest_eye
+

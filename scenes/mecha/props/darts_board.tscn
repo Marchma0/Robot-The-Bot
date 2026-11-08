@@ -3,6 +3,9 @@
 [ext_resource type="Script" path="res://scripts/props/darts_game.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/models/props/dartboard_wall.glb" id="2_board"]
 [ext_resource type="Script" path="res://scripts/props/darts_take.gd" id="3_take"]
+[ext_resource type="Script" path="res://scripts/props/chalk_scoreboard.gd" id="4_chalk"]
+[ext_resource type="PackedScene" path="res://assets/models/props/chalkboard.glb" id="5_chalkboard"]
+[ext_resource type="Shader" path="res://scenes/mecha/props/chalk.gdshader" id="6_chalk_shader"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_board"]
 height = 0.04
@@ -22,6 +25,24 @@ size = Vector2(0.03, 0.02)
 [sub_resource type="Gradient" id="Gradient_confetti"]
 offsets = PackedFloat32Array(0, 0.25, 0.5, 0.75, 1)
 colors = PackedColorArray(1, 0.3, 0.3, 1, 1, 0.85, 0.2, 1, 0.3, 0.9, 0.4, 1, 0.3, 0.7, 1, 1, 0.9, 0.4, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_grain"]
+frequency = 0.12
+fractal_octaves = 2
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_grain"]
+width = 256
+height = 256
+seamless = true
+noise = SubResource("FastNoiseLite_grain")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_chalk"]
+shader = ExtResource("6_chalk_shader")
+shader_parameter/grain = SubResource("NoiseTexture2D_grain")
+
+[sub_resource type="QuadMesh" id="QuadMesh_chalk"]
+material = SubResource("ShaderMaterial_chalk")
+size = Vector2(0.4, 0.48)
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_darts"]
 properties/0/path = NodePath(".:thrower_peer_id")
@@ -45,6 +66,15 @@ properties/5/replication_mode = 2
 properties/6/path = NodePath(".:dart_peer")
 properties/6/spawn = true
 properties/6/replication_mode = 2
+properties/7/path = NodePath(".:round_done")
+properties/7/spawn = true
+properties/7/replication_mode = 2
+properties/8/path = NodePath(".:history_names")
+properties/8/spawn = true
+properties/8/replication_mode = 2
+properties/9/path = NodePath(".:history_totals")
+properties/9/spawn = true
+properties/9/replication_mode = 2
 
 [node name="DartsBoard" type="Node3D"]
 script = ExtResource("1_script")
@@ -68,26 +98,18 @@ display_name = "Fléchettes"
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Take"]
 shape = SubResource("BoxShape3D_take")
 
-[node name="ScorePop" type="Label3D" parent="."]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -0.15)
-billboard = 1
-pixel_size = 0.0025
-modulate = Color(1, 0.95, 0.8, 1)
-outline_modulate = Color(0.15, 0.08, 0.03, 1)
-font_size = 64
-outline_size = 14
+[node name="Scoreboard" type="Node3D" parent="." node_paths=PackedStringArray("game")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.57, -0.01, 0)
+script = ExtResource("4_chalk")
+game = NodePath("..")
 
-[node name="Cheer" type="Label3D" parent="."]
+[node name="Model" parent="Scoreboard" instance=ExtResource("5_chalkboard")]
+
+[node name="Chalk" type="MeshInstance3D" parent="Scoreboard"]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, -0.2)
-billboard = 1
-pixel_size = 0.003
-modulate = Color(1, 0.85, 0.2, 1)
-outline_modulate = Color(0.45, 0.1, 0.02, 1)
-font_size = 72
-outline_size = 18
-text = "Dans le mille !"
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.022)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_chalk")
 
 [node name="Confetti" type="CPUParticles3D" parent="."]
 unique_name_in_owner = true

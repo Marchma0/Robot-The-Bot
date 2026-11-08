@@ -33,6 +33,7 @@ const STICK_RETURN_SPEED: float = 7.0
 @export var stick_lever_speed: float = 2.5
 
 var _target: Interactable = null
+var _excluded_seat: Seat = null
 ## Ce que le joueur a demandé ou tient (voir Possession), et depuis combien de temps il attend l'hôte.
 var _claim: Node = null
 var _claim_confirmed: bool = false
@@ -54,10 +55,12 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_update_claim(delta)
 	if _claim is Seat or _claim is Rope:
-		# Assis ou sur la corde (ou en attente de l'hôte) : on ne vise rien, seule action possible, en sortir.
-		_set_target(null)
+		# Assis ou sur la corde (ou en attente de l'hôte) : on ne vise rien, seule action possible, en sortir…
+		# sauf, assis sur un simple siège (canapé), les commandes faites pour ça (dames) : clic pour les utiliser.
+		_update_seated_target()
 		_update_seat_or_rope()
 	else:
+		_exclude_seat(null)
 		_update_target()
 		_handle_actions()
 		if is_holding():
@@ -198,6 +201,31 @@ func _update_seat_or_rope() -> void:
 		_release_claim()
 
 
+## Le siège où l'on est assis ne bloque pas la visée (le rayon partirait dans sa zone).
+func _exclude_seat(seat: Seat) -> void:
+	if seat == _excluded_seat:
+		return
+	if _excluded_seat != null and is_instance_valid(_excluded_seat):
+		remove_exception(_excluded_seat)
+	_excluded_seat = seat
+	if seat != null:
+		add_exception(seat)
+
+
+## Assis sur un simple siège : on peut viser et utiliser (clic) les commandes `usable_seated` à portée de main.
+func _update_seated_target() -> void:
+	var seat: Seat = _claim as Seat
+	_exclude_seat(seat if seat != null and not seat.has_screen else null)
+	if seat == null or seat.has_screen or not _holds_claim():
+		_set_target(null)
+		return
+	var target: Interactable = (get_collider() if is_colliding() else null) as Interactable
+	_set_target(target if target != null and target.usable_seated else null)
+	if _target != null and Input.is_action_just_pressed("grab"):
+		if _target.interact(false, true, false) == Interactable.Use.DONE:
+			button_pressed.emit()
+
+
 func _update_target() -> void:
 	var collider: Object = get_collider() if is_colliding() else null
 	_set_target(collider as Interactable)
@@ -293,6 +321,10 @@ func _update_prompt() -> void:
 		hints = [InputHint.make(&"grab", &"throw"), InputHint.make(&"interact", &"drop")]
 	elif _claim is Interactable and _claim_confirmed:
 		hints = (_claim as Interactable).get_hints()
+		if _claim is Seat and _target != null:
+			var seat_hints: Array[InputHint] = hints   # assis au canapé, en visant le damier
+			hints = _target.get_hints()
+			hints.append_array(seat_hints)
 	elif _claim == null and _target != null:
 		hints = _target.get_hints()
 	var key: String = InputHint.key_of(hints)

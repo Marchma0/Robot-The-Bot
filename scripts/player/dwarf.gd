@@ -179,9 +179,11 @@ func _ready() -> void:
 		_hud = PLAYER_HUD_SCENE.instantiate() as PlayerHud
 		add_child(_hud)
 		_hud.state_bubble.setup(self)
+		_hud.emote_wheel.setup(self)
 		_hud.poop_game.finished.connect(_on_poop_game_finished)
 		_camera_rig.activate(_hud.crosshair)
 		_appearance.set_first_person()
+		DwarfViewArms.new().setup(self, _camera, _appearance, slot)
 		player_name = NetworkManager.get_local_player_name()
 		_interactor.add_exception(self)
 		_interactor.set_active(true)

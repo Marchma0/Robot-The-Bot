@@ -74,13 +74,21 @@
 ## Les nains
 - Nain de 1,2 m, vue à la première personne (on voit son corps, pas sa tête), clavier + manette.
 - Marcher, sauter, s'accroupir, roue d'emotes (8 gestes), bulle d'état avec mini-portrait animé en haut à droite.
-- **Vie à bord** : salon dans le ventre (canapé où s'asseoir, télé animée, lampe qui se balance),
+- **Vue à la première personne façon Lethal Company / Deep Rock Galactic** : on ne voit pas son corps ; ses bras
+  montent dans le champ pendant un geste (appuyer, tenir, lancer, emote) et redescendent sinon. Les emotes restent
+  à la première personne : on voit son bras pointer, saluer, applaudir…
+- **Vie à bord** : salon dans le ventre (canapé où s'asseoir, télé animée qu'on allume et éteint avec son bouton, lampe qui se balance),
   toilettes dans la tête (mini-jeu « Poussée », cacas qu'on ramasse et qu'on lance, caca légendaire doré).
+  Intérieur usé et encombré, jamais vide.
 - **Fléchettes** sur la cible du salon : on prend les 3 fléchettes d'un coup (sur la cible ou là où elles sont
   plantées), on lance de n'importe où dans le robot, elles se plantent là où elles tapent. Centre = « Dans le mille ! »
-  (confettis) ; le total des 3 lancers s'affiche quelques secondes, rien n'est gardé. Un nain touché a la
+  (confettis) ; les scores s'écrivent à la craie sur l'ardoise d'à côté (lancers, total, 3 manches précédentes ;
+  rien n'est gardé après la partie). Un nain touché a la
   fléchette plantée dans le casque et la vue brouillée : un autre nain doit venir la lui retirer.
-  Intérieur usé et encombré, jamais vide.
+- **Jeu de dames** sur la table basse du salon, à deux (ou seul contre soi-même), debout ou assis sur le canapé (clic) : on vise un pion puis sa case
+  d'arrivée ; règles à la française simplifiées (prise obligatoire en avant et en arrière, rafles, dame volante),
+  le premier qui joue un côté le garde ; une pendule d'échecs à côté du damier montre à qui de jouer, sonne en fin
+  de partie, et on appuie dessus pour une nouvelle partie.
 - **À venir** : skins (vendus au camp), améliorations (vendues au camp).
 
 ## Principes qui valent partout
