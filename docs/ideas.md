@@ -1,152 +1,112 @@
-# Idees de game design (NON VALIDEES)
+# Idées (NON VALIDÉES)
 
-> Claude : ne rien implementer depuis ce fichier sans validation explicite.
+> Pistes proposées, **rien n'est décidé**. Ne rien implémenter d'ici sans validation explicite d'un humain.
+> Une idée validée passe dans `docs/jeu.md` (et `docs/decisions.md`), puis dans la roadmap d'`AGENTS.md`.
+> Rangées par phase de la roadmap. Ce qui a déjà été fait n'est plus ici (voir `docs/decisions.md`).
 
-## Boucle de gameplay (proposé le 2026-11-05)
+## Phase 1 — Fondations
 
-### La boucle
+### Modéliser en 3D avec l'IA (proposé le 2026-11-06)
+La planche de vues (`blender/tools/render_views.py`) est faite. Le reste :
+- **Budget + recette par pièces** (inspiré de `ozanzeng/blender-LPM-skill`) : objet découpé en 4 à 12 pièces simples
+  (boîte, prisme, tour, extrusion, plaque) ; règles de style low poly écrites (ombrage plat, silhouette avant les détails,
+  base à z = 0) ; une seule texture « palette » par objet, sans normal map.
+- **Contrôles automatiques PASS / FAIL avant export** (inspiré de `majidmanzarpour/blender-game-skills`, MIT) : budget,
+  transforms appliqués, objet au sol, UV, faces cassées, sommets isolés, nommage (`-col`, os `leg_L_*`) ; réimport du
+  `.glb` dans une scène vide (nombre d'os, animations, hauteur à 1 % près). Scripts `blender/tools/check_asset.py`, `roundtrip_glb.py`.
+- **Références à l'échelle** : croquis face + profil posés comme plans dans le `.blend`, repères (capsule du nain,
+  hauteur de porte), comparaison de silhouette chiffrée.
+- **Génération IA puis retravail** (`generate_3d` / `search_assets` du MCP Blender) : bien pour décors et petits objets,
+  pas pour le robot ni les nains (rig précis). Toujours retopologie, UV, collisions, test dans Godot.
+- **Geometry Nodes** pour les objets répétés avec variantes (rochers, caisses, tuyaux, blocs minables), figés en maillage avant export.
 
-**Lobby → choisir une mission (devant le robot) → mission → récompenses (argent + points de compétence) → retour au lobby → améliorer le robot et son nain → mission suivante.**
+Sources : github.com/ozanzeng/blender-LPM-skill, github.com/majidmanzarpour/blender-game-skills,
+github.com/colinurbs/claude-modeling-skills, arxiv.org/abs/2403.01248 (SceneCraft), arxiv.org/abs/2508.08228 (LL3M), BlenderGym (CVPR 2025).
 
-### Partie sauvegardée
-- Une partie = une sauvegarde : missions faites, argent, améliorations du robot, compétences de chaque nain, objets débloqués du lobby.
-- L'hôte possède la sauvegarde. Les joueurs qui rejoignent retrouvent leur nain (progression liée à leur compte Steam / leur pseudo).
-- Plusieurs emplacements de sauvegarde. Sauvegarde automatique à chaque retour au lobby.
+## Phase 2 — Les nains
 
-### Le lobby (grand espace, le « camp de base »)
-- Le robot est garé au milieu. Les missions se lancent **juste à côté du robot**, par exemple en tirant le grand levier d'une table de mission. On monte dans le robot et c'est parti.
-- Grand espace vivant, avec plein de petits jeux pour attendre ou se défier entre deux missions :
-  - **Lancer de nain** : un canon ou une catapulte, une cible au loin, un score.
-  - **Bras de fer** sur une table : on martèle des boutons à deux.
-  - **Course de chariots de mine** sur un petit circuit de rails.
-  - **Fléchettes / lancer de hache** sur une cible en bois.
-  - **Cible de la foreuse** : s'entraîner à piloter les bras du robot sur des blocs d'entraînement.
-  - **Bowling avec des tonneaux.**
-  - **Tir à la corde** à 2 contre 2.
-  - **Tableau des records** (lancer de nain, course…), sauvegardé avec la partie.
-- Lieux utiles :
-  - l'**atelier** : améliorer le robot ;
-  - l'**entraîneur nain** : dépenser ses points de compétence ;
-  - le **marchand** : objets cosmétiques et consommables ;
-  - le **tableau des missions** : la carte avec les 10 missions de l'histoire ;
-  - un **miroir** pour personnaliser son nain (barbe, casque, couleurs).
-- Le lobby s'agrandit et se décore au fil de l'histoire : trophées des missions réussies, nouveaux bâtiments…
+### Améliorations des nains (compétences)
+Le marchand d'améliorations des nains est validé ; ce qu'il vend ne l'est pas. Pistes (points de compétence) :
+- **Endurance** : grimper plus vite à la corde, courir plus longtemps ;
+- **Force** : porter des objets plus lourds dehors, tirer les leviers plus vite ;
+- **Adresse** : précision sur les commandes, poser les ponts plus vite ;
+- **Ingénieur** : réparer le robot plus vite ;
+- **Agilité** : sauter plus haut, s'accroupir et se relever plus vite.
+Des compétences qui donnent un rôle à chaque nain sans enfermer personne dans un poste.
 
-### Les 10 missions de l'histoire (pistes, à trier)
-1. **La Mine** *(tutoriel)* : descendre dans une mine avec le robot, forer les filons de minerai, ramasser les pépites au grappin. Apprend la marche, la foreuse et le grappin.
-2. **La Vallée de la Mort** : un canyon plein de gouffres. Il faut sortir du robot, ramasser des objets dehors (troncs, rochers, poutres) et les assembler en ponts assez solides pour faire passer le robot.
-3. **La Mission sans robot** : le robot est en panne au fond d'un trou. Les 4 nains, à pied, doivent aller chercher la pièce de rechange dans une forteresse en ruines (infiltration, énigmes à deux, portes à leviers), puis la ramener et réparer le robot.
-4. **Le Marais** : le sol est instable, chaque pas peut faire couler une jambe. Il faut lire le terrain, poser des planches, et tirer le robot avec le grappin accroché à des arbres.
-5. **La Tempête** : un vent violent pousse le robot. Équilibre extrême, l'équipe doit se pencher, s'accroupir et ancrer les pieds au bon moment ; les nains dehors se font emporter.
-6. **Le Convoi** : escorter (ou porter dans le sac à dos) une cargaison fragile d'un point A à un point B. Une chute ou un choc trop fort casse la marchandise, et on perd de l'argent.
-7. **La Montagne** : escalader une paroi avec le robot, le grappin servant de crochet d'escalade et la foreuse de piolet. Il faut coordonner les bras et les jambes.
-8. **Le Géant endormi** : traverser le dos (ou le ventre) d'une créature gigantesque sans la réveiller. Le bruit des pas compte : marcher lentement, accroupi, couper la foreuse.
-9. **La Course** : course contre un mécha rival (IA) sur un parcours d'obstacles. Raccourcis possibles à la foreuse.
-10. **Le Cœur de la Montagne** *(final)* : une grande mission en plusieurs étapes qui reprend tout ce qui a été appris (mine, ponts, équilibre, mission à pied), avec un final spectaculaire.
+### Skins des nains
+Barbe, casque, couleurs, choisis devant un miroir ou chez le marchand.
 
-D'autres idées en réserve :
-- mission de **nuit** : les phares du robot, et un nain dehors avec une lanterne pour guider ;
+## Phase 3 — Le robot
+
+### Améliorations du robot
+Pas dans la vision actuelle (seuls les **skins** du robot sont vendus). Si on en veut un jour, à l'atelier :
+jambes plus stables, foreuse plus rapide ou plus longue, grappin plus fort, sac à dos plus grand, meilleurs écrans,
+nouveaux postes ou boutons (turbo, ancre, klaxon…).
+
+### Chute physique du robot (anciens M7.3 et « se relever », retirés le 2026-11-06)
+Le porteur du projet préfère pour l'instant l'effondrement à genoux.
+- **Ragdoll** : os physiques simulés sur l'hôte, pose envoyée environ 20 fois par seconde et lissée chez les autres ;
+  les nains dégringolent dans la cabine (gravité du monde au-delà d'une certaine inclinaison) ; consoles accessibles pour le QTE ;
+  collisions sur les jambes pour pousser correctement un nain dehors.
+- **Se relever après une vraie chute** : transition de la pose ragdoll vers l'animation de relèvement.
+
+### Physique de l'intérieur dans une cabine « fantôme » immobile
+La physique du cockpit tourne dans une copie qui ne bouge jamais ; on n'affiche que le résultat, recollé sur le vrai robot
+(technique des jeux à bateaux habitables). Les nains ne glissent plus et ne traversent plus les murs même quand le robot
+penche fort. Gros chantier : seulement si des problèmes apparaissent.
+
+### Vie à bord
+- **Fléchettes dans le salon du ventre** (la cible y est en décor) : même jeu que celui du camp, fléchettes plantées
+  synchronisées, ardoise des scores par joueur, partie de « 301 » pendant les trajets, gage du perdant en emote.
+  Plus d'imprécision si on bouge ou si le robot marche.
+- **Cacas de collection** : raretés (commun marron, rare vert ou bleu, très rare violet à paillettes, légendaire doré) ;
+  plus c'est rare, plus « Poussée » est dur. Les rares ne se jettent pas : on les expose sur une **étagère à trophées**
+  (salon ou camp), socle + étiquette (nain, date, rareté), sauvegardée avec la partie. Succès « collectionneur »,
+  cacas à effets (le doré fait briller la cabine, le violet laisse des paillettes). Le caca doré lancé disparaît pour l'instant (provisoire).
+
+## Phase 4 — Le camp de base
+
+### Monnaie et sauvegarde
+- **Argent** (pièces, minerai vendu) selon le résultat de la mission : temps, dégâts, objectifs secondaires, chutes du robot.
+- Une partie = une sauvegarde : missions faites, argent, skins et améliorations achetés, objets du camp.
+  L'hôte possède la sauvegarde ; les joueurs qui rejoignent retrouvent leur nain (lié au compte Steam / pseudo).
+  Plusieurs emplacements, sauvegarde automatique à chaque retour au camp.
+
+### Mini-jeux
+- **Course de wagonnets** sur le petit circuit de rails (déjà en décor).
+- **Lancer de nain** : canon ou catapulte, cible au loin, score.
+- **Lancer de hache** sur une cible en bois.
+- **Cible de la foreuse** : s'entraîner à piloter les bras du robot sur des blocs d'entraînement.
+- **Bowling avec des tonneaux.**
+- **Tir à la corde** à 2 contre 2.
+- **Tableau des records** (lancer de nain, course…), sauvegardé avec la partie.
+
+### Le camp qui grandit
+Le camp s'agrandit et se décore au fil de l'histoire : trophées des missions réussies, nouveaux bâtiments…
+Tableau des missions sous forme de carte avec les 10 missions.
+
+## Phase 5 — Les missions
+
+### Les 10 missions (pistes, à trier)
+Chaque mission = un environnement + une mécanique phare (validé). Lesquelles, et l'histoire qui les relie : à décider.
+1. **La Mine** *(tutoriel)* : descendre dans une mine, forer les filons, ramasser les pépites au grappin. Apprend la marche, la foreuse et le grappin.
+2. **La Vallée de la Mort** : canyon plein de gouffres ; sortir du robot, ramasser des troncs, rochers, poutres et construire des ponts assez solides pour le robot.
+3. **La Mission sans robot** : robot en panne au fond d'un trou ; les 4 nains à pied vont chercher la pièce de rechange dans une forteresse en ruines (infiltration, énigmes à deux, portes à leviers), puis réparent.
+4. **Le Marais** : sol instable, chaque pas peut faire couler une jambe ; lire le terrain, poser des planches, tirer le robot au grappin accroché aux arbres.
+5. **La Tempête** : vent violent qui pousse le robot ; s'accroupir et ancrer les pieds au bon moment ; les nains dehors se font emporter.
+6. **Le Convoi** : porter une cargaison fragile dans le sac à dos ; une chute ou un choc trop fort la casse.
+7. **La Montagne** : escalader une paroi, le grappin en crochet d'escalade, la foreuse en piolet ; coordonner bras et jambes.
+8. **Le Géant endormi** : traverser le dos d'une créature gigantesque sans la réveiller ; le bruit compte (marcher lentement, accroupi, couper la foreuse).
+9. **La Course** : course contre un robot rival (IA) sur un parcours d'obstacles, raccourcis à la foreuse.
+10. **Le Cœur de la Montagne** *(final)* : grande mission en plusieurs étapes qui reprend tout, avec un final spectaculaire.
+
+En réserve :
+- mission de **nuit** : phares du robot, un nain dehors avec une lanterne pour guider ;
 - **sauvetage** de nains coincés, à attraper au grappin ;
 - **démolition** chronométrée d'une vieille tour à la foreuse ;
 - **déménagement** d'une maison entière dans le sac à dos ;
-- **mission sous-marine** : le robot marche au fond d'un lac et les nains gèrent l'air (pompes à actionner).
+- **sous-marine** : le robot marche au fond d'un lac, les nains gèrent l'air (pompes à actionner).
 
-### Récompenses et progression
-- **Argent** (pièces / minerai vendu), selon le résultat de la mission : temps, dégâts, objectifs secondaires, chutes du robot.
-- **Améliorer le robot** à l'atelier :
-  - jambes plus stables ;
-  - foreuse plus rapide ou plus longue ;
-  - grappin plus fort ;
-  - sac à dos plus grand ;
-  - meilleurs écrans (vue des pieds, caméra du grappin) ;
-  - nouveaux postes ou boutons (turbo, ancre, klaxon…) ;
-  - cosmétiques (peinture, drapeaux, décorations du cockpit).
-- **Points de compétence** à chaque fin de mission, à répartir sur son propre nain :
-  - **Endurance** : grimper plus vite à la corde, courir plus longtemps ;
-  - **Force** : porter des objets plus lourds dehors, tirer les leviers plus vite ;
-  - **Adresse** : précision sur les commandes, poser les ponts plus vite ;
-  - **Ingénieur** : réparer le robot plus vite ;
-  - **Agilité** : sauter plus haut, s'accroupir et se relever plus vite.
-  - Des compétences qui donnent un rôle à chaque nain sans enfermer personne dans un poste.
-- **Rejouer les missions** pour faire de meilleurs scores, ou finir des défis (une étoile par objectif).
-
-## Cacas de collection (proposé le 2026-11-05)
-
-- **Raretés :** commun (marron), rare (vert ou bleu), très rare (violet, à paillettes), légendaire (doré, déjà fait). Plus c'est rare, plus le mini-jeu « Poussée » est dur.
-- **Les cacas rares et plus** ne se jettent pas : en les ramassant, on peut les **exposer sur une étagère à trophées**, dans le salon ou dans le lobby, chacun sur un petit socle avec une étiquette (nom du nain, date, rareté).
-- **L'étagère** fait partie de la sauvegarde de la partie : c'est la collection de l'équipe.
-- **Pistes :** un succès « collectionneur » quand l'étagère est pleine, et des cacas à effets (le doré fait briller la cabine, le violet laisse des paillettes en vol…).
-
-## Fléchettes jouables dans le salon du ventre (proposé le 2026-11-05)
-
-La cible et l'ardoise des scores sont déjà au mur du fond du ventre (décor).
-- **Lancer :** on vise la cible et on clique. Une fléchette part de la main (animation `throw`) et se plante là où on visait, avec un peu d'imprécision (plus si on bouge ou si le robot marche).
-- **Les fléchettes plantées** restent visibles pour tout le monde, puis on les retire en appuyant sur E sur la cible.
-- **Le score** est calculé selon la zone touchée (centre, anneaux, double, triple) et écrit sur l'ardoise à côté de la cible, par joueur.
-- **Variante :** une partie de « 301 » à plusieurs pendant les trajets, les gages du perdant en emote.
-- **Réseau :** le lancer est une demande envoyée à l'hôte. L'hôte calcule l'impact et le score, et les fléchettes plantées sont synchronisées.
-
-## Synchro réseau et physique (proposé le 2026-11-05 — points 1 à 5 validés le 2026-11-05, faits le 2026-11-06)
-
-Constat : la synchro marche mais elle est « brute ». Chaque nain et le mécha envoient leur position environ 60 fois par seconde, sans lissage. Chez les autres, les positions arrivent donc par à-coups. Un nain dehors tremble aussi un peu vu par les autres.
-
-Recommandation : faire **1 à 5 ensemble**, en une étape. Le **6** attend qu'on en ait besoin en M7, le **7** se fera avec M7.3.
-
-1. **Nain dehors synchronisé dans le monde.**
-   - Aujourd'hui, la position du nain dehors est envoyée par rapport au mécha. Les autres reçoivent la position du mécha et celle du nain à des moments différents, d'où les tremblements.
-   - À la place : envoyer un indicateur « dehors » plus la position dans le monde. Chez les autres, un nain dehors est placé directement dans le monde.
-   - Coût faible, uniquement dans le nain.
-2. **Lissage des autres joueurs et du mécha.**
-   - Chaque joueur affiche les autres avec environ 100 ms de retard, en glissant entre les deux dernières positions reçues.
-   - C'est la technique standard des jeux en réseau.
-   - Les mouvements restent fluides malgré les paquets en retard ou perdus (relais Steam). Aucun retard sur son propre nain ni sur les commandes qu'on manipule.
-   - Un composant réutilisable, posé sur chaque nain et sur le mécha.
-3. **Lissage physique de Godot** (option de projet `physics_interpolation`).
-   - Affiche les objets entre deux étapes physiques.
-   - Mouvement fluide sur les écrans à 120 / 144 Hz.
-   - À vérifier avec ce qui est déjà fait à la main (caméra, nain dehors).
-4. **Moins de trafic.**
-   - Positions envoyées 30 fois par seconde au lieu de 60 : le lissage comble les trous.
-   - Les états d'animation regroupés en un seul nombre au lieu de 6 valeurs.
-   - Moins de latence et de pertes sur le relais Steam à 4 joueurs.
-5. **Ordre de calcul fixe.**
-   - À chaque étape physique, le mécha bouge avant que les nains se déplacent.
-   - Simple réglage de priorité. Évite des petits décalages quand le robot marchera vraiment (M7).
-6. **(Plus tard, M7) Physique de l'intérieur dans une cabine « fantôme » immobile.**
-   - La physique du cockpit tourne dans une copie qui ne bouge jamais. On n'affiche que le résultat, recollé sur le vrai robot.
-   - C'est la technique des jeux à bateaux et vaisseaux habitables.
-   - Les nains ne glissent plus et ne traversent plus les murs, même quand le robot penche fort, tombe ou se relève.
-   - Gros chantier : seulement si des problèmes apparaissent en M7.2 / M7.3.
-7. **Chute du robot (chute physique, voir « Chute physique du mécha » plus bas).**
-   - Seul l'hôte simule la physique du robot. La pose des os est envoyée environ 20 fois par seconde et lissée chez les autres (point 2).
-   - Les jambes du robot ont des collisions, pour pousser correctement un nain dehors.
-
-## Mieux modéliser en 3D avec l'IA (proposé le 2026-11-06, à rediscuter)
-Recherche sur ce qui se fait (forums, GitHub, articles). Constat commun : une IA qui écrit un script Blender « à l'aveugle » donne des résultats médiocres ; il lui faut des mesures, des références et des contrôles automatiques à chaque étape.
-
-1. **Boucle script → rendu multi-vues → correction.** *(validé et fait le 2026-11-06 : `blender/tools/render_views.py` + règle dans `AGENTS.md`)*
-   - L'IA écrit le script, fait une planche de 5 vues (face, profil, dos, 3/4, dessus), compare à la demande, corrige. Environ 3 tours.
-   - Base des travaux de recherche SceneCraft, LL3M, BlenderAlchemy, BlenderGym.
-2. **Budget + recette par pièces** (inspiré de `ozanzeng/blender-LPM-skill`).
-   - Avant de modéliser : taille réelle, budget de triangles, palette.
-   - Objet découpé en 4 à 12 pièces simples (boîte, prisme, tour, extrusion, plaque) + plier / effiler / symétrie.
-   - Règles de style low poly écrites : ombrage plat, silhouette avant les détails, base à z = 0, pas de faces superposées.
-   - Une seule texture « palette » par objet, sans normal map.
-3. **Contrôles automatiques PASS / FAIL avant export** (inspiré de `majidmanzarpour/blender-game-skills`, MIT).
-   - Budget, transforms appliqués, objet au sol, UV, faces cassées, sommets isolés, nommage (`-col`, os `leg_L_*`).
-   - Réimport du `.glb` dans une scène vide : nombre d'os, animations, hauteur à 1 % près.
-4. **Références à l'échelle.**
-   - Croquis face + profil posés comme plans à l'échelle dans le `.blend`, avec repères (capsule du nain, hauteur de porte).
-   - Comparaison de silhouette chiffrée (recouvrement ≥ 85 % au blockout, ≥ 90 % au final).
-5. **Génération IA puis retravail** (Meshy, Tripo, Hunyuan3D, TRELLIS.2, Rodin ; `generate_3d` / `search_assets` du MCP Blender).
-   - Bien pour décors et petits objets ; pas pour le mécha ni les nains (rig précis). Toujours retopologie, UV, collisions, test dans Godot.
-6. **Geometry Nodes** pour les objets répétés avec variantes (rochers, caisses, tuyaux, blocs minables), figés en maillage avant export.
-
-**Proposition :** faire 1 + 2 + 3 sous forme de **scripts Python versionnés** dans `blender/tools/` (`render_views.py`, `check_asset.py`, `roundtrip_glb.py`) + règles de style low poly dans `AGENTS.md`, pour que les deux IA (Claude Code et Antigravity) s'en servent. Pas de skill propre à une seule IA.
-
-Sources : github.com/ozanzeng/blender-LPM-skill, github.com/majidmanzarpour/blender-game-skills, github.com/colinurbs/claude-modeling-skills, github.com/ahujasid/blender-mcp, arxiv.org/abs/2403.01248 (SceneCraft), arxiv.org/abs/2508.08228 (LL3M), BlenderGym (CVPR 2025).
-
-## Chute physique du mécha (anciens M7.3 et M7.5 « se relever », retirés de la roadmap le 2026-11-06)
-Le porteur du projet préfère pour l'instant l'effondrement à genoux de M7.2. Gardé ici pour plus tard.
-- **Ragdoll** : remplacer l'effondrement simple par des os physiques simulés sur l'hôte, pose synchronisée ; les nains dégringolent dans la cabine (gravité du monde au-delà d'une certaine inclinaison). Garder les consoles accessibles pour le QTE.
-- **Se relever après une vraie chute** : transition de la pose ragdoll vers l'animation de relèvement de M7.2.
+### Rejouer
+Rejouer les missions pour de meilleurs scores, ou finir des défis (une étoile par objectif).

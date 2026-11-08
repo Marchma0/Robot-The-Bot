@@ -3,7 +3,7 @@ extends Node
 ## QTE à deux, à tour de rôle, sur les pads à 4 flèches des consoles des jambes.
 ## Une séquence = une suite d'étapes (jambe gauche / droite + flèche). Seule l'étape en cours compte :
 ## la bonne flèche du bon joueur la valide ; toute autre flèche fait reculer la séquence un peu.
-## Générique : sert au relèvement du robot (M7.2), resservira pour les autres QTE (M7.4, M7.6…).
+## Générique : sert au relèvement du robot (M7.2), resservira pour les autres QTE (panneaux muraux M7.4, saut M7.5…).
 ##
 ## Réseau : l'hôte tient la séquence et reçoit les appuis (signal `pressed` des PushButton, déjà validés).
 ## Il synchronise l'étape en cours (`current_leg`, `current_arrow`) et l'avancement : chaque peer allume

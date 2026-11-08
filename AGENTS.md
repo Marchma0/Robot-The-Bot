@@ -5,22 +5,23 @@
 > Deux développeurs travaillent sur le projet, chacun avec sa propre IA : lire la section « Travail à deux » avant toute chose.
 
 ## Le projet en 3 lignes
-Jeu coop 3D à 4 joueurs en P2P via Steam. Quatre nains pilotent un mécha **depuis l'intérieur** :
-ils se déplacent physiquement dans le cockpit et interagissent avec des postes/panneaux pour faire bouger le mécha.
-Objectif de base : amener le mécha d'un point A à un point B. Le game design est **en exploration** (voir `docs/ideas.md`, rien n'y est validé).
+Jeu coop 3D à 4 joueurs en P2P via Steam. Quatre nains pilotent un robot géant **depuis l'intérieur** :
+ils se déplacent dans le cockpit et manipulent des commandes physiques (joysticks des jambes, postes des bras…).
+Boucle : **camp de base** (lobby : mini-jeux, marchands de skins et d'améliorations) → **une des 10 missions** de l'histoire,
+chacune avec son environnement et sa propre idée de gameplay → retour au camp.
 
-### Le mécha (validé, voir `docs/decisions.md`)
-- Robot trapu low poly, style « robot cosy mais pas trop » (métal peint, chanfreins, rivets, hublots ronds, touches de cuivre — pas d'ambiance cabane).
-- **Ventre** : 2 nains aux postes des **jambes** (une jambe chacun).
-- **Tête** : 2 nains aux postes des **mains** — main gauche **grappin** (attraper des objets), main droite **foreuse**. Ils voient dehors par les deux yeux ronds (hublots).
-- On **monte** et on **descend** entre le ventre et la tête par un **rayon tracteur** (colonne lumineuse) ; un **interrupteur à chaque étage** inverse son sens (bleu = monte, orange = descend).
-- On **sort** du robot par une **trappe** dans le plancher du ventre (on saute dedans) et on **remonte** par une **corde** qui pend jusqu'au sol. Dehors, le nain ne suit plus le mécha.
-- **Jambes** (détail complet dans `docs/design_jambes.md`) : chaque nain du ventre pilote **sa** jambe avec **un joystick**. Pousser le joystick lève le pied et déplace un **curseur au sol** ; relâcher pose le pied sur le curseur, et l'**IK** plie le genou. Tirer vers soi recule le pied, écarter sur le côté fait pivoter le bassin. L'**équilibre** est réel : un pas mal compensé fait **chuter** le robot (ragdoll). Les actions spéciales (s'accroupir, se relever, sauter) se font à des **panneaux muraux**, par des **combinaisons à deux** gravées sur les murs (aucun QTE affiché à l'écran).
-- **Postes assis (foreuse et grappin)** : seules exceptions aux commandes libres. Le nain **s'assoit** (station `Seat`) devant un **petit écran** et ne contrôle plus son personnage : la caméra fait un **traveling** jusqu'à l'écran puis passe sur la **caméra du bras**, une image **brouillée** de vieille caméra. Les deux postes se reconnaissent d'un coup d'œil (grappin : fauteuil de bureau, image verte, viseur en coins ; foreuse : siège de tracteur jaune, établi rayé jaune et noir, image ambrée, viseur rond). Les bras ne peuvent **jamais rentrer dans la coque** (angles bornés dans `MechaArmUtils`).
-- **Foreuse** : orientée à la souris / au stick, Z/S l'**étend jusqu'à 3 m**, clic maintenu fait tourner la mèche qui **mine** ce qui est minable devant elle.
-- **Grappin** : orienté et étendu de la même façon, clic = refermer la pince ; **saut = lancer la pince au bout d'un câble** (15 m) pour ramener des objets lointains.
-- **Inventaire** : ce qui est attrapé va **automatiquement** dans un **gros sac à dos** porté dans le dos du robot.
-- **Vie à bord** : le ventre est un salon (canapé où s'asseoir, télé animée, cible de fléchettes décorative, lampe qui se balance), la tête a des toilettes (mini-jeu « Poussée » pour faire caca, cacas qu'on ramasse et qu'on lance, caca légendaire doré). Intérieur usé et encombré, jamais vide.
+**Avant de toucher au gameplay, lire `docs/jeu.md`** (tout ce qui est validé : boucle, camp, missions, robot, nains).
+
+## Les documents du projet
+| Fichier | Contenu | Quand l'écrire |
+|---|---|---|
+| `AGENTS.md` | règles, conventions, procédure git, **roadmap** | règle qui change, tâche commencée ou finie |
+| `docs/jeu.md` | description **validée** du jeu | dès qu'une décision change le jeu |
+| `docs/decisions.md` | journal des décisions (date - décision - raison) | à chaque décision, dans le commit du code |
+| `docs/ideas.md` | idées **non validées**, rangées par phase | idée proposée, pas encore choisie |
+| `docs/reseau.md` | modèle réseau et recettes de synchro | avant toute interaction, objet ou niveau |
+| `README.md` | installation pour un nouveau développeur | outil ou étape d'installation qui change |
+| `addons/ADDONS.txt` | addons requis (version, source, installation) | à chaque addon ajouté |
 
 ## Stack
 - **Moteur** : Godot 4.7.x, **GDScript uniquement** (pas de C#), physique 3D **Jolt**.
@@ -49,11 +50,8 @@ scripts/
   mecha/           # contrôle, IK, équilibre, stations
   player/
   interaction/     # système générique d'interaction (stations, panneaux)
-docs/
-  ideas.md         # idées de game design NON validées
-  decisions.md     # décisions prises (date + raison)
-  reseau.md        # modèle réseau : comment synchroniser une interaction, un objet, un niveau (À LIRE)
-tests/             # scènes de test isolées (sandbox_*.tscn)
+docs/              # jeu.md, decisions.md, ideas.md, reseau.md (voir « Les documents du projet »)
+tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (tests/tools/)
 ```
 
 ## Architecture réseau — règles NON négociables
@@ -140,7 +138,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn)
    - À distance : exporter l'exe (`Godot --headless --path . --export-release "Windows Desktop" build/windows/Robot-The-Bot.exe`, puis copier `steam_appid.txt` à côté), envoyer le dossier `build/windows/` zippé, et passer par Steam (lobby / invitation) ou par un VPN type Tailscale en mode local.
    - Les deux joueurs doivent avoir **exactement la même version** (même commit de `main`, ou le même `.exe` exporté), sinon la synchro casse.
 4. Après chaque étape qui marche : proposer un message de commit git clair.
-5. Noter les décisions importantes dans `docs/decisions.md`.
+5. Noter les décisions importantes dans `docs/decisions.md` et, si elles changent le jeu, mettre à jour `docs/jeu.md`.
 
 ## Travail à deux (deux humains, deux IA)
 Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se parlent pas : **le dépôt git est leur seule mémoire commune**.
@@ -149,11 +147,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 1. `git pull` sur `main`, puis créer ou mettre à jour sa branche.
 2. Relire la roadmap ci-dessous et les dernières entrées de `docs/decisions.md` : l'autre a peut-être changé quelque chose depuis.
 
-**Où écrire quoi**
-- Règles et conventions → **ce fichier (`AGENTS.md`)**, et seulement lui. Ne jamais mettre une règle du projet dans la mémoire privée de son IA, ni dans `CLAUDE.md` ou `.agent/rules/` : l'autre IA ne la verrait pas.
-- Décision prise (technique ou game design) → `docs/decisions.md` (date - décision - raison), dans le même commit que le code concerné.
-- Idée non validée → `docs/ideas.md`.
-- Avancement → cocher la roadmap.
+**Où écrire quoi** : voir le tableau « Les documents du projet » en haut. Ne jamais mettre une règle ou une info du projet dans la mémoire privée de son IA, ni dans `CLAUDE.md` ou `.agent/rules/` : l'autre IA ne la verrait pas.
 
 **Qui fait quoi**
 - Avant de commencer un jalon ou une tâche, l'indiquer dans la roadmap avec le pseudo GitHub (ex. `[en cours — Marchma0]`) et pousser ce changement tout de suite, pour que l'autre le voie.
@@ -197,53 +191,61 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - Godot **4.7.2** pour les deux (même version, sinon les fichiers d'import changent).
 - Les chemins propres à une machine ne vont jamais dans un fichier versionné : variables d'environnement (`GODOT_PATH`) ou fichiers locaux ignorés.
 
-## Roadmap (prototype)
+## Roadmap
 
-> **À faire en priorité (Kamel / Marchma0)** : tâche S1 ci-dessous, avant toute nouvelle fonctionnalité.
+> Rangée par **phases** dans l'ordre où le jeu se construit ; on peut avancer deux phases en parallèle (une par développeur).
+> Avant de commencer une tâche : la marquer `[en cours — pseudo]` et pousser tout de suite. La cocher quand elle est fusionnée dans `main`.
+> Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-- [ ] **S1 — Synchro de toutes les interactions (PRIORITÉ, à faire par Kamel)** `[en cours — Marchma0]` : aujourd'hui, certaines actions ne sont pas vues pareil par tous les joueurs. À vérifier et corriger en multi (2 à 4 instances, hôte + clients), pour que chaque joueur voie exactement la même chose :
-  - casser des objets avec le robot (foreuse qui mine les rochers, éclats, caisse de minerai qui apparaît) ;
-  - ramasser des objets (caisses, cacas, grappin, rangement dans le sac à dos) ;
-  - plus généralement toutes les interactions : boutons, leviers, sièges, portes, mini-jeux du camp, terminal de mission.
-  Pour chaque interaction : l'hôte décide, l'état est répliqué (ou envoyé par RPC à tous), un joueur qui arrive en cours de partie voit le bon état.
-  - [x] Modèle réseau général (2026-11-08) : niveau créé par l'hôte (`LevelSpawner`), objets réseau sous `NetSpawner` (objets posés à la main repris par l'hôte), caisses synchronisées, cacas et caisses figés en mode STATIC, garde-fous (`tests/tools/net_test.sh`, F9, alerte « créé hors d'un MultiplayerSpawner »), doc `docs/reseau.md`. Test auto vert sur rochers, caisses, sac, cacas, grappin, foreuse, boutons, leviers, sièges, porte, rayon, terminal, fléchettes, bras de fer, arrivée en cours de partie et changements de niveau
+**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0)
+
+### Phase 1 — Fondations (moteur, réseau, outils)
+- [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet (héberger / rejoindre en local), 4 nains (M0)
+- [x] 1.2 Synchro lissée : lissage des autres joueurs et du robot, `physics_interpolation`, moins de trafic, ordre de calcul fixe (M6.6)
+- [x] 1.3 Interface en icônes « touche → action », police Fredoka, plus de texte d'aide brut (M6.6)
+- [ ] 1.4 **Synchro de toutes les interactions** (S1) `[en cours — Marchma0]` : chaque joueur voit exactement la même chose, y compris celui qui arrive en cours de partie
+  - [x] Modèle réseau général (2026-11-08) : niveau créé par l'hôte (`LevelSpawner`), objets sous `NetSpawner`, cacas et caisses en `FREEZE_MODE_STATIC`, garde-fous (`net_test.sh`, F9, `NetGuard`), `docs/reseau.md`. Test auto vert sur toutes les interactions existantes
   - [ ] À confirmer en vraie partie Steam (hôte + client, F9 pour comparer)
-- [x] M0 — Projet, Input Map, NetworkManager ENet (host/join local), spawn de 4 nains
-- [x] M1 — Nain contrôlable (CharacterBody3D) dans un cockpit qui bouge
-- [x] M2 — Modèles 3D low poly simples (Blender via MCP) : nain, mécha robot (ventre + tête, trou de circulation), postes → `.glb` + scènes héritées
-- [x] M3 — Système d'interaction : commandes physiques toujours actives (boutons instantanés, leviers/joysticks qu'on attrape), pas de poste verrouillant
-- [x] M4 — Animations des nains : squelette Blender + animations `idle`, `walk`, `jump`, `grab` (tenir un levier), `press` (appuyer), état synchronisé et `AnimationTree` dans Godot. Les leviers et boutons s'animent déjà selon leur état (fait en M3)
-- [ ] M5 — Steam (avancé pour tester à distance) : GodotSteam (App ID 480), choix ENet / Steam isolé dans `network_manager.gd`, lobby Steam, rejoindre par invitation ou code de lobby, export Windows (`.exe`) à envoyer aux testeurs. ENet reste disponible pour les tests locaux
-- [x] M6 — Circulation : **rayon tracteur** entre le ventre et la tête (interrupteur de sens à chaque étage), **trappe** dans le plancher du ventre pour sortir et **corde** pour remonter (on se hisse en haut), nain « dehors » qui ne suit plus le mécha, avec les animations `float` et `climb`
-- [x] M6.5 — Vie à bord (hors plan initial, ajouté en route) :
-  - [x] Commandes : la vue suit exactement l'inclinaison du levier / joystick tenu
-  - [x] Roue d'emotes (B / LB) : 8 emotes (coucou, pouce levé, pointer, applaudir, danse, je sais pas, salut nain, doigt d'honneur), gestes du haut du corps jouables en marchant, doigts et os `head` ajoutés au nain
-  - [x] Vue à la première personne : on voit son corps (pas sa tête), les yeux avancent quand on baisse le regard
-  - [x] Bulle d'état en haut à droite : mini-portrait 3D animé de son propre nain + nom de l'état
-  - [x] S'accroupir (Ctrl / B) : jambes rentrées dans la tunique, collision réduite
-  - [x] Intérieur décoré (salon du ventre, tête encombrée, hublots, usure), canapé où s'asseoir
-  - [x] Toilettes : porte manuelle, mini-jeu « Poussée », caca à ramasser / lancer (touché = recul + écran taché), caca légendaire doré
-  - [x] Lancer de caca en cloche (plus lourd) : il disparaît au premier contact dans un petit nuage de fumée marron (doré pour le légendaire), tache l'écran du nain touché
-- [x] M6.6 — Synchro lissée et interface en icônes (fait le 2026-11-06) :
-  - [x] Gravité et interactions entre joueurs : points **1 à 5** de « Synchro réseau et physique » dans `docs/ideas.md` (validés) : nain dehors synchronisé dans le monde, lissage des autres joueurs et du mécha, `physics_interpolation`, moins de trafic, ordre de calcul fixe (mécha avant nains)
-  - [x] Interface : retirer les textes d'aide bruts à l'écran (consignes, noms d'état, invites d'interaction…) et les remplacer par des **icônes**, ou au pire de **petits mots** dans une police soignée (police Fredoka, dans `assets/fonts/`)
-- [x] M6.7 — Intérieur modulaire (fait le 2026-11-06) :
-  - [x] Organisation : un fichier par objet (`blender/props/` → `assets/models/props/`), matériaux partagés, une sous-scène Godot par pièce
-  - [x] Coque : murs en tôle peinte rivetée, montants, plafond (poutres, tuyaux), sol en plaques de métal, usure (rouille, éraflures)
-  - [x] Objets : cabine et porte des toilettes en tôle, mobilier de la tête (tapis, armoire à outils, chauffe-eau), consoles des jambes et de la foreuse, fauteuil et bureau du grappin
-  - [x] Canapé du salon ; le reste du vieux décor (table basse, caisses, tonneau, tableau, cible, télé…) sera découpé en objets au fil de l'eau, quand on y touchera
-- [ ] M7 — Marche du mécha `[en cours — Marchma0]` (détail : `docs/design_jambes.md`, révisé le 2026-11-06 : marche en rythme). Tout est simulé par l'hôte : les clients n'envoient que leurs joysticks, l'état (pieds, pas en cours, corps) est synchronisé et l'IK est calculée chez chacun. Pendant M7 : ne pas toucher à `blender/mecha.blend`, `assets/models/mecha.glb` ni aux jambes
-  - [x] M7.1 — Squelette + IK + marche en rythme (fait le 2026-11-06) : jambes remodelées un peu plus longues (os `pelvis`, `leg_L_thigh`, `leg_L_shin`, `leg_L_foot`…), IK 2 os, un coup de joystick = un pas de sa jambe (haut = avance, diagonale = avance en tournant, côté = pivote, bas = recule), pas alternés = le robot avance (plus vite si on enchaîne), un seul joueur = il piétine, deux pieds en l'air interdit, désaccord de direction = il trébuche (sans tomber), marque lumineuse là où le pied va se poser. Remplace le mouvement de test
-  - [x] M7.2 — Jauge d'erreur + chute + QTE de relèvement (fait le 2026-11-06) : jauge d'erreur sur les deux consoles des jambes (monte à chaque pas décalé selon l'écart, redescend lentement), jauge pleine = le robot s'effondre à genoux ; QTE à tour de rôle sur les pads à 4 flèches (flèche allumée + voyant « à toi » jaune sur la console du joueur dont c'est le tour), jauge de QTE (mauvaise flèche = elle recule un peu, et elle se vide avec le temps : il faut enchaîner vite), QTE réussi = il se relève (animation). Système de QTE générique, réutilisé ensuite
-  - [x] Voyant « à toi » en marche : vert sur la console du joueur qui doit faire son pas, il s'éteint dès qu'il a poussé son joystick et l'autre s'allume (les deux verts au départ ou après une pause)
-  - [x] Ressenti des joysticks des jambes (poussée qui suit la souris, « clac » au pas, vue fixe) + élan du robot entre les pas ; panneau des touches des postes en haut à gauche (Tab) (fait le 2026-11-07)
-  - [x] Bras du grappin qui ne se décolle plus à fond + erreurs de joystick plus pénalisantes (fait le 2026-11-07)
-  - [ ] M7.4 — Panneaux muraux : boutons et leviers (système M3) sur les murs du ventre, QTE à deux avec le système de M7.2 (s'accroupir, se relever…)
-  - [ ] M7.5 — Saut directionnel : un joueur tient la direction au joystick pendant un QTE, trajectoire calculée par l'hôte, réception ratée = remplit la jauge d'erreur ou fait tomber
-- [x] M8 — Foreuse (fait le 2026-11-07) : levier de profondeur + bouton miner déjà en place (console de la tête), bras qui **s'étend en animation** jusqu'à 3 m (`drill_arm.py`, `drill_slider.py`, `drill_bit.py`), mèche qui tourne + étincelles, minage des éléments minables (`mineable_rock.py` dans le niveau de test, vibration, animation d'éclatement en 12 morceaux et apparition d'une caisse de minerai `CargoCrate`)
-- [x] M9 — Grappin (fait le 2026-11-07) : poste assis avec écran (`Grabber_Seat`), animation `sit`, caméra embarquée sur le poignet du bras, **bras et pince articulés animés** (`grabber_arm.py`, `grabber_slider.py`, `grabber_claw.py`), attraper un objet (`CargoCrate`, `Poop`) et l'envoyer automatiquement dans le `Backpack` (M10)
-- [x] M9.5 — Postes des bras (fait le 2026-11-07) : poste assis pour la foreuse (comme le grappin, postes bien différenciés), bras bloqués hors de la cabine, image de caméra brouillée, grappin lançable au bout d'un câble, traveling de caméra en douceur quand on s'assoit
-- [x] M10 — Inventaire (fait le 2026-11-07) : gros sac à dos dans le dos du robot (`blender/props/backpack.py`, `backpack_lid.py`, `cargo_crate.py`), les objets attrapés ou déposés y vont automatiquement avec une **animation de rangement** (le couvercle s'ouvre, l'objet décrit un arc par-dessus l'épaule jusque dans le puits du sac, le tas intérieur et la jauge arrière montent, puis le sac se referme). Modèle + stockage synchronisé (`Backpack.store_node` prêt pour M9)
-- [x] M12 — Lobby « camp minier dans un canyon » (fait le 2026-11-07) : les joueurs apparaissent dans le camp, robot au centre, terminal de mission devant lui (lance la mission test, bouton de retour au camp dans le robot), coins de mini-jeux en décor seulement (fléchettes, bras de fer, wagonnets…)
-- [x] M12.1 — Terminal plus simple (flèches pour choisir la mission + bouton lancer, plus bas) et premiers mini-jeux jouables : fléchettes, bras de fer (fait le 2026-11-07)
-- [ ] M11 — Expérimentations et réglages game design (parcours A → B, difficulté, sensations)
+- [ ] 1.5 Steam (M5) : GodotSteam (App ID 480), lobby, invitation ou code de lobby, export Windows `.exe` pour les testeurs — en place, reste à valider à distance (avec 1.4)
+- [x] 1.6 Pipeline 3D : un script Python par objet (`blender/props/`), palette partagée, planche de vues, refus des faces superposées, captures `interior_shots` (M6.7)
+
+### Phase 2 — Les nains
+- [x] 2.1 Nain contrôlable dans un cockpit qui bouge, vue à la première personne (M1)
+- [x] 2.2 Squelette et animations (`idle`, `walk`, `jump`, `grab`, `press`, `sit`…), `AnimationTree`, état synchronisé (M4)
+- [x] 2.3 Emotes (roue de 8), corps visible en première personne, bulle d'état avec portrait, s'accroupir (M6.5)
+- [ ] 2.4 Skins des nains : pièces interchangeables (barbe, casque, couleurs…), choix synchronisé et sauvegardé — vendus en 4.5
+- [ ] 2.5 Améliorations des nains : liste à définir avec le porteur du projet (pistes dans `docs/ideas.md`) — vendues en 4.6
+
+### Phase 3 — Le robot
+- [x] 3.1 Modèle low poly (ventre + tête), postes, système d'interaction (boutons, leviers, joysticks toujours actifs) (M2, M3)
+- [x] 3.2 Circulation : rayon tracteur, trappe, corde, nain dehors (M6)
+- [x] 3.3 Intérieur modulaire et vie à bord : coque en tôle, salon, canapé, télé, toilettes et mini-jeu « Poussée », cacas, caca doré (M6.5, M6.7)
+- [ ] 3.4 **Marche** (M7) `[en cours — Marchma0]` — pendant 3.4, ne pas toucher à `blender/mecha.blend`, `assets/models/mecha.glb` ni aux jambes
+  - [x] Squelette, IK 2 os, marche en rythme, voyant « à toi », élan du robot, ressenti des joysticks (M7.1)
+  - [x] Jauge d'erreur, effondrement à genoux, QTE de relèvement à tour de rôle, système de QTE générique (M7.2)
+  - [ ] Panneaux muraux : boutons et leviers sur les murs du ventre, combinaisons à deux gravées sur les murs (s'accroupir, se relever…) (M7.4)
+  - [ ] Saut directionnel : direction tenue au joystick pendant la combinaison, trajectoire calculée par l'hôte, réception ratée = jauge d'erreur ou chute (M7.5)
+- [x] 3.5 Foreuse : bras qui s'étend jusqu'à 3 m, mèche, minage des rochers, caisse de minerai (M8)
+- [x] 3.6 Grappin : pince articulée, caméra sur le bras, lancer au bout d'un câble ; postes assis des deux bras, image brouillée, bras bornés hors de la coque (M9, M9.5)
+- [x] 3.7 Sac à dos : rangement automatique animé, contenu synchronisé (M10)
+- [ ] 3.8 Skins du robot : peinture, décorations, choix synchronisé et sauvegardé — vendus en 4.5
+
+### Phase 4 — Le camp de base (lobby)
+- [x] 4.1 Camp minier dans un canyon, robot au centre, terminal de mission (flèches + bouton), retour au camp (M12, M12.1)
+- [x] 4.2 Mini-jeux : fléchettes, bras de fer (M12.1)
+- [ ] 4.3 Monnaie et sauvegarde de la partie : ce qu'on gagne en mission, ce qu'on dépense au camp, ce qui est gardé (à concevoir d'abord, pistes dans `docs/ideas.md`)
+- [ ] 4.4 Plus de mini-jeux (les wagonnets sont déjà en décor ; pistes dans `docs/ideas.md`)
+- [ ] 4.5 Marchands de skins : un pour les nains (2.4), un pour le robot (3.8)
+- [ ] 4.6 Marchand d'améliorations des nains (2.5)
+
+### Phase 5 — Les missions
+- [x] 5.1 Cadre : `MissionDirector`, niveau créé par l'hôte, mission de test (rochers, caisses) (M12, S1)
+- [ ] 5.2 Mission prototype A → B : régler le ressenti, la difficulté et la durée sur un vrai parcours (M11)
+- [ ] 5.3 Fin de mission : objectif atteint ou raté, récompenses, retour au camp (lié à 4.3)
+- [ ] 5.4 Histoire : le fil rouge des 10 missions, et la mécanique phare de chacune (à valider avec le porteur du projet)
+- [ ] 5.5 Les 10 missions, une par une (une ligne par mission ici une fois 5.4 validé) : environnement + mécanique propre + histoire
+
+### Phase 6 — Finitions
+- [ ] 6.1 Son et musique
+- [ ] 6.2 Menus et options (touches, son, graphismes)
+- [ ] 6.3 Version à distribuer sur Steam
