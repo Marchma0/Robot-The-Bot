@@ -11,7 +11,7 @@ Fiche
   - corps de manette (IronDark) avec ses deux poignées vers le pilote, deux petits boutons « start / select » ;
   - joystick en (-0.22, -0.03) : socle rond, bague en cuivre, cuvette, soufflet en dôme (pivot à 0,05 m) ;
   - croix en (0.22, 0) : socle rond + croix creuse sous les 4 pads (pads à 0,075 m du centre, posés à 0,035 m) ;
-  - cadran en (0, 0.17) : boîtier rond, fond crème, bague en cuivre (l'arc de couleur et l'aiguille sont
+  - cadran en (-0.04, 0.1), au centre du plateau (pas caché par l'écran) : boîtier rond, fond crème, bague en cuivre (l'arc de couleur et l'aiguille sont
     dessinés par leg_dashboard.gd, à 0,0215 et 0,026 m) ;
   - voyant « à toi » (marche) en (-0.22, 0.19) : posé par leg_dashboard.tscn ;
   - écran du QTE derrière la croix, centre (0.22, 0.22, 0.09), incliné de 50° vers le pilote ; la dalle
@@ -31,7 +31,7 @@ from mathutils import Matrix, Vector  # noqa: E402
 JOY = (-0.22, -0.03)
 JOY_PIVOT_Z = 0.05
 DPAD = (0.22, 0.0)
-DIAL = (0.0, 0.17)
+DIAL = (-0.04, 0.1)
 SCREEN_C = Vector((0.22, 0.22, 0.09))
 SCREEN_TILT = math.radians(-50.0)
 SCREEN_W, SCREEN_H = 0.24, 0.135

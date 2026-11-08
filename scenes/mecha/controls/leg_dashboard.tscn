@@ -50,7 +50,7 @@ script = ExtResource("1_dash")
 
 [node name="Needle" type="Node3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.026, -0.17)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.04, 0.026, -0.1)
 
 [node name="Blade" type="MeshInstance3D" parent="Needle"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.028)
