@@ -10,10 +10,19 @@ signal pressed(peer_id: int)
 
 const PRESS_DEPTH: float = 0.025
 const PRESS_DURATION: float = 0.15
+## Flèche de croix directionnelle (`arrow`) : contour d'une branche de la croix qui pointe vers -Z (haut),
+## et petit triangle clair gravé dessus. Repère du bouton (avant son échelle).
+const ARROW_ARM: PackedVector2Array = [Vector2(-0.05, -0.07), Vector2(0.05, -0.07), Vector2(0.05, 0.05),
+	Vector2(0.0, 0.09), Vector2(-0.05, 0.05)]
+const ARROW_MARK: PackedVector2Array = [Vector2(0.0, -0.055), Vector2(0.032, -0.012), Vector2(-0.032, -0.012)]
+const ARROW_MARK_COLOR: Color = Color(0.93, 0.9, 0.82)
 
 @export var cap_color: Color = Color(0.8, 0.15, 0.1)
 ## Interrupteur : un appui allume, l'appui suivant éteint.
 @export var toggle: bool = false
+## Bouton en forme de flèche de manette (croix directionnelle) : -1 = bouton rond, sinon
+## 0 haut, 1 bas, 2 gauche, 3 droite (même ordre que QteSequence.Arrow). Le socle rond est alors caché.
+@export_range(-1, 3) var arrow: int = -1
 
 ## Nombre d'appuis validés. Autorité : hôte.
 var press_count: int = 0
@@ -36,7 +45,9 @@ func _ready() -> void:
 	_cap_material.albedo_color = cap_color
 	_cap_material.roughness = 0.5
 	_cap_material.emission = cap_color
-	_cap.material_override = _cap_material
+	if arrow >= 0:
+		_make_arrow_cap()
+	_cap.set_surface_override_material(0, _cap_material)
 	_cap_rest_y = _cap.position.y
 	_debug_label.visible = show_debug
 	NetworkManager.session_ended.connect(_on_session_ended)
@@ -89,6 +100,41 @@ func _play_press() -> void:
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:
 	return [_cap]
+
+
+## Remplace le chapeau rond par une branche de croix directionnelle tournée vers `arrow`.
+func _make_arrow_cap() -> void:
+	_cap_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var mesh: ArrayMesh = ArrayMesh.new()
+	_add_prism(mesh, ARROW_ARM, -0.025, 0.025)
+	_add_prism(mesh, ARROW_MARK, 0.0245, 0.03)
+	var mark: StandardMaterial3D = StandardMaterial3D.new()
+	mark.albedo_color = ARROW_MARK_COLOR
+	mark.roughness = 0.6
+	mark.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mesh.surface_set_material(1, mark)
+	_cap.mesh = mesh
+	_cap.rotation.y = [0.0, PI, PI / 2.0, -PI / 2.0][arrow]
+	(get_node("Base") as Node3D).visible = false
+
+
+## Ajoute à `mesh` une surface : le contour convexe `outline` (x, z) extrudé de y0 à y1 (dessus + côtés).
+static func _add_prism(mesh: ArrayMesh, outline: PackedVector2Array, y0: float, y1: float) -> void:
+	var tool: SurfaceTool = SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i: int in range(1, outline.size() - 1):
+		for p: Vector2 in [outline[0], outline[i + 1], outline[i]]:
+			tool.set_normal(Vector3.UP)
+			tool.add_vertex(Vector3(p.x, y1, p.y))
+	for i: int in outline.size():
+		var a: Vector2 = outline[i]
+		var b: Vector2 = outline[(i + 1) % outline.size()]
+		var normal: Vector3 = Vector3(b.y - a.y, 0.0, a.x - b.x).normalized()
+		for p: Vector3 in [Vector3(a.x, y0, a.y), Vector3(a.x, y1, a.y), Vector3(b.x, y1, b.y),
+				Vector3(a.x, y0, a.y), Vector3(b.x, y1, b.y), Vector3(b.x, y0, b.y)]:
+			tool.set_normal(normal)
+			tool.add_vertex(p)
+	tool.commit(mesh)
 
 
 func _on_session_ended(_reason: String) -> void:

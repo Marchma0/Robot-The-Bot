@@ -81,6 +81,16 @@ func _run_host() -> void:
 	await _client_step("interrupteur du rayon (client)", "Mecha/Controls/BeamSwitch_Belly", "request_press")
 	await _client_step("porte des toilettes (client)", "Mecha/ToiletDoor/Handle", "request_toggle")
 	await _client_step("bouton du pad (client)", "Mecha/Controls/LegL_PadUp", "request_press")
+	# QTE : la séquence entière et les erreurs sont synchronisées (écran « Just Dance » des consoles).
+	var qte: QteSequence = _world.get_node("Mecha/RecoveryQte") as QteSequence
+	qte.start([Vector2i(0, QteSequence.Arrow.UP), Vector2i(1, QteSequence.Arrow.LEFT), Vector2i(0, QteSequence.Arrow.RIGHT)])
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _check("QTE lancé par l'hôte (séquence)")
+	await _client_step("QTE : mauvaise flèche (client)", "Mecha/Controls/LegL_PadDown", "request_press")
+	await _client_step("QTE : bonne flèche (client)", "Mecha/Controls/LegL_PadUp", "request_press")
+	qte.cancel()
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _check("QTE annulé")
 	await _client_step("levier attrapé (client)", "Mecha/Controls/LegL_Stick", "request_grab")
 	await _client_step("levier lâché (client)", "Mecha/Controls/LegL_Stick", "request_release")
 	await _client_step("assis au grappin (client)", "Mecha/Controls/Grabber_Seat", "request_sit")

@@ -6,8 +6,8 @@ extends Node
 ## Générique : sert au relèvement du robot (M7.2), resservira pour les autres QTE (panneaux muraux M7.4, saut M7.5…).
 ##
 ## Réseau : l'hôte tient la séquence et reçoit les appuis (signal `pressed` des PushButton, déjà validés).
-## Il synchronise l'étape en cours (`current_leg`, `current_arrow`) et l'avancement : chaque peer allume
-## lui-même la bonne flèche et la jauge (LegDashboard).
+## Il synchronise la séquence entière (`sequence`), l'étape en cours (`current_leg`, `current_arrow`),
+## l'avancement et le nombre d'erreurs : chaque peer dessine lui-même l'écran du QTE (QteScreen).
 
 signal completed
 signal mistake(leg: int)
@@ -32,6 +32,10 @@ var current_leg: int = -1
 var current_arrow: int = -1
 ## Remplissage de la jauge, en étapes (step_index au plus, baisse en continu). Autorité : hôte.
 var progress_steps: float = 0.0
+## Toute la séquence, une case par étape : jambe * 4 + flèche. Autorité : hôte (synchronisé, pour l'écran).
+var sequence: PackedInt32Array = PackedInt32Array()
+## Nombre d'erreurs depuis le début de la partie (l'écran clignote en rouge quand il change). Autorité : hôte.
+var mistake_count: int = 0
 
 var _steps: Array[Vector2i] = []
 var _grace: float = 0.0
@@ -78,6 +82,10 @@ func start(steps: Array[Vector2i]) -> void:
 	if not multiplayer.is_server() or steps.is_empty():
 		return
 	_steps = steps
+	var packed: PackedInt32Array = PackedInt32Array()
+	for step: Vector2i in steps:
+		packed.append(step.x * 4 + step.y)
+	sequence = packed
 	step_index = 0
 	progress_steps = 0.0
 	step_count = steps.size()
@@ -106,6 +114,7 @@ func _on_pad(_peer_id: int, leg: int, arrow: int) -> void:
 	else:
 		step_index = maxi(0, step_index - penalty_steps)
 		progress_steps = minf(progress_steps, float(step_index))
+		mistake_count += 1
 		mistake.emit(leg)
 	_update_current()
 

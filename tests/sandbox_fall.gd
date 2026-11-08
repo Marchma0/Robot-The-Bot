@@ -99,6 +99,8 @@ func _maybe_shoot() -> void:
 		_shoot("0_jauge_vide", _cam_inside)
 	if _qte.active and _qte.step_index >= 1 and _qte.current_leg == 0 and fmod(Time.get_ticks_msec() / 1000.0, 0.5) < 0.25:
 		_shoot("2_qte_console", _cam_inside)
+	if _qte.active and _mistake_done:
+		_shoot("7_qte_erreur", _cam_inside)
 	if _qte.active and _qte.step_index >= 2:
 		_shoot("3_a_terre", _cam_outside)
 	if _walker.phase == MechaWalker.Phase.WALKING and _qte_presses > 0 and _time > _end_time - 0.2 and _end_time > 0.0:

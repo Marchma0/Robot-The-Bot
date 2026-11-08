@@ -7,7 +7,7 @@ Fiche
   Placées par scenes/mecha/props/toilet_bowl.tscn (collision) en Godot (-1.97, 5.6, 1.4),
   tournées vers la droite du mécha (la porte de la cabine).
 - Budget : 1600 triangles.
-- Pièces : pied et cuvette (Cream), eau (Glass), lunette et abattant (Wood), charnières, tuyau de chasse (Copper),
+- Pièces : pied et cuvette (Cream), eau (Glass), lunette et abattant ovale à bord adouci (Wood), charnières, tuyau de chasse (Copper),
   réservoir (Cream) sur équerres, chaîne et poignée (Copper, Wood).
 
     blender -b --factory-startup --python blender/props/toilet_bowl.py
@@ -19,26 +19,52 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools"))
 import prop_kit as kit  # noqa: E402
+from mathutils import Matrix  # noqa: E402
 
 WALL = -0.23
 SEAT_Z = 0.37
+
+
+def lid_outline(half_w, half_h):
+    """Contour de l'abattant (x, hauteur), centré : bas presque droit aux coins arrondis (charnières),
+    haut en demi-ellipse un peu pointue, comme une vraie lunette."""
+    pts = []
+    r = 0.05
+    # coins arrondis du bas, de gauche à droite
+    for k in range(4):
+        a = math.pi + k * (math.pi / 2) / 3
+        pts.append((-half_w + r + math.cos(a) * r * 0.9, -half_h + r + math.sin(a) * r))
+    for k in range(4):
+        a = 1.5 * math.pi + k * (math.pi / 2) / 3
+        pts.append((half_w - r + math.cos(a) * r * 0.9, -half_h + r + math.sin(a) * r))
+    # côtés puis haut en ellipse (de droite à gauche), un peu plus étroit en haut
+    top_c = -half_h + r + 0.06
+    for k in range(13):
+        a = k * math.pi / 12
+        squeeze = 1.0 - 0.12 * math.sin(a)
+        pts.append((math.cos(a) * half_w * squeeze, top_c + math.sin(a) * (half_h - (top_c))))
+    return pts
 
 
 def main():
     kit.new_scene()
     b = kit.Builder("ToiletBowl")
     # pied et cuvette, un peu ovale (deux troncs de cône côte à côte vers l'avant)
-    b.cylinder((0, -0.02, 0.0), (0, -0.02, 0.18), 0.12, "Cream", 12, radius_end=0.1)
-    b.cylinder((0, 0.02, 0.17), (0, 0.02, SEAT_Z - 0.03), 0.13, "Cream", 12, radius_end=0.19)
-    b.cylinder((0, 0.02, SEAT_Z - 0.03), (0, 0.02, SEAT_Z - 0.027), 0.15, "Glass", 12)     # eau, juste sous la lunette
-    # lunette : anneau en 12 segments de bois autour du trou
-    for k in range(12):
-        a0, a1 = k * math.tau / 12, (k + 1) * math.tau / 12
+    b.cylinder((0, -0.02, 0.0), (0, -0.02, 0.18), 0.12, "Cream", 16, radius_end=0.1)
+    b.cylinder((0, 0.02, 0.17), (0, 0.02, SEAT_Z - 0.03), 0.13, "Cream", 16, radius_end=0.19)
+    b.cylinder((0, 0.02, SEAT_Z - 0.03), (0, 0.02, SEAT_Z - 0.027), 0.15, "Glass", 16)     # eau, juste sous la lunette
+    # lunette : anneau en 16 segments de bois autour du trou
+    for k in range(16):
+        a0, a1 = k * math.tau / 16, (k + 1) * math.tau / 16
         p0 = (math.cos(a0) * 0.16, 0.02 + math.sin(a0) * 0.16, SEAT_Z - 0.015)
         p1 = (math.cos(a1) * 0.16, 0.02 + math.sin(a1) * 0.16, SEAT_Z - 0.015)
         b.cylinder(p0, p1, 0.022, "Wood", 6)
-    # abattant levé contre le réservoir, charnières
-    b.tilted_box((0, WALL + 0.07, SEAT_Z + 0.2), (0.34, 0.025, 0.4), math.radians(12), "Wood")
+    # abattant levé contre le réservoir : ovale (large aux charnières, arrondi en haut), bord adouci
+    # par une 2e épaisseur un peu plus petite côté cuvette ; charnières
+    lid = (Matrix.Translation((0, WALL + 0.07, SEAT_Z + 0.2)) @ Matrix.Rotation(math.radians(12), 4, "X")
+           @ Matrix.Rotation(math.radians(90), 4, "X"))
+    b.extrude(lid_outline(0.17, 0.2), -0.0045, 0.0125, "Wood", lid)
+    b.extrude(lid_outline(0.15, 0.18), -0.0125, -0.0045, "Wood", lid)
     for x in (-0.09, 0.09):
         b.box((x - 0.02, WALL + 0.05, SEAT_Z - 0.03), (x + 0.02, WALL + 0.09, SEAT_Z), "Copper")
     b.box((-0.22, WALL, SEAT_Z - 0.05), (0.12, WALL + 0.07, SEAT_Z - 0.01), "Cream")        # raccord au mur

@@ -7,7 +7,7 @@ Fiche
 - Budget : 1500 triangles.
 - Pièces : platine ronde boulonnée au sol (IronDark), colonne (Iron) avec ressort (Copper), repose-pieds
   en anneau, coque d'assise et dossier incliné en tôle jaune (Yellow), coussins noirs (DartBlack).
-- Pas de collision solide (comme le fauteuil du grappin) : l'interaction est dans Controls/Drill_Seat.
+- Collision : scenes/mecha/props/drill_chair.tscn (assise + dossier) ; l'interaction est dans Controls/Drill_Seat.
 - Volontairement très différent du fauteuil de bureau du grappin.
 
     blender -b --factory-startup --python blender/props/drill_chair.py

@@ -48,6 +48,7 @@ PALETTE = {
     "Iron": ((0.420, 0.430, 0.460), 0.45, 0.8, 0.0),
     "IronDark": ((0.170, 0.170, 0.190), 0.55, 0.7, 0.0),
     "Lamp": ((1.000, 0.750, 0.400), 0.75, 0.0, 3.0),
+    "Neon": ((0.100, 0.850, 1.000), 0.40, 0.0, 3.0),
     "Ochre": ((0.800, 0.480, 0.240), 0.95, 0.0, 0.0),
     "Paint": ((0.290, 0.470, 0.450), 0.75, 0.0, 0.0),
     "Paper": ((0.920, 0.860, 0.700), 0.90, 0.0, 0.0),
@@ -150,6 +151,22 @@ class Builder:
         for i in range(n):
             j = (i + 1) % n
             faces.append(self.bm.faces.new((left[i], left[j], right[j], right[i])))
+        bmesh.ops.recalc_face_normals(self.bm, faces=faces)
+        index = self._index(mat_name)
+        for face in faces:
+            face.material_index = index
+
+    def extrude(self, outline_xy, z0: float, z1: float, mat_name: str, matrix=None) -> None:
+        """Forme quelconque (même creuse, ex. une croix) : contour (x, y) dans l'ordre, extrudé de z0 à z1.
+        matrix (optionnelle) place la pièce : ex. Translation @ Rotation pour la dresser ou l'incliner."""
+        matrix = matrix or Matrix.Identity(4)
+        bottom = [self.bm.verts.new(matrix @ Vector((x, y, z0))) for x, y in outline_xy]
+        top = [self.bm.verts.new(matrix @ Vector((x, y, z1))) for x, y in outline_xy]
+        faces = [self.bm.faces.new(bottom[::-1]), self.bm.faces.new(top)]
+        n = len(outline_xy)
+        for i in range(n):
+            j = (i + 1) % n
+            faces.append(self.bm.faces.new((bottom[i], bottom[j], top[j], top[i])))
         bmesh.ops.recalc_face_normals(self.bm, faces=faces)
         index = self._index(mat_name)
         for face in faces:

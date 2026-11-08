@@ -1,22 +1,19 @@
 class_name LegDashboard
 extends Node3D
-## Tableau de bord d'une console de jambe : cadran de la jauge d'erreur, jauge de QTE,
-## voyant « à toi » et flèche du pad à presser.
+## Tableau de bord d'une console de jambe (habillage façon manette : leg_controls.glb) : cadran de la jauge
+## d'erreur, voyant « à toi » (marche) et écran du QTE (QteScreen, façon « Just Dance »).
 ## Purement visuel : chaque peer l'affiche à partir de l'état synchronisé (MechaWalker, QteSequence).
 ## Le nœud est posé sur le plateau incliné de la console (X vers la droite, Y vers le haut du plateau,
 ## Z vers le pilote).
 
-## Couleurs du voyant « à toi » : vert = fais ton pas (marche), jaune = ton tour dans le QTE.
+## Couleur du voyant « à toi » : vert = fais ton pas (marche). Pendant un QTE, c'est l'écran qui guide.
 const LAMP_STEP: Color = Color(0.3, 1.0, 0.35)
-const LAMP_QTE: Color = Color(1.0, 0.8, 0.2)
 
 
 ## 0 = console de la jambe gauche, 1 = droite.
 @export var leg: int = 0
 @export var walker: MechaWalker
 @export var qte: QteSequence
-## Pads de cette console, dans l'ordre : haut, bas, gauche, droite.
-@export var pads: Array[PushButton] = []
 ## Débattement de l'aiguille (degrés de chaque côté du centre).
 @export var needle_sweep_degrees: float = 120.0
 ## Cadran : centre (repère du tableau de bord), rayons de l'arc de couleur, hauteur au-dessus du plateau.
@@ -27,23 +24,19 @@ const LAMP_QTE: Color = Color(1.0, 0.8, 0.2)
 @export var danger_from: float = 0.8
 
 var _shown_error: float = 0.0
-var _shown_progress: float = 0.0
 var _lamp_material: StandardMaterial3D
-var _fill_material: StandardMaterial3D
 var _end_stop_material: StandardMaterial3D
 
 @onready var _needle: Node3D = %Needle
-@onready var _fill: MeshInstance3D = %QteFill
 @onready var _lamp: MeshInstance3D = %TurnLamp
-@onready var _fill_left: float = _fill.position.x - (_fill.mesh as BoxMesh).size.x / 2.0
-@onready var _fill_width: float = (_fill.mesh as BoxMesh).size.x
+@onready var _screen: MeshInstance3D = %Screen
+@onready var _viewport: SubViewport = %ScreenViewport
 
 
 func _ready() -> void:
 	_lamp_material = (_lamp.mesh as Mesh).surface_get_material(0).duplicate() as StandardMaterial3D
 	_lamp.material_override = _lamp_material
-	_fill_material = (_fill.mesh as Mesh).surface_get_material(0).duplicate() as StandardMaterial3D
-	_fill.material_override = _fill_material
+	_build_screen()
 	_build_dial()
 
 
@@ -58,24 +51,23 @@ func _process(delta: float) -> void:
 	# Butée de chute : elle clignote quand l'aiguille entre dans le rouge.
 	var danger: bool = _shown_error >= danger_from and fmod(Time.get_ticks_msec() / 1000.0, 0.4) < 0.2
 	_end_stop_material.emission_energy_multiplier = 4.0 if danger else 0.6
-	# Jauge de QTE : se remplit de gauche à droite.
-	_shown_progress = lerpf(_shown_progress, qte.get_progress() if qte.active else 0.0, k)
-	_fill.visible = _shown_progress > 0.005
-	_fill.scale.x = maxf(0.001, _shown_progress)
-	_fill.position.x = _fill_left + _fill_width * _shown_progress / 2.0
-	# Voyant « à toi ». QTE : jaune qui clignote + flèche allumée. Marche : vert fixe tant que c'est
-	# à moi de faire mon pas (il s'éteint dès que j'ai poussé mon joystick, l'autre s'allume).
-	var my_turn: bool = qte.active and qte.current_leg == leg
-	var blink: bool = fmod(Time.get_ticks_msec() / 1000.0, 0.5) < 0.3
+	# Voyant « à toi » : vert fixe tant que c'est à moi de faire mon pas (il s'éteint dès que j'ai poussé
+	# mon joystick, l'autre s'allume).
 	var my_step: bool = not qte.active and walker.phase == MechaWalker.Phase.WALKING \
 		and (walker.next_leg == -1 or walker.next_leg == leg)
-	var lamp_color: Color = LAMP_STEP if my_step else LAMP_QTE
-	_lamp_material.emission = lamp_color
-	_lamp_material.albedo_color = lamp_color.darkened(0.55)
-	_lamp_material.emission_enabled = (my_turn and blink) or my_step
-	_fill_material.emission_energy_multiplier = 1.5 if qte.active else 0.3
-	for arrow: int in pads.size():
-		pads[arrow].lit = my_turn and qte.current_arrow == arrow
+	_lamp_material.emission = LAMP_STEP
+	_lamp_material.albedo_color = LAMP_STEP.darkened(0.55)
+	_lamp_material.emission_enabled = my_step
+
+
+## Écran du QTE : l'image du SubViewport (dessinée par QteScreen) affichée sur la dalle, sans ombrage.
+func _build_screen() -> void:
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_texture = _viewport.get_texture()
+	_screen.material_override = material
+	if qte != null:
+		(%QteScreen as QteScreen).setup(qte, leg)
 
 
 ## Arc de couleur autour de l'aiguille (vert = début, jaune, rouge = chute) + butées de début et de fin.

@@ -228,7 +228,11 @@ func _physics_process(delta: float) -> void:
 	var seat: Seat = _interactor.get_seat()
 	if seat == null:
 		_seat_yaw = 0.0   # prochain siège : on part face à l'avant du siège
-		_glide_seat = null
+		if _glide_seat != null:
+			# On vient de se lever : on revient là d'où on s'est assis (les chaises ont une collision,
+			# debout sur place on se retrouverait perché dessus).
+			global_position = (_glide_seat.global_transform * _sit_from).origin
+			_glide_seat = null
 	_camera_rig.update_view(seat)
 	_route_hints()
 	if not (seat is Toilet) and _hud.poop_game.is_active():
