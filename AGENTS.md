@@ -215,7 +215,6 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
   - [x] Ménage (2026-11-08) : une seule façon de retrouver le nain d'un joueur (`Dwarf.of_peer`) et son nom (« Joueur N » partout), petites bidouilles retirées, pieds du robot typés, scènes de test obsolètes supprimées, vérifications automatiques + `tests/tools/run_tests.sh`. Le script à la racine du robot attend les skins du robot (3.8)
   - [x] Système d'interaction (2026-11-08) : chaque commande gère son utilisation (`Interactable.interact`), l'Interactor n'a plus de liste de types ; l'hôte refuse qu'un joueur tienne ou occupe deux choses à la fois (`Possession`) ; le test réseau vérifie vraiment que chaque demande a un effet
   - [x] Nain découpé (2026-11-08) : apparence (`DwarfLook`, où iront les skins), caméra (`DwarfCamera`), corde (`DwarfClimb`) ; interface du joueur dans `scenes/ui/player_hud.tscn`, créée seulement pour le joueur local ; `dwarf.gd` passe de 780 à 590 lignes
-  - [ ] Fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte et sauvegarde — conception à valider avec le porteur du projet
   - [x] Base commune des bras (2026-11-08) : `MechaArm` (visée depuis le poste, limites, caméra, remise à zéro), `DrillArm` et `GrabberArm` n'ont plus que leur outil
   - [x] Traduction (2026-11-08) : textes visibles passés par `tr()`, tableau `assets/translations/texts.csv` (54 textes, fr + en), le jeu suit la langue du système (menu de langue : 6.2), vérification dans `run_tests.sh`
   - [ ] Dette de `mecha.blend` (après 3.4) : retirer les anciens bras et l'ancienne console de `mecha_shell.py`, découper le vieux décor en objets avec leur collision, supprimer `MechaArmUtils.strip_*`
@@ -244,7 +243,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 ### Phase 4 — Le camp de base (lobby)
 - [x] 4.1 Camp minier dans un canyon, robot au centre, terminal de mission (flèches + bouton), retour au camp (M12, M12.1)
 - [x] 4.2 Mini-jeux : fléchettes, bras de fer (M12.1)
-- [ ] 4.3 Monnaie et sauvegarde de la partie : ce qu'on gagne en mission, ce qu'on dépense au camp, ce qui est gardé (à concevoir d'abord, pistes dans `docs/ideas.md`)
+- [ ] 4.3 Monnaie et sauvegarde de la partie (économie reportée par le porteur du projet le 2026-11-08) : fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte, sauvegarde **chez l'hôte** (validé) ; argent par nain ou commun : à décider
 - [ ] 4.4 Plus de mini-jeux (les wagonnets sont déjà en décor ; pistes dans `docs/ideas.md`)
 - [ ] 4.5 Marchands de skins : un pour les nains (2.4), un pour le robot (3.8)
 - [ ] 4.6 Marchand d'améliorations des nains (2.5)

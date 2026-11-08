@@ -23,6 +23,8 @@
 - **Mini-jeux** jouables : fléchettes, bras de fer (machine à bras mécaniques). Les wagonnets sont du décor pour l'instant.
 - **À venir** : marchand de skins des nains, marchand de skins du robot, marchand d'améliorations des nains,
   d'autres mini-jeux.
+- **Sauvegarde** : tout est gardé chez l'hôte (une partie = une sauvegarde de l'hôte) ; un ami qui revient dans
+  la partie retrouve son nain et ses achats. L'économie (argent, prix) sera conçue plus tard.
 
 ## Les missions
 - 10 missions, une histoire qui les relie.
