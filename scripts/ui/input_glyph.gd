@@ -24,6 +24,11 @@ const PAD_BUTTON_NAMES: Dictionary[int, String] = {
 	JOY_BUTTON_LEFT_SHOULDER: "LB", JOY_BUTTON_RIGHT_SHOULDER: "RB",
 	JOY_BUTTON_LEFT_STICK: "L3", JOY_BUTTON_RIGHT_STICK: "R3",
 }
+## Croix directionnelle : la branche à surligner pour chaque bouton.
+const DPAD_DIRECTIONS: Dictionary[int, Vector2] = {
+	JOY_BUTTON_DPAD_UP: Vector2.UP, JOY_BUTTON_DPAD_DOWN: Vector2.DOWN,
+	JOY_BUTTON_DPAD_LEFT: Vector2.LEFT, JOY_BUTTON_DPAD_RIGHT: Vector2.RIGHT,
+}
 const KEY_NAMES: Dictionary[String, String] = {
 	"Space": "Espace", "Escape": "Échap", "Ctrl": "Ctrl", "Shift": "Maj", "Enter": "Entrée",
 }
@@ -80,6 +85,8 @@ func _draw() -> void:
 				_draw_pill(rect, part["text"], font)
 			&"stick":
 				_draw_stick(rect, part["text"], font)
+			&"dpad":
+				_draw_dpad(rect, DPAD_DIRECTIONS[int(part["text"])])
 		x += width + GAP
 
 
@@ -121,6 +128,8 @@ func _part_for_event(event: InputEvent) -> Dictionary:
 			var index: int = (event as InputEventJoypadButton).button_index
 			if index < FACE_BUTTONS.size():
 				return _part(&"face", FACE_BUTTONS[index]["text"], HEIGHT, FACE_BUTTONS[index]["color"])
+			if DPAD_DIRECTIONS.has(index):
+				return _part(&"dpad", str(index), HEIGHT)
 			return _pill(PAD_BUTTON_NAMES.get(index, "?"))
 		if event is InputEventJoypadMotion:
 			var axis: int = (event as InputEventJoypadMotion).axis
@@ -215,6 +224,20 @@ func _draw_stick(rect: Rect2, text: String, font: Font) -> void:
 		draw_colored_polygon(PackedVector2Array([tip, tip - dir * 4.0 + side, tip - dir * 4.0 - side]), COLOR_COPPER)
 	var text_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
 	draw_string(font, center + Vector2(-text_width / 2.0, 5.5), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, COLOR_FACE)
+
+
+## Croix directionnelle grise, la branche du bouton en cuivre.
+func _draw_dpad(rect: Rect2, direction: Vector2) -> void:
+	var center: Vector2 = rect.get_center()
+	var arm: float = HEIGHT / 2.0 - 1.0
+	var half: float = 6.5
+	for horizontal: bool in [true, false]:
+		var box: Rect2 = Rect2(center - Vector2(arm, half), Vector2(arm * 2.0, half * 2.0)) if horizontal \
+			else Rect2(center - Vector2(half, arm), Vector2(half * 2.0, arm * 2.0))
+		_draw_round(box, COLOR_PAD, 3, COLOR_INK, 2)
+	var tip: Vector2 = center + direction * (arm - 3.0)
+	var side: Vector2 = Vector2(direction.y, direction.x) * 4.5
+	draw_colored_polygon(PackedVector2Array([tip, tip - direction * 7.0 + side, tip - direction * 7.0 - side]), COLOR_COPPER)
 
 
 func _draw_round(rect: Rect2, color: Color, radius: int, border: Color = Color.TRANSPARENT, border_width: int = 0) -> void:

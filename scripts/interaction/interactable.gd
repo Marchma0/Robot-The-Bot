@@ -43,6 +43,12 @@ func interact(_press: bool, _grab: bool, _hands_free: bool) -> Use:
 	return Use.NONE
 
 
+## Vrai si on ne peut pas l'utiliser avec un objet de l'inventaire en main (levier, siège, corde…) :
+## l'Interactor ne la propose pas tant que la main n'est pas vide. À surcharger.
+func needs_empty_hands() -> bool:
+	return false
+
+
 ## Après `Use.CLAIM` : l'objet que le joueur va tenir ou occuper (lui-même, ou ex. le caca de sa poignée).
 func get_claim() -> Node:
 	return self

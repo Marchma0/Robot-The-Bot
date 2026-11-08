@@ -1,14 +1,15 @@
 class_name Poop
 extends RigidBody3D
-## Caca : se ramasse (E), se tient dans la main, se lance (clic) ou se pose (E).
+## Caca : se ramasse (E) dans une case de l'inventaire (Inventory) ; dans la case choisie, il est en main :
+## il se lance (clic) ou se pose (G). Dans une autre case, il est rangé (caché).
 ## Lancé, il part en cloche (lourd) et disparaît dans un petit nuage de fumée dès qu'il touche
 ## quelque chose. Un nain touché a l'écran taché quelques secondes. Posé, il reste au sol.
 ##
 ## Réseau : l'hôte est autoritaire. Il simule le vol (corps rigide), décide qui le tient
-## (`holder_peer_id`, répliqué) et détecte les contacts. Au contact, il envoie `play_burst`
+## (`holder_peer_id` et sa case `holder_slot`, répliqués) et détecte les contacts. Au contact, il envoie `play_burst`
 ## à tout le monde (chacun joue le nuage chez lui) puis supprime le caca (le spawner le retire
 ## chez les clients). Les clients ne simulent rien : ils reçoivent la position, et placent
-## eux-mêmes le caca dans la main de celui qui le tient.
+## eux-mêmes le caca dans la main de celui qui le tient (ou le cachent s'il est rangé).
 ## Au repos (ou tenu), le corps est figé et suit le mécha (enfant de Mecha/Props).
 ## Sa place (repère de Mecha/Props) est envoyée par `net_place` et appliquée par les clients à chaque
 ## étape physique. Figé en mode STATIC : en mode KINEMATIC, Jolt réécrit parfois une ancienne place
@@ -29,6 +30,8 @@ const LIFETIME: float = 120.0
 
 ## Peer qui le tient (0 = personne). Autorité : hôte.
 var holder_peer_id: int = 0
+## Case de l'inventaire du porteur où il est rangé (voir Inventory). Autorité : hôte.
+var holder_slot: int = 0
 ## Caca légendaire (doré, brillant, ne disparaît pas au sol). Fixé à la création.
 ## Lancé, il disparaît comme les autres (provisoire, voir docs/decisions.md).
 var golden: bool = false:
@@ -61,7 +64,7 @@ var _has_received_place: bool = false
 
 func _ready() -> void:
 	add_to_group(&"poops")
-	add_to_group(Possession.GROUP)
+	add_to_group(Inventory.GROUP)
 	freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
 	freeze = true
 	contact_monitor = true
@@ -77,6 +80,12 @@ func _physics_process(delta: float) -> void:
 			transform = _received_place
 		return
 	_age += delta
+	if holder_peer_id != 0 and Dwarf.of_peer(holder_peer_id) == null:
+		# Son porteur est parti : le caca tombe là où il était.
+		holder_peer_id = 0
+		_flying = true
+		_slow_time = 0.0
+		freeze = false
 	if _flying:
 		# Il s'arrête : on le refige pour qu'il suive de nouveau le mécha.
 		_slow_time = _slow_time + delta if linear_velocity.length() < 0.3 else 0.0
@@ -94,10 +103,11 @@ func _process(_delta: float) -> void:
 	if physics_interpolation_mode != held_mode:
 		physics_interpolation_mode = held_mode
 		reset_physics_interpolation()
-	if holder_peer_id != 0:
-		var dwarf: Dwarf = Dwarf.of_peer(holder_peer_id)
-		if dwarf != null:
-			global_transform = dwarf.get_hold_transform()
+	var dwarf: Dwarf = Dwarf.of_peer(holder_peer_id)
+	# Rangé dans une autre case que celle en main : caché (il suit quand même la main).
+	visible = holder_peer_id == 0 or (dwarf != null and dwarf.hand_slot == holder_slot)
+	if dwarf != null:
+		global_transform = dwarf.get_hold_transform()
 	if _gold_material != null:
 		# Scintillement du caca doré.
 		var shine: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.006)
@@ -114,6 +124,24 @@ func is_held_locally() -> bool:
 	return holder_peer_id != 0 and holder_peer_id == multiplayer.get_unique_id()
 
 
+## Inventaire (voir Inventory) : une case pour ce caca, chez son porteur.
+func inventory_entries(peer_id: int) -> Array[Dictionary]:
+	if holder_peer_id != peer_id:
+		return []
+	return [{"slot": holder_slot, "icon": &"poop_gold" if golden else &"poop", "count": 1}]
+
+
+## Joueur local, caca en main : le lancer dans la direction du regard.
+func throw_from_hand(_origin: Vector3, direction: Vector3) -> void:
+	request_throw.rpc_id(1, direction)
+
+
+## Joueur local, caca en main : le poser.
+func drop_from_hand() -> void:
+	request_throw.rpc_id(1, Vector3.ZERO)
+
+
+## Ramasser dans une case libre de l'inventaire (celle en main si elle est libre).
 @rpc("any_peer", "call_local", "reliable")
 func request_pick() -> void:
 	if not multiplayer.is_server():
@@ -124,20 +152,24 @@ func request_pick() -> void:
 		return
 	if dwarf.global_position.distance_to(global_position) > PICK_REACH:
 		return
-	if Possession.is_peer_busy(get_tree(), sender):
-		return   # il tient ou occupe déjà autre chose (un seul caca à la fois)
+	if Possession.holds_control(get_tree(), sender):
+		return   # assis, sur la corde ou un levier en main
+	var slot: int = Inventory.free_slot(get_tree(), sender)
+	if slot < 0:
+		return   # inventaire plein
+	holder_slot = slot
 	holder_peer_id = sender
 	freeze = true
 	_age = 0.0
 
 
-## Lancer dans la direction du regard, ou poser (direction nulle).
+## Lancer dans la direction du regard, ou poser (direction nulle). Seulement s'il est en main.
 @rpc("any_peer", "call_local", "reliable")
 func request_throw(direction: Vector3) -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
-	if sender != holder_peer_id:
+	if sender != holder_peer_id or Inventory.hand_slot_of(sender) != holder_slot:
 		return
 	var dwarf: Dwarf = Dwarf.of_peer(sender)
 	if dwarf != null:

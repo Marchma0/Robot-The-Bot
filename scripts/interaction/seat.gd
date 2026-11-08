@@ -119,6 +119,11 @@ func get_hints() -> Array[InputHint]:
 	return [InputHint.make(&"grab", &"sit")]
 
 
+## Demande la main vide (voir Interactable.needs_empty_hands).
+func needs_empty_hands() -> bool:
+	return true
+
+
 ## S'asseoir (E ou clic, mains libres) : on va l'occuper.
 func interact(press: bool, grab: bool, hands_free: bool) -> Use:
 	if not (press or grab) or not hands_free:

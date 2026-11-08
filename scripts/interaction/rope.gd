@@ -63,6 +63,11 @@ func get_hints() -> Array[InputHint]:
 	return [InputHint.make(&"grab", &"climb")]
 
 
+## Demande la main vide (voir Interactable.needs_empty_hands).
+func needs_empty_hands() -> bool:
+	return true
+
+
 ## Attraper la corde (clic / RT maintenu, mains libres) : on y grimpe.
 func interact(_press: bool, grab: bool, hands_free: bool) -> Use:
 	if not grab or not hands_free:

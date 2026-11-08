@@ -2,6 +2,7 @@ class_name DartHandle
 extends Interactable
 ## Une fléchette du jeu du robot (DartsGame). Plantée quelque part (cible, mur…) : la viser permet de
 ## prendre toutes les fléchettes libres. Plantée dans un nain : un autre nain la vise pour la lui retirer.
+## Dans les deux cas, elles vont dans une case de l'inventaire de celui qui les prend.
 ## Placée et montrée par DartsGame à partir de son état synchronisé.
 
 var game: DartsGame
@@ -16,7 +17,7 @@ func set_pickable(pickable: bool) -> void:
 	_shape.disabled = not pickable
 
 
-func interact(press: bool, grab: bool, hands_free: bool) -> Use:
+func interact(press: bool, grab: bool, _hands_free: bool) -> Use:
 	if not (press or grab) or game == null:
 		return Use.NONE
 	if game.dart_where[index] == DartsGame.Where.IN_DWARF:
@@ -24,29 +25,16 @@ func interact(press: bool, grab: bool, hands_free: bool) -> Use:
 			return Use.NONE
 		game.request_pull.rpc_id(1, index)
 		return Use.DONE
-	if not hands_free:
-		return Use.NONE
 	game.request_take.rpc_id(1)
-	return Use.CLAIM
-
-
-func get_claim() -> Node:
-	return game
+	return Use.DONE
 
 
 func get_hints() -> Array[InputHint]:
 	if game == null:
 		return []
-	if game.dart_where[index] == DartsGame.Where.IN_DWARF:
-		if game.dart_peer[index] == multiplayer.get_unique_id():
-			return []
-		return [InputHint.make(&"grab", &"hand_grab")]
-	if game.thrower_peer_id == 0:
-		return [InputHint.make(&"grab", &"hand_grab")]
-	# Pas de « a if c else b » ici : avec des tableaux, GDScript renvoie un Array non typé.
-	if game.is_thrower_locally():
+	if game.dart_where[index] == DartsGame.Where.IN_DWARF and game.dart_peer[index] == multiplayer.get_unique_id():
 		return []
-	return [InputHint.state(&"locked")]
+	return [InputHint.make(&"interact", &"dart")]
 
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:

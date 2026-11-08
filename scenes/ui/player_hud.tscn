@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/ui/poop_minigame.gd" id="7_poopgame"]
 [ext_resource type="Script" path="res://scripts/ui/dart_blind_overlay.gd" id="8_dartblind"]
 [ext_resource type="Script" path="res://scripts/ui/hurt_overlay.gd" id="9_hurt"]
+[ext_resource type="Script" path="res://scripts/ui/inventory_bar.gd" id="10_invbar"]
 
 [node name="PlayerHud" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -58,21 +59,38 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -320.0
-offset_top = -118.0
+offset_top = -160.0
 offset_right = 320.0
-offset_bottom = -66.0
+offset_bottom = -108.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
 alignment = 1
 script = ExtResource("2_hintbar")
 
+[node name="InventoryBar" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -96.0
+offset_right = 200.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+alignment = 1
+script = ExtResource("10_invbar")
+
 [node name="HintPanel" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
 offset_left = 22.0
-offset_top = 22.0
+offset_top = 78.0
 offset_right = 222.0
-offset_bottom = 222.0
+offset_bottom = 278.0
 mouse_filter = 2
 script = ExtResource("3_hintpanel")
 

@@ -2,10 +2,11 @@ extends Node3D
 ## Bac à sable des fléchettes du robot (3.9) : un vrai nain (hors réseau, on est l'hôte) prend les fléchettes
 ## plantées dans la cible du salon, lance dans le mille, puis à côté, puis sur un allié (nain du joueur 2) ;
 ## le total s'affiche ; il retire la fléchette de la tête de l'allié. Puis une fléchette plantée dans son
-## propre nain lui brouille la vue, et il ne peut pas se l'enlever lui-même.
+## propre nain lui brouille la vue, et il ne peut pas se l'enlever lui-même. Enfin, l'inventaire (5 cacas).
 ## Captures dans build/views/darts_*.png.
 
 const DWARF_SCENE: PackedScene = preload("res://scenes/player/dwarf.tscn")
+const POOP_SCENE: PackedScene = preload("res://scenes/props/poop.tscn")
 
 @export var quit_when_done: bool = true
 
@@ -29,7 +30,12 @@ func _ready() -> void:
 
 	_darts.request_take.rpc_id(1)
 	await _wait(0.2)
-	TestCheck.expect(_darts.thrower_peer_id == 1 and _darts.darts_in_hand() == 3, "on prend les 3 fléchettes d'un coup")
+	TestCheck.expect(_darts.darts_held_by(1) == 3, "on prend les 3 fléchettes d'un coup")
+	var first: Dictionary = Inventory.slots_of(get_tree(), 1)[0]
+	TestCheck.expect(not first.is_empty() and first["icon"] == &"dart" and first["count"] == 3, "les 3 fléchettes prennent une seule case de l'inventaire")
+	(_dwarf.get_node("%Camera") as Camera3D).current = true
+	await TestCheck.frame_drawn(get_tree())
+	TestCheck.save_view(get_viewport(), "res://build/views/darts_0b_en_main.png")
 
 	await _throw_at(_darts.to_global(Vector3(0.0, 0.0, DartsGame.BOARD_FRONT_Z)))
 	await _shot("1_dans_le_mille", Vector3(-0.5, 3.75, 0.8), Vector3(0.0, 3.85, 1.9), 0.25)
@@ -58,7 +64,11 @@ func _ready() -> void:
 
 	_darts.request_pull.rpc_id(1, in_ally)
 	await _wait(0.3)
-	TestCheck.expect(in_ally >= 0 and _darts.dart_where[in_ally] == DartsGame.Where.PLANTED, "on retire la fléchette de l'allié : elle retourne sur la cible")
+	TestCheck.expect(in_ally >= 0 and _darts.dart_where[in_ally] == DartsGame.Where.IN_HAND and _darts.darts_held_by(1) == 1,
+		"on retire la fléchette de l'allié : elle va dans notre inventaire")
+	_darts.request_release.rpc_id(1)
+	await _wait(0.2)
+	TestCheck.expect(_darts.darts_held_by(1) == 0 and _darts.dart_where[in_ally] == DartsGame.Where.PLANTED, "G : elle retourne sur la cible")
 
 	# Une fléchette en plein visage (elle arrive de face) : vue brouillée, et on ne peut pas se l'enlever soi-même.
 	var facing: Vector3 = -_dwarf.view_transform().basis.z
@@ -95,8 +105,50 @@ func _ready() -> void:
 	await _shot("6_plantees_allie_vue", Vector3(0.6, 3.6, -1.6), _mecha.to_local(_dwarf.global_position) + Vector3(0.0, 0.7, 0.0))
 	_darts._put_on_board(1)
 	_darts._put_on_board(2)
+	await _inventory_checks()
 	if quit_when_done or TestCheck.is_auto():
 		TestCheck.finish(get_tree())
+
+
+## Inventaire : 5 cacas remplissent les 5 cases, un 6e est refusé ; seul celui de la case choisie est en main
+## (visible, seul à pouvoir être lancé) ; avec un objet en main, on ne peut pas s'asseoir.
+func _inventory_checks() -> void:
+	var poops: Array[Poop] = []
+	for i: int in Inventory.SIZE + 1:
+		var poop: Poop = POOP_SCENE.instantiate() as Poop
+		_mecha.get_node("Props").add_child(poop, true)
+		poop.global_position = _dwarf.global_position + _mecha.global_basis.x * 0.3
+		poops.append(poop)
+	await _wait(0.1)
+	for poop: Poop in poops:
+		poop.request_pick.rpc_id(1)
+		await _wait(0.05)
+	var slots: Array[Dictionary] = Inventory.slots_of(get_tree(), 1)
+	var full: bool = true
+	for slot: Dictionary in slots:
+		full = full and not slot.is_empty() and slot["icon"] == &"poop"
+	TestCheck.expect(full and poops[0].holder_slot == 0 and poops[4].holder_slot == 4, "5 cacas : un par case, dans l'ordre")
+	TestCheck.expect(poops[5].holder_peer_id == 0, "inventaire plein : le 6e caca reste par terre")
+	_darts.request_take.rpc_id(1)
+	await _wait(0.1)
+	TestCheck.expect(_darts.darts_held_by(1) == 0, "inventaire plein : on ne peut pas prendre les fléchettes")
+	_dwarf.hand_slot = 2
+	await _wait(0.1)
+	TestCheck.expect(poops[2].visible and not poops[0].visible, "seul le caca de la case choisie est en main")
+	(_dwarf.get_node("%Camera") as Camera3D).current = true   # la vue du joueur, barre d'inventaire en bas
+	await TestCheck.frame_drawn(get_tree())
+	await TestCheck.frame_drawn(get_tree())
+	TestCheck.save_view(get_viewport(), "res://build/views/darts_7_inventaire.png")
+	poops[0].request_throw.rpc_id(1, Vector3.FORWARD)
+	await _wait(0.1)
+	TestCheck.expect(poops[0].holder_peer_id == 1, "un caca rangé (pas en main) ne se lance pas")
+	TestCheck.expect(Possession.is_peer_busy(get_tree(), 1), "objet en main : levier, siège et corde refusés")
+	poops[2].request_throw.rpc_id(1, Vector3.ZERO)
+	await _wait(0.1)
+	TestCheck.expect(poops[2].holder_peer_id == 0 and not Possession.is_peer_busy(get_tree(), 1), "G : on pose le caca, la main est vide")
+	for poop: Poop in poops:
+		if is_instance_valid(poop):
+			poop.queue_free()
 
 
 func _spawn(peer: int, slot: int, at: Vector3) -> Dwarf:

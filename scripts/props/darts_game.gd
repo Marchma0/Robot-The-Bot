@@ -1,17 +1,21 @@
 class_name DartsGame
 extends Node3D
 ## Jeu de fléchettes du robot, sur la cible du salon (ventre). Trois fléchettes (DartHandle), plantées dans
-## la cible au départ. On vise la cible (DartsTake) ou une fléchette plantée pour prendre toutes les fléchettes
-## libres d'un coup, puis on lance au regard (clic), de n'importe où dans le robot. La fléchette part en cloche
+## la cible au départ. On vise la cible (DartsTake) ou une fléchette plantée (E) pour prendre toutes les fléchettes
+## libres d'un coup : elles vont ensemble dans une case de l'inventaire (Inventory). Case en main, on lance au
+## regard (clic), de n'importe où dans le robot ; G les repose sur la cible. La fléchette part en cloche
 ## et se plante là où elle tape : la cible (points selon l'anneau, « Dans le mille ! » au centre), un mur,
 ## un meuble… ou un autre nain : plantée au visage (de face, à hauteur de tête), il a la vue brouillée ; ailleurs
 ## (casque, corps), il a juste un flash rouge de douleur. Dans tous les cas, un autre nain doit venir la lui
-## retirer (elle retourne sur la cible). Les scores s'écrivent à la craie sur l'ardoise d'à côté (`ChalkScoreboard`).
+## retirer : elle va dans l'inventaire de celui qui la retire (sur la cible s'il n'a plus de place).
+## Une manche = les lancers d'un même joueur (3 au plus) ; elle se termine quand il n'a plus de fléchette en main,
+## qu'il les repose, ou qu'un autre lance. Les scores s'écrivent à la craie sur l'ardoise d'à côté (`ChalkScoreboard`).
 ##
 ## Réseau : prendre, poser, lancer et retirer passent par des RPC vers l'hôte, qui vérifie, calcule le vol
 ## (rayons contre le monde et les nains) et le score, puis envoie le vol à tout le monde (`_show_throw`) :
-## chaque peer anime la fléchette lui-même. L'hôte tient (synchronisé) qui lance, les scores de la manche,
-## les dernières manches et la place de chaque fléchette (`dart_where`, `dart_pos`, `dart_dir`, `dart_peer`).
+## chaque peer anime la fléchette lui-même. L'hôte tient (synchronisé) le lanceur de la manche, ses scores,
+## les dernières manches et la place de chaque fléchette (`dart_where`, `dart_pos`, `dart_dir`, `dart_peer`,
+## `dart_slot` : la case de l'inventaire de celui qui l'a en main).
 ## Repère : celui de la cible (centre de la cible contre le mur, elle regarde vers -Z).
 
 enum Where { PLANTED, IN_HAND, IN_DWARF }
@@ -47,7 +51,7 @@ const FACE_CONE_COS: float = 0.5
 ## Manches gardées sur l'ardoise.
 const HISTORY_SIZE: int = 4
 
-## Joueur qui a les fléchettes en main (0 = personne). Autorité : hôte.
+## Joueur dont la manche est en cours (0 = personne). Autorité : hôte.
 var thrower_peer_id: int = 0
 var thrower_name: String = ""
 ## Points de chaque lancer de la manche en cours. Autorité : hôte.
@@ -62,14 +66,17 @@ var dart_where: PackedInt32Array = PackedInt32Array()
 ## Pointe et direction de chaque fléchette : repère du jeu (PLANTED) ou de la tête du nain touché (IN_DWARF).
 var dart_pos: PackedVector3Array = PackedVector3Array()
 var dart_dir: PackedVector3Array = PackedVector3Array()
-## Nain dans lequel la fléchette est plantée (IN_DWARF), sinon 0.
+## Nain dans lequel la fléchette est plantée (IN_DWARF) ou qui l'a sur lui (IN_HAND), sinon 0.
 var dart_peer: PackedInt32Array = PackedInt32Array()
+## Case de l'inventaire de ce nain (IN_HAND). Les fléchettes d'un même nain sont toutes dans la même case.
+var dart_slot: PackedInt32Array = PackedInt32Array()
 ## Où elle est plantée dans ce nain (Spot), si IN_DWARF.
 var dart_spot: PackedInt32Array = PackedInt32Array()
 
 var _darts: Array[DartHandle] = []
 var _flights: Array[Dictionary] = []
-var _hand_dart: Node3D
+## Fléchette montrée dans la main de chaque nain qui en a en main (une par nain au plus).
+var _hand_darts: Array[Node3D] = []
 ## Hôte : fin de manche dans ce temps (s), -1 = pas de manche qui se termine.
 var _round_end_timer: float = -1.0
 var _blind_shown: bool = false
@@ -89,11 +96,13 @@ func _ready() -> void:
 		_darts.append(dart)
 		_flights.append({})
 	_put_all_on_board()
-	_hand_dart = DART_MODEL.instantiate() as Node3D
-	_hand_dart.top_level = true
-	_hand_dart.visible = false
-	add_child(_hand_dart)
-	add_to_group(Possession.GROUP)
+	for i: int in DART_COUNT:
+		var hand_dart: Node3D = DART_MODEL.instantiate() as Node3D
+		hand_dart.top_level = true
+		hand_dart.visible = false
+		add_child(hand_dart)
+		_hand_darts.append(hand_dart)
+	add_to_group(Inventory.GROUP)
 	NetworkManager.session_ended.connect(_on_session_ended)
 
 
@@ -102,14 +111,13 @@ func _physics_process(delta: float) -> void:
 		return
 	if _round_end_timer >= 0.0:
 		_round_end_timer -= delta
-		if _round_end_timer < 0.0:
+		if _round_end_timer < 0.0 and darts_held_by(thrower_peer_id) == 0:
 			_end_round()
-	# Joueur parti : ses fléchettes retournent sur la cible.
+	# Joueur parti : sa manche se termine, ses fléchettes retournent sur la cible.
 	if thrower_peer_id != 0 and Dwarf.of_peer(thrower_peer_id) == null:
-		_return_held_darts()
 		_end_round()
 	for i: int in DART_COUNT:
-		if dart_where[i] == Where.IN_DWARF and Dwarf.of_peer(dart_peer[i]) == null:
+		if dart_where[i] != Where.PLANTED and Dwarf.of_peer(dart_peer[i]) == null:
 			_put_on_board(i)
 
 
@@ -142,54 +150,93 @@ func _process(delta: float) -> void:
 		if local != null:
 			_blind_shown = blind
 			local.set_dart_blind(blind)
-	# Fléchette dans la main de celui qui lance (s'il lui en reste).
-	var holder: Dwarf = Dwarf.of_peer(thrower_peer_id)
-	_hand_dart.visible = holder != null and darts_in_hand() > 0
-	if _hand_dart.visible:
-		_hand_dart.global_transform = holder.get_hold_transform()
+	# Une fléchette dans la main de chaque nain dont la case des fléchettes est en main.
+	var shown: int = 0
+	var holders: PackedInt32Array = PackedInt32Array()
+	for i: int in DART_COUNT:
+		if dart_where[i] != Where.IN_HAND or dart_peer[i] in holders:
+			continue
+		holders.append(dart_peer[i])
+		var holder: Dwarf = Dwarf.of_peer(dart_peer[i])
+		if holder != null and holder.hand_slot == dart_slot[i]:
+			_hand_darts[shown].visible = true
+			_hand_darts[shown].global_transform = holder.get_hold_transform()
+			shown += 1
+	for k: int in range(shown, DART_COUNT):
+		_hand_darts[k].visible = false
 	_update_effects(delta)
 
 
-## Vrai si le joueur local a les fléchettes en main.
-func is_thrower_locally() -> bool:
-	return thrower_peer_id != 0 and thrower_peer_id == multiplayer.get_unique_id()
-
-
+## Nombre de fléchettes sur des nains (dans leur inventaire).
 func darts_in_hand() -> int:
 	return dart_where.count(Where.IN_HAND)
 
 
-## Prendre toutes les fléchettes libres (plantées ailleurs que dans un nain).
+## Nombre de fléchettes dans l'inventaire du joueur `peer_id`.
+func darts_held_by(peer_id: int) -> int:
+	var count: int = 0
+	for i: int in DART_COUNT:
+		if dart_where[i] == Where.IN_HAND and dart_peer[i] == peer_id:
+			count += 1
+	return count
+
+
+## Vrai s'il reste des fléchettes à prendre (plantées ailleurs que dans un nain).
+func has_free_darts() -> bool:
+	return dart_where.has(Where.PLANTED)
+
+
+## Inventaire (voir Inventory) : une case pour toutes les fléchettes de ce joueur.
+func inventory_entries(peer_id: int) -> Array[Dictionary]:
+	var count: int = darts_held_by(peer_id)
+	if count == 0:
+		return []
+	return [{"slot": _slot_of(peer_id), "icon": &"dart", "count": count}]
+
+
+## Joueur local, fléchettes en main : en lancer une (`origin` = les yeux, `direction` = le regard).
+func throw_from_hand(origin: Vector3, direction: Vector3) -> void:
+	request_throw.rpc_id(1, origin, direction)
+
+
+## Joueur local, fléchettes en main : les reposer sur la cible.
+func drop_from_hand() -> void:
+	request_release.rpc_id(1)
+
+
+## Prendre toutes les fléchettes libres (plantées ailleurs que dans un nain) : elles vont dans la case des
+## fléchettes du joueur s'il en a déjà, sinon dans une case libre.
 @rpc("any_peer", "call_local", "reliable")
 func request_take() -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
 	var dwarf: Dwarf = Dwarf.of_peer(sender)
-	if dwarf == null or thrower_peer_id != 0 or _round_end_timer >= 0.0 or not _near_a_dart(dwarf):
+	if dwarf == null or not has_free_darts() or not _near_a_dart(dwarf):
 		return
-	if dart_where.count(Where.PLANTED) == 0 or Possession.is_peer_busy(get_tree(), sender, self):
-		return
-	var where: PackedInt32Array = dart_where
+	if Possession.holds_control(get_tree(), sender):
+		return   # assis, sur la corde ou un levier en main
+	var slot: int = _slot_for(sender)
+	if slot < 0:
+		return   # inventaire plein
 	for i: int in DART_COUNT:
-		if where[i] == Where.PLANTED:
-			where[i] = Where.IN_HAND
-	dart_where = where
-	thrower_peer_id = sender
-	thrower_name = dwarf.get_display_name()
-	round_scores = PackedInt32Array()
-	round_done = false
+		if dart_where[i] == Where.PLANTED:
+			_give(i, sender, slot)
 
 
-## Poser : les fléchettes encore en main retournent sur la cible.
+## Poser : les fléchettes du joueur (case en main) retournent sur la cible.
 @rpc("any_peer", "call_local", "reliable")
 func request_release() -> void:
-	if not multiplayer.is_server() or multiplayer.get_remote_sender_id() != thrower_peer_id:
+	if not multiplayer.is_server():
 		return
-	if _round_end_timer >= 0.0:
-		return   # la manche se termine déjà
-	_return_held_darts()
-	_end_round()
+	var sender: int = multiplayer.get_remote_sender_id()
+	if darts_held_by(sender) == 0 or Inventory.hand_slot_of(sender) != _slot_of(sender):
+		return
+	for i: int in DART_COUNT:
+		if dart_where[i] == Where.IN_HAND and dart_peer[i] == sender:
+			_put_on_board(i)
+	if sender == thrower_peer_id:
+		_end_round()
 
 
 ## Lancer (hôte) : `origin` = les yeux du lanceur, `direction` = où il regarde (global).
@@ -199,11 +246,15 @@ func request_throw(origin: Vector3, direction: Vector3) -> void:
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
 	var dwarf: Dwarf = Dwarf.of_peer(sender)
-	var index: int = dart_where.find(Where.IN_HAND)
-	if sender != thrower_peer_id or dwarf == null or index < 0 or direction.length() < 0.1:
+	var index: int = _first_held_by(sender)
+	if dwarf == null or index < 0 or direction.length() < 0.1:
 		return
+	if Inventory.hand_slot_of(sender) != dart_slot[index]:
+		return   # les fléchettes sont rangées dans une autre case
 	if dwarf.global_position.distance_to(origin) > 2.0:
 		return   # yeux trop loin du nain
+	if sender != thrower_peer_id or round_done or round_scores.size() >= DART_COUNT:
+		_start_round(sender, dwarf)
 	var velocity: Vector3 = direction.normalized() * THROW_SPEED
 	var result: Dictionary = _simulate(origin, velocity, dwarf)
 	var scores: PackedInt32Array = round_scores
@@ -212,11 +263,12 @@ func request_throw(origin: Vector3, direction: Vector3) -> void:
 	_land(index, result)
 	_show_throw.rpc(index, to_local(origin), global_basis.inverse() * velocity, result["time"],
 		result["score"] == BULLSEYE_POINTS)
-	if darts_in_hand() == 0:
+	if darts_held_by(sender) == 0:
 		_round_end_timer = result["time"] + 0.4
 
 
-## Retirer la fléchette `index` plantée dans un autre nain : elle retourne sur la cible.
+## Retirer la fléchette `index` plantée dans un autre nain : elle va dans l'inventaire de celui qui la retire
+## (avec ses autres fléchettes, sinon dans une case libre), ou sur la cible s'il n'a plus de place.
 @rpc("any_peer", "call_local", "reliable")
 func request_pull(index: int) -> void:
 	if not multiplayer.is_server() or index < 0 or index >= DART_COUNT or dart_where[index] != Where.IN_DWARF:
@@ -228,7 +280,11 @@ func request_pull(index: int) -> void:
 		return   # on ne peut pas se l'enlever soi-même
 	if victim != null and puller.global_position.distance_to(victim.global_position) > PULL_REACH:
 		return
-	_put_on_board(index)
+	var slot: int = -1 if Possession.holds_control(get_tree(), sender) else _slot_for(sender)
+	if slot < 0:
+		_put_on_board(index)
+	else:
+		_give(index, sender, slot)
 
 
 ## Chez tout le monde : la fléchette `index` vole de `origin` (vitesse `velocity`, repère du jeu) pendant `time`.
@@ -338,12 +394,14 @@ func _put_all_on_board() -> void:
 	dart_dir = PackedVector3Array()
 	dart_peer = PackedInt32Array()
 	dart_spot = PackedInt32Array()
+	dart_slot = PackedInt32Array()
 	for i: int in DART_COUNT:
 		dart_where.append(Where.PLANTED)
 		dart_pos.append(Vector3.ZERO)
 		dart_dir.append(Vector3.FORWARD)
 		dart_peer.append(0)
 		dart_spot.append(Spot.HEAD)
+		dart_slot.append(0)
 		_put_on_board(i)
 
 
@@ -368,10 +426,46 @@ func _put_on_board(index: int) -> void:
 	dart_spot = spots
 
 
-func _return_held_darts() -> void:
+## Hôte : la fléchette `index` va dans la case `slot` de l'inventaire du joueur `peer_id`.
+func _give(index: int, peer_id: int, slot: int) -> void:
+	var where: PackedInt32Array = dart_where
+	var peer: PackedInt32Array = dart_peer
+	var slots: PackedInt32Array = dart_slot
+	where[index] = Where.IN_HAND
+	peer[index] = peer_id
+	slots[index] = slot
+	dart_where = where
+	dart_peer = peer
+	dart_slot = slots
+
+
+## Case des fléchettes du joueur `peer_id` (-1 s'il n'en a pas).
+func _slot_of(peer_id: int) -> int:
+	var index: int = _first_held_by(peer_id)
+	return dart_slot[index] if index >= 0 else -1
+
+
+## Hôte : où ranger des fléchettes du joueur `peer_id` : avec les siennes, sinon une case libre (-1 = plein).
+func _slot_for(peer_id: int) -> int:
+	var slot: int = _slot_of(peer_id)
+	return slot if slot >= 0 else Inventory.free_slot(get_tree(), peer_id)
+
+
+func _first_held_by(peer_id: int) -> int:
 	for i: int in DART_COUNT:
-		if dart_where[i] == Where.IN_HAND:
-			_put_on_board(i)
+		if dart_where[i] == Where.IN_HAND and dart_peer[i] == peer_id:
+			return i
+	return -1
+
+
+## Hôte : le joueur lance la première fléchette d'une nouvelle manche ; la manche en cours (d'un autre) se termine.
+func _start_round(peer_id: int, dwarf: Dwarf) -> void:
+	_end_round()
+	_round_end_timer = -1.0
+	thrower_peer_id = peer_id
+	thrower_name = dwarf.get_display_name()
+	round_scores = PackedInt32Array()
+	round_done = false
 
 
 func _near_a_dart(dwarf: Dwarf) -> bool:

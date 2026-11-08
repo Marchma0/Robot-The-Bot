@@ -115,6 +115,7 @@ func _run_host() -> void:
 	arm.grab_node(_world.get_node("Mecha/Props").get_child(0) as Node3D, "poop")
 	await get_tree().create_timer(STEP_WAIT * 3.0).timeout
 	await _check("caca attrapé par le grappin et rangé dans le sac")
+	await _inventory_steps()
 
 	_director._travel(&"lobby")
 	await get_tree().create_timer(STEP_WAIT * 2.0).timeout
@@ -141,6 +142,44 @@ func _run_host() -> void:
 	get_tree().quit(0 if _failures == 0 else 1)
 
 
+## Inventaire du client : deux cacas dans deux cases, changement de case, lancer d'un caca rangé refusé,
+## levier refusé avec un caca en main, puis les deux cacas posés (G).
+func _inventory_steps() -> void:
+	_toilet()._drop_poop(false)
+	_toilet()._drop_poop(false)
+	await get_tree().create_timer(STEP_WAIT).timeout
+	var poops: Array[String] = []
+	for node: Node in get_tree().get_nodes_in_group(&"poops"):
+		if (node as Poop).holder_peer_id == 0:
+			poops.append(str(_world.get_path_to(node)))
+	await _client_step("inventaire : 1er caca dans la case 1 (client)", poops[0], "request_pick")
+	await _client_step("inventaire : 2e caca dans la case 2 (client)", poops[1], "request_pick")
+	if (_world.get_node(poops[1]) as Poop).holder_slot != 1:
+		_failures += 1
+		_log("ÉCHEC  inventaire : le 2e caca n'est pas dans la case 2")
+	await _client_hand_slot(1)
+	await _client_refused("inventaire : le caca rangé ne se lance pas (client)", poops[0], "request_throw", true, [Vector3.FORWARD])
+	await _client_step("inventaire : caca de la case 2 posé (client)", poops[1], "request_throw", [Vector3.ZERO])
+	await _client_hand_slot(0)
+	# À portée du levier d'abord (le caca en main bouge avec le nain), puis la demande, qui doit être refusée.
+	_client_action.rpc_id(_client_id, "Mecha/Controls/LegL_Stick", "goto", [])
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _client_refused("caca en main : le levier est refusé (client)", "Mecha/Controls/LegL_Stick", "request_grab")
+	await _client_step("inventaire : caca de la case 1 posé (client)", poops[0], "request_throw", [Vector3.ZERO])
+
+
+## Le client choisit une case (touche 1 à 5) : l'hôte doit la voir sur son nain (propriété du client, répliquée).
+func _client_hand_slot(slot: int) -> void:
+	var step: String = "inventaire : case %d choisie (client)" % (slot + 1)
+	_client_action.rpc_id(_client_id, "Mecha/Players/%d" % _client_id, "hand_slot", [slot])
+	await get_tree().create_timer(STEP_WAIT).timeout
+	if Dwarf.of_peer(_client_id).hand_slot != slot:
+		_failures += 1
+		_log("ÉCHEC  %s : l'hôte ne voit pas la case choisie" % step)
+		return
+	await _check(step)
+
+
 ## Fléchette plantée dans le nain du client (l'hôte simule le coup), puis le nain de l'hôte la lui retire.
 func _dart_in_client_step() -> void:
 	var darts: DartsGame = _world.get_node("Mecha/Controls/Darts") as DartsGame
@@ -162,7 +201,13 @@ func _dart_in_client_step() -> void:
 	await get_tree().create_timer(0.6).timeout
 	darts.request_pull.rpc_id(1, 0)
 	await get_tree().create_timer(STEP_WAIT).timeout
-	await _check("fléchette retirée par l'hôte")
+	if darts.darts_held_by(1) != 1:
+		_failures += 1
+		_log("ÉCHEC  fléchette retirée : pas dans l'inventaire de l'hôte")
+	await _check("fléchette retirée par l'hôte (dans son inventaire)")
+	darts.request_release.rpc_id(1)
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _check("fléchette reposée sur la cible par l'hôte")
 
 
 ## Fait faire une action au client, vérifie que l'hôte l'a appliquée, puis compare.
@@ -180,9 +225,9 @@ func _client_step(step: String, path: String, action: String, args: Array = []) 
 
 ## Fait faire au client une demande que l'hôte doit refuser : rien ne doit changer.
 ## `stay` : le client ne se rapproche pas de l'objet (sinon il se place à portée, comme une étape normale).
-func _client_refused(step: String, path: String, action: String, stay: bool = true) -> void:
+func _client_refused(step: String, path: String, action: String, stay: bool = true, args: Array = []) -> void:
 	var before: Dictionary = NetAudit.snapshot(_world, true)
-	_client_action.rpc_id(_client_id, path, ("stay:" if stay else "") + action, [])
+	_client_action.rpc_id(_client_id, path, ("stay:" if stay else "") + action, args)
 	await get_tree().create_timer(STEP_WAIT).timeout
 	var diffs: PackedStringArray = NetAudit.diff(before, NetAudit.snapshot(_world, true))
 	if diffs.is_empty():
@@ -243,6 +288,14 @@ func _client_action(path: String, action: String, args: Array) -> void:
 		target.callv(&"rpc_id", [1, action.trim_prefix("stay:")] + args)
 		return
 	match action:
+		"hand_slot":
+			(target as Dwarf).hand_slot = args[0]   # touche 1 à 5 : le nain du client, répliqué
+		"goto":
+			# Se placer à portée sans rien demander.
+			var walker: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
+			var near: Vector3 = target.global_position + target.global_basis.z * 0.8
+			walker.global_position = near
+			walker.set(&"_world_position", near)
 		"drive":
 			# Assis : on envoie les commandes du poste pendant une seconde, comme le nain assis.
 			for i: int in range(30):

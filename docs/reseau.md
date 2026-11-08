@@ -45,8 +45,13 @@ Hériter d'`Interactable` (ou d'une commande existante) et surcharger `interact(
 elle envoie la RPC `request_xxx` vers l'hôte et renvoie `Use.DONE` (action instantanée) ou `Use.CLAIM`
 (objet qu'on va tenir ou occuper). L'`Interactor` n'a pas à changer. L'hôte vérifie `is_peer_in_reach` ;
 les variables d'état vont dans le `MultiplayerSynchronizer` de sa scène.
-Un objet qu'on **tient ou occupe** (levier, siège, corde, caca, fléchettes) : groupe `Possession.GROUP`,
-une ligne dans `Possession.holder_of`, et l'hôte refuse la demande si `Possession.is_peer_busy` (une seule chose à la fois).
+Un objet qu'on **tient ou occupe** (levier, siège, corde) : groupe `Possession.GROUP`,
+une ligne dans `Possession.holder_of`, surcharger `needs_empty_hands` (vrai), et l'hôte refuse la demande si
+`Possession.is_peer_busy` (une seule chose à la fois, main vide).
+Un objet qu'on **met dans l'inventaire** (caca, fléchettes) : groupe `Inventory.GROUP`, l'objet garde lui-même
+qui l'a et dans quelle case (variables synchronisées) et a les méthodes `inventory_entries`, `throw_from_hand`,
+`drop_from_hand` (voir `scripts/player/inventory.gd`) ; à la demande, l'hôte prend la case `Inventory.free_slot`
+(refus si -1 ou `Possession.holds_control`). La case choisie (`Dwarf.hand_slot`) est écrite par le joueur et répliquée.
 Le robot est dans `main.tscn` : ses commandes existent déjà chez tout le monde.
 
 ### Un objet qu'on ramasse, qui casse, qui apparaît (caisse, caca…)
