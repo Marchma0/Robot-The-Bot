@@ -3,7 +3,8 @@ extends Node3D
 ## Jeu de dames de la table basse du salon (règles : CheckersRules). On vise un de ses pions (E / clic) :
 ## il est entouré et ses coups possibles s'allument ; on vise ensuite la case d'arrivée. Le premier joueur
 ## qui joue un côté le garde jusqu'à la fin de la partie (seul, on peut jouer les deux). En fin de partie,
-## les pions du gagnant sautillent et le bouton « nouvelle partie » de la table s'allume.
+## les pions du gagnant sautillent et la pendule d'échecs posée à côté sonne ; on appuie
+## dessus pour une nouvelle partie (CheckersClock, qui montre aussi à qui de jouer).
 ##
 ## Réseau : chaque clic est une demande à l'hôte (`request_cell`), qui vérifie (portée, tour, coup permis)
 ## et tient l'état synchronisé : damier, tour, pion choisi, rafle en cours, gagnant, joueur de chaque côté.
@@ -26,8 +27,6 @@ const SELECT_COLOR: Color = Color(1.0, 0.85, 0.25)
 const TARGET_COLOR: Color = Color(0.45, 1.0, 0.45)
 ## Plus de coups possibles d'une seule pièce (dame au centre).
 const MAX_TARGETS: int = 13
-
-@export var reset_button: PushButton
 
 ## Damier (CheckersRules.Piece par case). Autorité : hôte.
 var board: PackedByteArray = CheckersRules.start_board()
@@ -75,8 +74,6 @@ func _ready() -> void:
 	for i: int in MAX_TARGETS:
 		_target_dots.append(_make_marker(_dot_mesh(), TARGET_COLOR))
 	_rebuild_pieces()
-	if reset_button != null:
-		reset_button.pressed.connect(_on_reset_pressed)
 	NetworkManager.session_ended.connect(_on_session_ended)
 
 
@@ -98,8 +95,6 @@ func _process(delta: float) -> void:
 	_update_anims(delta)
 	_update_markers()
 	_celebrate()
-	if reset_button != null:
-		reset_button.lit = winner >= 0
 
 
 ## Centre d'une case, au ras du damier (repère de la table).
@@ -200,8 +195,13 @@ func _play(move: Dictionary) -> void:
 		winner = 1 - turn
 
 
-func _on_reset_pressed(_peer_id: int) -> void:
-	reset_game()
+## Nouvelle partie demandée par un joueur (il appuie sur la pendule).
+@rpc("any_peer", "call_local", "reliable")
+func request_new_game() -> void:
+	if not multiplayer.is_server():
+		return
+	if Dwarf.is_peer_near(multiplayer.get_remote_sender_id(), to_global(cell_position(27)), REACH):
+		reset_game()
 
 
 func _on_session_ended(_reason: String) -> void:

@@ -87,7 +87,8 @@
   fléchette plantée dans le casque et la vue brouillée : un autre nain doit venir la lui retirer.
 - **Jeu de dames** sur la table basse du salon, à deux (ou seul contre soi-même) : on vise un pion puis sa case
   d'arrivée ; règles à la française simplifiées (prise obligatoire en avant et en arrière, rafles, dame volante),
-  le premier qui joue un côté le garde ; bouton « nouvelle partie » sur la table.
+  le premier qui joue un côté le garde ; une pendule d'échecs à côté du damier montre à qui de jouer, sonne en fin
+  de partie, et on appuie dessus pour une nouvelle partie.
 - **À venir** : skins (vendus au camp), améliorations (vendues au camp).
 
 ## Principes qui valent partout

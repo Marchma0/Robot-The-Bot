@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://assets/models/props/coffee_table.glb" id="1_model"]
 [ext_resource type="Script" path="res://scripts/props/checkers_game.gd" id="2_checkers"]
-[ext_resource type="PackedScene" path="res://scenes/mecha/controls/push_button.tscn" id="3_button"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/chess_clock.tscn" id="3_clock"]
 
 [sub_resource type="BoxShape3D" id="Shape_0"]
 size = Vector3(0.45, 0.34, 0.55)
@@ -38,15 +38,12 @@ sync_to_physics = false
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0)
 shape = SubResource("Shape_0")
 
-[node name="Checkers" type="Node3D" parent="." node_paths=PackedStringArray("reset_button")]
+[node name="Checkers" type="Node3D" parent="."]
 script = ExtResource("2_checkers")
-reset_button = NodePath("NewGame")
 
-[node name="NewGame" parent="Checkers" instance=ExtResource("3_button")]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -0.13, 0.34, -0.19)
-display_name = "Nouvelle partie"
-cap_color = Color(0.2, 0.55, 0.85, 1)
-show_debug = false
+[node name="ChessClock" parent="Checkers" node_paths=PackedStringArray("game") instance=ExtResource("3_clock")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -0.08, 0.34, -0.19)
+game = NodePath("..")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="Checkers"]
 replication_config = SubResource("SceneReplicationConfig_checkers")

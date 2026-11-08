@@ -62,8 +62,9 @@ func _ready() -> void:
 	_click(_cell(4, 7))
 	TestCheck.expect(_game.selected == -1, "partie finie : plus rien ne se joue")
 	await _shot("3_victoire", 0.6)
+	await _shot_at("4_pendule_sonne", Vector3(-1.45, 3.12, -0.27), Vector3(-1.105, 2.99, -0.265))
 
-	(_game.get_node("NewGame") as PushButton).request_press.rpc_id(1)
+	_game.request_new_game.rpc_id(1)   # comme un appui sur la pendule
 	await _wait(0.6)
 	TestCheck.expect(_game.winner == -1 and _game.board.count(P.RED) == 12 and _game.turn == CheckersRules.Side.RED, "nouvelle partie : tout est remis en place")
 	TestCheck.expect(_game.find_children("", "Node3D", false, false).size() > 0, "pions affichés")
@@ -84,6 +85,14 @@ func _shot(shot_name: String, delay: float = 0.45) -> void:
 	_cam.global_position = _mecha.global_transform * Vector3(-1.025, 3.45, 0.42)
 	_cam.look_at(_mecha.global_transform * Vector3(-1.025, 2.94, 0.06), _mecha.global_basis.y)
 	_cam.current = true
+	await TestCheck.frame_drawn(get_tree())
+	await TestCheck.frame_drawn(get_tree())
+	TestCheck.save_view(get_viewport(), "res://build/views/checkers_%s.png" % shot_name)
+
+
+func _shot_at(shot_name: String, from: Vector3, to: Vector3) -> void:
+	_cam.global_position = _mecha.global_transform * from
+	_cam.look_at(_mecha.global_transform * to, _mecha.global_basis.y)
 	await TestCheck.frame_drawn(get_tree())
 	await TestCheck.frame_drawn(get_tree())
 	TestCheck.save_view(get_viewport(), "res://build/views/checkers_%s.png" % shot_name)
