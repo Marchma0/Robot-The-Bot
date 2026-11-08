@@ -1,9 +1,31 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://assets/models/props/coffee_table.glb" id="1_model"]
+[ext_resource type="Script" path="res://scripts/props/checkers_game.gd" id="2_checkers"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/controls/push_button.tscn" id="3_button"]
 
 [sub_resource type="BoxShape3D" id="Shape_0"]
 size = Vector3(0.45, 0.34, 0.55)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_checkers"]
+properties/0/path = NodePath(".:board")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:turn")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:selected")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:chain")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:winner")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:side_peers")
+properties/5/spawn = true
+properties/5/replication_mode = 2
 
 [node name="CoffeeTable" type="Node3D"]
 
@@ -15,3 +37,17 @@ sync_to_physics = false
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0)
 shape = SubResource("Shape_0")
+
+[node name="Checkers" type="Node3D" parent="." node_paths=PackedStringArray("reset_button")]
+script = ExtResource("2_checkers")
+reset_button = NodePath("NewGame")
+
+[node name="NewGame" parent="Checkers" instance=ExtResource("3_button")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -0.13, 0.34, -0.19)
+display_name = "Nouvelle partie"
+cap_color = Color(0.2, 0.55, 0.85, 1)
+show_debug = false
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="Checkers"]
+replication_config = SubResource("SceneReplicationConfig_checkers")
+replication_interval = 0.05

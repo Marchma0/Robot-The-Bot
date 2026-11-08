@@ -81,6 +81,8 @@ func _run_host() -> void:
 	await _client_step("interrupteur du rayon (client)", "Mecha/Controls/BeamSwitch_Belly", "request_press")
 	await _client_step("porte des toilettes (client)", "Mecha/ToiletDoor/Handle", "request_toggle")
 	await _client_step("télé éteinte (client)", "Mecha/InteriorBelly/TvSet/Power", "request_press")
+	await _client_step("dames : pion choisi (client)", "Mecha/InteriorBelly/CoffeeTable/Checkers", "request_cell", [17])
+	await _client_step("dames : pion joué (client)", "Mecha/InteriorBelly/CoffeeTable/Checkers", "request_cell", [26])
 	await _client_step("bouton du pad (client)", "Mecha/Controls/LegL_PadUp", "request_press")
 	# QTE : la séquence entière et les erreurs sont synchronisées (écran « Just Dance » des consoles).
 	var qte: QteSequence = _world.get_node("Mecha/RecoveryQte") as QteSequence
