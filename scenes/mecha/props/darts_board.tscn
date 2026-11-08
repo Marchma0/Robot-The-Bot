@@ -1,0 +1,121 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/darts_game.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/models/props/dartboard_wall.glb" id="2_board"]
+[ext_resource type="Script" path="res://scripts/props/darts_take.gd" id="3_take"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_board"]
+height = 0.04
+radius = 0.25
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_take"]
+size = Vector3(0.6, 0.6, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_confetti"]
+vertex_color_use_as_albedo = true
+cull_mode = 2
+
+[sub_resource type="QuadMesh" id="QuadMesh_confetti"]
+material = SubResource("StandardMaterial3D_confetti")
+size = Vector2(0.03, 0.02)
+
+[sub_resource type="Gradient" id="Gradient_confetti"]
+offsets = PackedFloat32Array(0, 0.25, 0.5, 0.75, 1)
+colors = PackedColorArray(1, 0.3, 0.3, 1, 1, 0.85, 0.2, 1, 0.3, 0.9, 0.4, 1, 0.3, 0.7, 1, 1, 0.9, 0.4, 1, 1)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_darts"]
+properties/0/path = NodePath(".:thrower_peer_id")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:thrower_name")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:round_scores")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:dart_where")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:dart_pos")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:dart_dir")
+properties/5/spawn = true
+properties/5/replication_mode = 2
+properties/6/path = NodePath(".:dart_peer")
+properties/6/spawn = true
+properties/6/replication_mode = 2
+
+[node name="DartsBoard" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Model" parent="." instance=ExtResource("2_board")]
+
+[node name="BoardBody" type="AnimatableBody3D" parent="."]
+unique_name_in_owner = true
+sync_to_physics = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BoardBody"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, -0.02)
+shape = SubResource("CylinderShape3D_board")
+
+[node name="Take" type="Area3D" parent="." node_paths=PackedStringArray("game")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1)
+script = ExtResource("3_take")
+game = NodePath("..")
+display_name = "Fléchettes"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Take"]
+shape = SubResource("BoxShape3D_take")
+
+[node name="ScorePop" type="Label3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -0.15)
+billboard = 1
+pixel_size = 0.0025
+modulate = Color(1, 0.95, 0.8, 1)
+outline_modulate = Color(0.15, 0.08, 0.03, 1)
+font_size = 64
+outline_size = 14
+
+[node name="Cheer" type="Label3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, -0.2)
+billboard = 1
+pixel_size = 0.003
+modulate = Color(1, 0.85, 0.2, 1)
+outline_modulate = Color(0.45, 0.1, 0.02, 1)
+font_size = 72
+outline_size = 18
+text = "Dans le mille !"
+
+[node name="Confetti" type="CPUParticles3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.08)
+emitting = false
+amount = 80
+lifetime = 1.6
+one_shot = true
+explosiveness = 0.95
+mesh = SubResource("QuadMesh_confetti")
+direction = Vector3(0, 0.6, -1)
+spread = 60.0
+gravity = Vector3(0, -3, 0)
+initial_velocity_min = 1.5
+initial_velocity_max = 3.0
+angular_velocity_min = -400.0
+angular_velocity_max = 400.0
+damping_min = 1.0
+damping_max = 2.0
+color_initial_ramp = SubResource("Gradient_confetti")
+
+[node name="Flash" type="OmniLight3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.4)
+light_color = Color(1, 0.85, 0.4, 1)
+light_energy = 0.0
+omni_range = 2.5
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_darts")
+replication_interval = 0.1

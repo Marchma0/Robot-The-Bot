@@ -47,7 +47,6 @@ Tirez !,Tirez !,Pull!
 %s gagne !,%s gagne !,%s wins!
 BRAS DE FER,BRAS DE FER,ARM WRESTLING
 asseyez-vous à deux,asseyez-vous à deux,two players: take a seat
-FLÉCHETTES,FLÉCHETTES,DARTS
 Terrain d'essai,Terrain d'essai,Test ground
 à bord : %d / %d,à bord : %d / %d,aboard: %d / %d
 Montez à bord !  %d,Montez à bord !  %d,All aboard!  %d
@@ -58,3 +57,6 @@ Bouton vert : partir,Bouton vert : partir,Green button: go
 Prêt,Prêt,Ready
 Raté !,Raté !,Missed!
 Bravo !,Bravo !,Well done!
+Dans le mille !,Dans le mille !,Bullseye!
+%s : %d points,%s : %d points,%s: %d points
+Une fléchette dans la tête ! Un allié doit te l'enlever.,Une fléchette dans la tête ! Un allié doit te l'enlever.,A dart in your head! A teammate has to pull it out.

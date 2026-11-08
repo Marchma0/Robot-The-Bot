@@ -1,11 +1,11 @@
 class_name DartsTake
 extends Interactable
-## Seau de fléchettes posé près de la ligne de tir : on le vise et on prend les 3 fléchettes (DartsGame).
+## La cible des fléchettes du robot : on la vise pour prendre toutes les fléchettes libres (DartsGame).
 
 @export var game: DartsGame
 
 
-## Prendre les 3 fléchettes (mains libres) : on va les tenir.
+## Prendre les fléchettes (mains libres) : on va les tenir.
 func interact(press: bool, grab: bool, hands_free: bool) -> Use:
 	if not (press or grab) or not hands_free or game == null:
 		return Use.NONE

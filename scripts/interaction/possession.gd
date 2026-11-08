@@ -1,6 +1,6 @@
 class_name Possession
 extends RefCounted
-## Ce qu'un joueur tient ou occupe : un levier, un siège, la corde, un caca ou les fléchettes du camp.
+## Ce qu'un joueur tient ou occupe : un levier, un siège, la corde, un caca ou les fléchettes du robot.
 ## Un joueur n'en a qu'un à la fois. Chacun de ces objets se range dans le groupe `GROUP`.
 ##
 ## Réseau : l'hôte appelle `is_peer_busy` avant d'accepter une demande (attraper, s'asseoir, ramasser…).

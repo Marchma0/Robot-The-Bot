@@ -381,6 +381,26 @@ func receive_splat() -> void:
 	_hud.splat_overlay.splat()
 
 
+## Envoyé par l'hôte quand une fléchette plante ce nain : animation "hit" (la vue brouillée suit l'état
+## synchronisé du jeu de fléchettes, voir `set_dart_blind`).
+@rpc("any_peer", "call_local", "reliable")
+func receive_dart() -> void:
+	if multiplayer.get_remote_sender_id() != 1 or not is_multiplayer_authority():
+		return
+	anim_hit_count += 1
+
+
+## Os de la tête (suit les animations) : une fléchette qui touche ce nain s'y plante.
+func get_head_attach() -> Node3D:
+	return get_node("BodyModel/DwarfRig/Skeleton3D/HeadBone") as Node3D
+
+
+## Joueur local : vue brouillée tant qu'une fléchette est plantée dans son nain (appelé par DartsGame).
+func set_dart_blind(blind: bool) -> void:
+	if _hud != null:
+		_hud.dart_blind.set_active(blind)
+
+
 func _on_hints_changed(hints: Array[InputHint]) -> void:
 	_hints = hints
 	_route_hints()

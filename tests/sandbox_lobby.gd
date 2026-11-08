@@ -1,6 +1,6 @@
 extends Node
 ## Bac à sable M12 / M12.1 : lance le jeu (scène principale) en hôte hors réseau, puis joue tout le parcours :
-## apparition au camp, vues du camp, fléchettes (3 lancers), bras de fer (contre un adversaire simulé),
+## apparition au camp, vues du camp, bras de fer (contre un adversaire simulé),
 ## terminal (flèches + bouton vert, compte à rebours), départ en mission (terrain de test) quand le nain
 ## monte à bord, puis bouton « retour au camp ». Captures : build/views/lobby_*.png.
 
@@ -28,24 +28,6 @@ func _ready() -> void:
 	_cam = Camera3D.new()
 	add_child(_cam)
 	await _shot_from("2_vue_ensemble", Vector3(16.0, 14.0, -22.0), Vector3(0.0, 2.0, 4.0))
-
-	# Fléchettes : derrière la ligne, 3 lancers visés sur la cible
-	var darts: DartsGame = level.get_node("Minigames/Darts")
-	_place_dwarf(dwarf, darts.to_global(Vector3(0.2, 0.0, -3.5)), darts.to_global(Vector3(0.0, 0.0, 0.0)))
-	await _wait(0.3)
-	darts.request_take.rpc_id(1)
-	await _wait(0.2)
-	for k: int in 3:
-		var eye: Vector3 = dwarf.global_position + Vector3(0.0, 0.95, 0.0)
-		var target: Vector3 = darts.to_global(DartsGame.BOARD_CENTER + Vector3(0.06 * (k - 1), 0.05 * k, 0.0))
-		var flight_time: float = eye.distance_to(target) / DartsGame.THROW_SPEED
-		var aim: Vector3 = target + Vector3(0.0, 0.5 * DartsGame.DART_GRAVITY * flight_time * flight_time, 0.0)
-		darts.request_throw.rpc_id(1, eye, (aim - eye).normalized())
-		await _wait(0.7)
-	print("Fléchettes : %s, record %d (%s)" % [darts.round_scores, darts.record, darts.record_name])
-	TestCheck.expect(darts.round_scores.size() == 3, "fléchettes : 3 lancers comptés")
-	TestCheck.expect(darts.record > 0 and darts.record_name == dwarf.get_display_name(), "fléchettes : record au nom du joueur")
-	await _shot_from("3_flechettes", darts.to_global(Vector3(-0.4, 1.4, -2.4)), darts.to_global(Vector3(0.45, 1.25, 0.0)))
 
 	# Bras de fer : le nain s'assoit à gauche, un adversaire simulé à droite (peer 99)
 	var arm: ArmwrestleGame = level.get_node("Minigames/ArmWrestling")

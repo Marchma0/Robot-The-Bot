@@ -20,7 +20,7 @@
 - Les nains apparaissent dehors, le robot est garé au centre.
 - **Terminal de mission** devant le robot : 2 flèches pour choisir la mission, un gros bouton vert pour lancer
   un compte à rebours de 20 s ; la mission part quand tous les nains sont à bord.
-- **Mini-jeux** jouables : fléchettes, bras de fer (machine à bras mécaniques). Les wagonnets sont du décor pour l'instant.
+- **Mini-jeux** jouables : bras de fer (machine à bras mécaniques). Les fléchettes se jouent dans le robot (voir « Vie à bord »). Les wagonnets sont du décor pour l'instant.
 - **À venir** : marchand de skins des nains, marchand de skins du robot, marchand d'améliorations des nains,
   d'autres mini-jeux.
 - **Sauvegarde** : tout est gardé chez l'hôte (une partie = une sauvegarde de l'hôte) ; un ami qui revient dans
@@ -76,6 +76,10 @@
 - Marcher, sauter, s'accroupir, roue d'emotes (8 gestes), bulle d'état avec mini-portrait animé en haut à droite.
 - **Vie à bord** : salon dans le ventre (canapé où s'asseoir, télé animée, lampe qui se balance),
   toilettes dans la tête (mini-jeu « Poussée », cacas qu'on ramasse et qu'on lance, caca légendaire doré).
+- **Fléchettes** sur la cible du salon : on prend les 3 fléchettes d'un coup (sur la cible ou là où elles sont
+  plantées), on lance de n'importe où dans le robot, elles se plantent là où elles tapent. Centre = « Dans le mille ! »
+  (confettis) ; le total des 3 lancers s'affiche quelques secondes, rien n'est gardé. Un nain touché a la
+  fléchette plantée dans le casque et la vue brouillée : un autre nain doit venir la lui retirer.
   Intérieur usé et encombré, jamais vide.
 - **À venir** : skins (vendus au camp), améliorations (vendues au camp).
 

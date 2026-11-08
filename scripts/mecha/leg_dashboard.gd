@@ -17,7 +17,7 @@ const LAMP_STEP: Color = Color(0.3, 1.0, 0.35)
 ## Débattement de l'aiguille (degrés de chaque côté du centre).
 @export var needle_sweep_degrees: float = 120.0
 ## Cadran : centre (repère du tableau de bord), rayons de l'arc de couleur, hauteur au-dessus du plateau.
-@export var dial_center: Vector3 = Vector3(0.0, 0.0215, -0.17)
+@export var dial_center: Vector3 = Vector3(-0.04, 0.0215, -0.1)
 @export var arc_inner: float = 0.05
 @export var arc_outer: float = 0.074
 ## À partir de là (0 à 1) l'aiguille est dans le rouge : la butée de chute clignote.
