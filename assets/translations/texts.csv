@@ -1,0 +1,55 @@
+keys,fr,en
+— Steam (à distance) —,— Steam (à distance) —,— Steam (online) —
+"Héberger (Steam, amis)","Héberger (Steam, amis)","Host (Steam, friends)"
+Code du lobby Steam,Code du lobby Steam,Steam lobby code
+Rejoindre (code Steam),Rejoindre (code Steam),Join (Steam code)
+— Local / VPN (adresse IP) —,— Local / VPN (adresse IP) —,— Local / VPN (IP address) —
+Héberger (local),Héberger (local),Host (local)
+Adresse de l'hôte,Adresse de l'hôte,Host address
+Rejoindre (adresse IP),Rejoindre (adresse IP),Join (IP address)
+Création du lobby Steam...,Création du lobby Steam...,Creating the Steam lobby...
+Connexion au lobby Steam...,Connexion au lobby Steam...,Joining the Steam lobby...
+Impossible d'héberger (%s).,Impossible d'héberger (%s).,Cannot host (%s).
+Impossible de rejoindre (%s).,Impossible de rejoindre (%s).,Cannot join (%s).
+Connexion à %s...,Connexion à %s...,Connecting to %s...
+hôte,hôte,host
+hôte Steam (code %s),hôte Steam (code %s),Steam host (code %s)
+Partie quittée.,Partie quittée.,You left the game.
+Connexion impossible (hôte introuvable ou partie pleine).,Connexion impossible (hôte introuvable ou partie pleine).,Cannot connect (host not found or game full).
+L'hôte a fermé la partie.,L'hôte a fermé la partie.,The host closed the game.
+Steam indisponible (addon GodotSteam absent),Steam indisponible (addon GodotSteam absent),Steam unavailable (GodotSteam addon missing)
+Steam indisponible : lance le client Steam puis relance le jeu,Steam indisponible : lance le client Steam puis relance le jeu,"Steam unavailable: start the Steam client, then restart the game"
+Steam : connecté en tant que %s,Steam : connecté en tant que %s,Steam: signed in as %s
+Code de lobby invalide,Code de lobby invalide,Invalid lobby code
+Création du lobby Steam impossible (code %d),Création du lobby Steam impossible (code %d),Could not create the Steam lobby (code %d)
+Hôte Steam impossible (%s),Hôte Steam impossible (%s),Could not host on Steam (%s)
+Impossible de rejoindre le lobby (code %d),Impossible de rejoindre le lobby (code %d),Could not join the lobby (code %d)
+Connexion Steam impossible (%s),Connexion Steam impossible (%s),Steam connection failed (%s)
+Mécha de %s,Mécha de %s,%s's mecha
+Joueur %d,Joueur %d,Player %d
+Coucou,Coucou,Wave
+Pouce levé,Pouce levé,Thumbs up
+Pointer,Pointer,Point
+Applaudir,Applaudir,Clap
+Danse,Danse,Dance
+Je sais pas,Je sais pas,Dunno
+Salut nain,Salut nain,Dwarf salute
+Doigt d'honneur,Doigt d'honneur,Middle finger
+Espace,Espace,Space
+Échap,Échap,Esc
+Maj,Maj,Shift
+Entrée,Entrée,Enter
+CACA LÉGENDAIRE !,CACA LÉGENDAIRE !,LEGENDARY POOP!
+Plop !,Plop !,Plop!
+LÉGENDAIRE !,LÉGENDAIRE !,LEGENDARY!
+Pousse !,Pousse !,Push!
+Tirez !,Tirez !,Pull!
+%s gagne !,%s gagne !,%s wins!
+BRAS DE FER,BRAS DE FER,ARM WRESTLING
+asseyez-vous à deux,asseyez-vous à deux,two players: take a seat
+FLÉCHETTES,FLÉCHETTES,DARTS
+Terrain d'essai,Terrain d'essai,Test ground
+à bord : %d / %d,à bord : %d / %d,aboard: %d / %d
+Montez à bord !  %d,Montez à bord !  %d,All aboard!  %d
+Verrouillée,Verrouillée,Locked
+Bouton vert : partir,Bouton vert : partir,Green button: go

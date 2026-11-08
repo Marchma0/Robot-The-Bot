@@ -1,18 +1,30 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://assets/models/props/toilet_cabin.glb" id="1_cabin"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/toilet_cabin.tscn" id="1_cabin"]
 [ext_resource type="PackedScene" path="res://assets/models/props/head_rug.glb" id="2_rug"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/props/tool_locker.tscn" id="3_locker"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/props/boiler.tscn" id="4_boiler"]
-[ext_resource type="PackedScene" path="res://assets/models/props/drill_desk.glb" id="5_drill"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/drill_desk.tscn" id="5_drill"]
 [ext_resource type="PackedScene" path="res://assets/models/props/drill_chair.glb" id="8_drill_chair"]
 [ext_resource type="PackedScene" path="res://assets/models/props/grabber_chair.glb" id="6_chair"]
-[ext_resource type="PackedScene" path="res://assets/models/props/grabber_desk.glb" id="7_desk"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/grabber_desk.tscn" id="7_desk"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/toilet_bowl.tscn" id="9_toilet"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/potted_mushroom.tscn" id="10_mushroom"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/coffee_corner.tscn" id="11_coffee"]
+[ext_resource type="PackedScene" path="res://assets/models/props/tool_rack.glb" id="12_tool_rack"]
+[ext_resource type="PackedScene" path="res://assets/models/props/junk_shelf.glb" id="13_shelf"]
+[ext_resource type="PackedScene" path="res://assets/models/props/wall_map.glb" id="14_map"]
+[ext_resource type="PackedScene" path="res://assets/models/props/bunting.glb" id="15_bunting"]
+[ext_resource type="PackedScene" path="res://assets/models/props/ceiling_light.glb" id="16_light"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/props/railing.tscn" id="17_railing"]
 
 [node name="InteriorHead" type="Node3D"]
 
 [node name="ToiletCabin" parent="." instance=ExtResource("1_cabin")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.515, 5.6, 1.39)
+
+[node name="ToiletBowl" parent="." instance=ExtResource("9_toilet")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.97, 5.6, 1.4)
 
 [node name="HeadRug" parent="." instance=ExtResource("2_rug")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 5.6, -0.1)
@@ -34,3 +46,27 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 5.6, -0.85)
 
 [node name="GrabberDesk" parent="." instance=ExtResource("7_desk")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.1, 5.6, -1.55)
+
+[node name="GiantMushroom" parent="." instance=ExtResource("10_mushroom")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -1.96, 5.6, -1.62)
+
+[node name="CoffeeCorner" parent="." instance=ExtResource("11_coffee")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -2.2, 5.6, 0.175)
+
+[node name="ToolRack" parent="." instance=ExtResource("12_tool_rack")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -2.2, 6.97, 0.18)
+
+[node name="JunkShelf" parent="." instance=ExtResource("13_shelf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 5.6, 1.9)
+
+[node name="WallMap" parent="." instance=ExtResource("14_map")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.2, 7.05, -0.57)
+
+[node name="Bunting" parent="." instance=ExtResource("15_bunting")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.1, 8.15, -1.9)
+
+[node name="CeilingLight" parent="." instance=ExtResource("16_light")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 0, 8.3, 0)
+
+[node name="BeamRailing" parent="." instance=ExtResource("17_railing")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75, 5.6, 1)

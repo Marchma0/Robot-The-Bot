@@ -113,7 +113,7 @@ func _update_target(delta: float) -> void:
 func _finish(success: bool) -> void:
 	_active = false
 	if success:
-		_result_text = "CACA LÉGENDAIRE !" if _golden else "Plop !"
+		_result_text = tr("CACA LÉGENDAIRE !") if _golden else tr("Plop !")
 	else:
 		_result_text = "… rien."
 	_result_time = 1.6
@@ -126,7 +126,7 @@ func _draw() -> void:
 	if _active and _progress < 0.25:
 		var shake: float = (0.25 - _progress) * 24.0
 		origin += Vector2(sin(_time * 61.0), cos(_time * 47.0)) * shake
-	var title: String = "LÉGENDAIRE !" if _golden else "Pousse !"
+	var title: String = tr("LÉGENDAIRE !") if _golden else tr("Pousse !")
 	var font: Font = get_theme_default_font()
 	var title_color: Color = COLOR_GOLD if _golden else Color.WHITE
 	draw_string_outline(font, origin + Vector2(-30.0, -14.0), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 6, Color.BLACK)

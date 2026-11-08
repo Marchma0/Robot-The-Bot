@@ -1,0 +1,81 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/player_hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/ui/hint_bar.gd" id="2_hintbar"]
+[ext_resource type="Script" path="res://scripts/ui/hint_panel.gd" id="3_hintpanel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/emote_wheel.tscn" id="4_wheel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/state_bubble.tscn" id="5_bubble"]
+[ext_resource type="Script" path="res://scripts/ui/splat_overlay.gd" id="6_splat"]
+[ext_resource type="Script" path="res://scripts/ui/poop_minigame.gd" id="7_poopgame"]
+
+[node name="PlayerHud" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="Crosshair" type="CenterContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Dot" type="ColorRect" parent="Crosshair"]
+custom_minimum_size = Vector2(4, 4)
+layout_mode = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0.85)
+
+[node name="HintBar" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -118.0
+offset_right = 320.0
+offset_bottom = -66.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+alignment = 1
+script = ExtResource("2_hintbar")
+
+[node name="HintPanel" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+offset_left = 22.0
+offset_top = 22.0
+offset_right = 222.0
+offset_bottom = 222.0
+mouse_filter = 2
+script = ExtResource("3_hintpanel")
+
+[node name="EmoteWheel" parent="." instance=ExtResource("4_wheel")]
+unique_name_in_owner = true
+
+[node name="StateBubble" parent="." instance=ExtResource("5_bubble")]
+unique_name_in_owner = true
+
+[node name="SplatOverlay" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_splat")
+
+[node name="PoopMinigame" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7_poopgame")

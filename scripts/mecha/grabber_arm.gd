@@ -1,7 +1,7 @@
 class_name GrabberArm
-extends Node3D
+extends MechaArm
 ## Bras gauche du mécha : grappin articulé avec caméra embarquée (M9 — Grappin, lancer en M9.5).
-## Piloté par le nain assis au poste `seat` (`Grabber_Seat`) :
+## Piloté par le nain assis au poste `seat` (`Grabber_Seat`), visée commune avec la foreuse (MechaArm) :
 ## - souris / stick droit (`control_look`) et Q/D (`control_move.x`) : orientent le bras (lacet + tangage),
 ##   sans jamais pouvoir rentrer dans la coque (`MechaArmUtils`) ;
 ## - Z/S (`control_move.y`) : étendent ou replient le fût télescopique (0 → 3,8 m) ;
@@ -30,7 +30,6 @@ const SLEEVE_OUTER_REST_Z: float = -0.9
 const SLEEVE_INNER_REST_Z: float = -0.95
 const SLEEVE_OUTER_SHARE: float = 0.3
 const SLEEVE_INNER_SHARE: float = 0.62
-const REST_PITCH: float = -0.12
 const CLAW_OPEN_ANGLE: float = 0.44
 const CLAW_CLOSED_ANGLE: float = -0.10
 const CLAW_SPEED: float = 6.5
@@ -50,18 +49,8 @@ const CABLE_RADIUS: float = 0.025
 const CABLE_ROOT_Z: float = -0.32
 const CABLE_SAG: float = 0.035
 
-@export var seat: Seat
 @export var backpack: Backpack
-@export var extend_speed: float = 2.8
-@export var yaw_key_speed: float = 1.1
-@export var look_sensitivity: float = 0.65
 
-## Lacet du bras (rad). Autorité : hôte.
-var arm_yaw: float = 0.0
-## Tangage du bras (rad, négatif = vers le bas). Autorité : hôte.
-var arm_pitch: float = REST_PITCH
-## Extension télescopique en mètres (0.0 .. 3.8). Autorité : hôte.
-var extension: float = 0.0
 ## Vrai quand les mâchoires de la pince sont fermées. Autorité : hôte.
 var claw_closed: bool = false
 ## État du lancer (`Shot`). Autorité : hôte.
@@ -82,7 +71,6 @@ var _last_occupant: int = 0
 var _shown_shot: float = 0.0
 var _cable_parts: Array[MeshInstance3D] = []
 
-@onready var _elbow_pivot: Node3D = %ElbowPivot
 @onready var _sleeve_outer: MeshInstance3D = %SleeveOuter
 @onready var _sleeve_inner: MeshInstance3D = %SleeveInner
 @onready var _slider_pivot: Node3D = %SliderPivot
@@ -91,27 +79,23 @@ var _cable_parts: Array[MeshInstance3D] = []
 @onready var _cable_root: Node3D = %Cable
 @onready var _claw_left: Node3D = %ClawLeft
 @onready var _claw_right: Node3D = %ClawRight
-@onready var _camera_anchor: Marker3D = %CameraAnchor
 @onready var _grab_zone: Area3D = %GrabZone
 @onready var _hold_point: Marker3D = %HoldPoint
 
 
+func _init() -> void:
+	extend_speed = 2.8   # le grappin s'étend plus vite que la foreuse
+
+
 func _ready() -> void:
-	var parent_node: Node = get_parent()
-	if parent_node != null:
-		var ext_details: MeshInstance3D = parent_node.get_node_or_null("Ext_Details") as MeshInstance3D
-		if ext_details != null:
-			MechaArmUtils.strip_static_arm(ext_details, SIDE_SIGN)
-	if seat != null:
-		seat.camera_anchor = _camera_anchor
+	super()
 	_build_cable()
-	NetworkManager.session_ended.connect(_on_session_ended)
 
 
 func _physics_process(delta: float) -> void:
 	if not multiplayer.is_server():
 		return
-	var occupant: int = seat.occupant_peer_id if seat != null else 0
+	var occupant: int = get_occupant()
 	if occupant != _last_occupant:
 		_last_occupant = occupant
 		_last_fire_count = 0
@@ -123,12 +107,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if occupant != 0:
-		var look: Vector2 = seat.control_look
-		seat.control_look = Vector2.ZERO
-		var move: Vector2 = seat.control_move
-		arm_yaw = MechaArmUtils.clamp_yaw(arm_yaw - look.x * look_sensitivity - move.x * yaw_key_speed * delta, SIDE_SIGN)
-		arm_pitch = MechaArmUtils.clamp_pitch(arm_pitch + look.y * look_sensitivity)
-		extension = clampf(extension + move.y * extend_speed * delta, 0.0, MAX_EXTENSION)
+		extension = _steer(delta)
 		claw_closed = seat.control_grab
 		if seat.control_fire_count != _last_fire_count:
 			_last_fire_count = seat.control_fire_count
@@ -143,7 +122,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
-	_elbow_pivot.rotation = Vector3(arm_pitch, arm_yaw, 0.0)
+	_show_aim()
 	_slider_pivot.position = Vector3(0.0, 0.0, SLIDER_REST_Z - extension)
 	_sleeve_outer.position = Vector3(0.0, 0.0, SLEEVE_OUTER_REST_Z - extension * SLEEVE_OUTER_SHARE)
 	_sleeve_inner.position = Vector3(0.0, 0.0, SLEEVE_INNER_REST_Z - extension * SLEEVE_INNER_SHARE)
@@ -160,11 +139,6 @@ func _process(delta: float) -> void:
 		_shown_shot = lerpf(_shown_shot, shot_distance, 1.0 - exp(-30.0 * delta))
 	_claw_head.position = Vector3(0.0, 0.0, -_shown_shot)
 	_update_cable()
-
-
-## Point d'ancrage de la caméra embarquée sur la pince.
-func get_camera_anchor() -> Marker3D:
-	return _camera_anchor
 
 
 ## Lance la pince au bout de son câble (hôte). Sans effet si elle est déjà partie ou si le sac est plein.
@@ -343,6 +317,14 @@ func _update_delivery(delta: float) -> void:
 				target_bp.store_node(item_to_store, kind_to_store)
 
 
+func _side_sign() -> float:
+	return SIDE_SIGN
+
+
+func _max_extension() -> float:
+	return MAX_EXTENSION
+
+
 func _find_backpack() -> Backpack:
 	for node: Node in get_tree().get_nodes_in_group(&"backpacks"):
 		return node as Backpack
@@ -397,10 +379,8 @@ func _update_cable() -> void:
 		prev = p
 
 
-func _on_session_ended(_reason: String) -> void:
-	arm_yaw = 0.0
-	arm_pitch = REST_PITCH
-	extension = 0.0
+func reset_arm() -> void:
+	super()
 	claw_closed = false
 	shot_state = Shot.IDLE
 	shot_distance = 0.0

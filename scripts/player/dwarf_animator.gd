@@ -19,12 +19,6 @@ const STATE_ANIMATIONS: Dictionary[StringName, StringName] = {
 	&"float": &"float", &"climb": &"climb", &"dance": &"emote_dance",
 	&"crouch": &"crouch", &"crouch_walk": &"crouch_walk", &"poop": &"poop",
 }
-## Texte affiché dans la bulle d'état pour chaque état de base.
-const STATE_LABELS: Dictionary[StringName, String] = {
-	&"idle": "Au repos", &"walk": "Marche", &"air": "Saute", &"sit": "Assis",
-	&"float": "Flotte", &"climb": "Grimpe", &"dance": "Danse",
-	&"crouch": "Accroupi", &"crouch_walk": "Se dandine", &"poop": "Fait caca",
-}
 ## États dont la vitesse de lecture suit la vitesse du nain (marche, grimpe).
 const SCALED_STATES: Array[StringName] = [&"walk", &"climb", &"crouch_walk"]
 ## Os animés par la couche haut du corps (tenir / appuyer).
@@ -59,17 +53,9 @@ var _last_press_count: int = 0
 var _preview_timer: float = 0.0
 var _last_emote_count: int = 0
 var _gesture_playing: bool = false
-var _gesture_label: String = ""
-var _gesture_time: float = 0.0
 var _last_throw_count: int = 0
 var _last_hit_count: int = 0
 var _last_sigh_count: int = 0
-var _last_golden_count: int = 0
-var _event_label: String = ""
-var _event_time: float = 0.0
-
-## Ce que fait le nain, en mots (lu par la bulle d'état).
-var state_label: String = "Au repos"
 
 
 func _ready() -> void:
@@ -155,46 +141,23 @@ func _process(delta: float) -> void:
 			_tree.set("parameters/gesture_pick/transition_request", String(Emotes.LIST[emote]["animation"]))
 			_tree.set("parameters/gesture/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 			_gesture_playing = true
-			_gesture_label = Emotes.LIST[emote]["label"]
-			_gesture_time = float(Emotes.LIST[emote]["duration"])
 	elif _gesture_playing and not Emotes.is_valid(emote):
 		_tree.set("parameters/gesture/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
 		_gesture_playing = false
-		_gesture_time = 0.0
 
 	# Lancer / recevoir un caca : couches du haut du corps, déclenchées par des compteurs.
 	if dwarf.anim_throw_count != _last_throw_count:
 		_last_throw_count = dwarf.anim_throw_count
 		_tree.set("parameters/throw/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
-		_event_label = "Lance !"
-		_event_time = 0.8
 	if dwarf.anim_hit_count != _last_hit_count:
 		_last_hit_count = dwarf.anim_hit_count
 		_tree.set("parameters/hit/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
-		_event_label = "Touché !"
-		_event_time = 1.2
 
-	# Toilettes : raté = soupir (geste « je sais pas ») ; caca légendaire = annonce dans la bulle.
+	# Toilettes : raté = soupir (geste « je sais pas »).
 	if dwarf.anim_sigh_count != _last_sigh_count:
 		_last_sigh_count = dwarf.anim_sigh_count
 		_tree.set("parameters/gesture_pick/transition_request", "emote_shrug")
 		_tree.set("parameters/gesture/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
-		_event_label = "Raté…"
-		_event_time = 1.4
-	if dwarf.anim_golden_count != _last_golden_count:
-		_last_golden_count = dwarf.anim_golden_count
-		_event_label = "CACA LÉGENDAIRE !"
-		_event_time = 3.0
-
-	# Texte de la bulle : un événement (lancer, touché), puis un geste, puis l'état de base.
-	_gesture_time -= delta
-	_event_time -= delta
-	if _event_time > 0.0:
-		state_label = _event_label
-	elif _gesture_time > 0.0:
-		state_label = _gesture_label
-	else:
-		state_label = STATE_LABELS.get(target, "")
 
 
 func _build_tree() -> AnimationNodeBlendTree:

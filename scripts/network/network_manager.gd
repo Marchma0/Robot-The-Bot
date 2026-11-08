@@ -105,7 +105,7 @@ func leave_game() -> void:
 	if not is_online():
 		return
 	_reset_peer()
-	session_ended.emit("Partie quittée.")
+	session_ended.emit(tr("Partie quittée."))
 
 
 func is_online() -> bool:
@@ -143,12 +143,12 @@ func _on_connected_to_server() -> void:
 
 func _on_connection_failed() -> void:
 	_reset_peer()
-	connection_failed.emit("Connexion impossible (hôte introuvable ou partie pleine).")
+	connection_failed.emit(tr("Connexion impossible (hôte introuvable ou partie pleine)."))
 
 
 func _on_server_disconnected() -> void:
 	_reset_peer()
-	session_ended.emit("L'hôte a fermé la partie.")
+	session_ended.emit(tr("L'hôte a fermé la partie."))
 
 
 func _on_steam_host_ready(peer: MultiplayerPeer, lobby_id: int) -> void:

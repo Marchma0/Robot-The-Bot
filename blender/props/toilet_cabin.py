@@ -4,10 +4,11 @@ Fiche
 - Taille : 1,37 x 1,02 m au sol, 1,63 m de haut (un nain fait 1,2 m). Coin du fond à gauche contre les murs de la tête :
   seules la cloison avant (+Y) et la cloison droite (+X, avec l'ouverture de la porte) sont modélisées.
 - Origine : au sol, au centre de l'emprise. Placée dans le mécha en Blender (-1.515, -1.39, 5.6) = Godot (-1.515, 5.6, 1.39).
-- Budget : 2500 triangles.
+- Budget : 3500 triangles.
 - Pièces : âme des cloisons (Paint), plinthe, lisses et poteaux (IronDark), rivets (Copper), grille d'aération,
-  corniche en cuivre, voyant vert au-dessus de la porte.
-- Collisions : déjà dans mecha.tscn (Hull/ToiletFront, Hull/ToiletSide). La porte est un objet à part (toilet_door).
+  corniche en cuivre, voyant vert au-dessus de la porte ; dedans : carrelage en damier (DartBlack / Cream),
+  dérouleur de papier, petit cadre au mur du fond, ventouse. La cuvette est un objet à part (toilet_bowl).
+- Collisions : scenes/mecha/props/toilet_cabin.tscn (cloison avant, bout de cloison droite). La porte est un objet à part (toilet_door).
 
     blender -b --factory-startup --python blender/props/toilet_cabin.py
 """
@@ -68,13 +69,45 @@ def side_wall(b):
     b.box((x1 + 0.04, cy - 0.045, LINTEL_Z + 0.085), (x1 + 0.05, cy + 0.045, LINTEL_Z + 0.135), "ButtonGreen")
 
 
+def interior(b):
+    """Dans la cabine : carrelage en damier, dérouleur de papier, cadre au mur du fond, ventouse dans le coin.
+    Le mur gauche et le mur du fond sont ceux de la tête (x = X0, y = Y0)."""
+    tile = 0.15
+    nx = int((X1 - T - 0.01 - X0) / tile)
+    ny = int((Y1 - T - 0.01 - Y0) / tile)
+    for i in range(nx):
+        for j in range(ny):
+            x0, y0 = X0 + i * tile, Y0 + j * tile
+            b.box((x0 + 0.002, y0 + 0.002, 0.0), (x0 + tile - 0.002, y0 + tile - 0.002, 0.008),
+                  "DartBlack" if (i + j) % 2 else "Cream")
+    # dérouleur de papier au mur du fond
+    px, pz = -0.095, 0.62
+    b.box((px - 0.07, Y0, pz + 0.03), (px + 0.07, Y0 + 0.02, pz + 0.05), "Copper")
+    for dx in (-0.065, 0.065):
+        b.box((dx + px - 0.005, Y0, pz - 0.01), (dx + px + 0.005, Y0 + 0.08, pz + 0.04), "Copper")
+    b.cylinder((px - 0.055, Y0 + 0.06, pz), (px + 0.055, Y0 + 0.06, pz), 0.05, "Paper", 10)
+    b.box((px - 0.05, Y0 + 0.1, pz - 0.12), (px + 0.05, Y0 + 0.104, pz), "Paper")      # bout de papier qui pend
+    # petit cadre au-dessus : canard sur l'eau
+    fx, fz = -0.085, 1.15
+    b.box((fx - 0.2, Y0, fz - 0.15), (fx + 0.2, Y0 + 0.02, fz + 0.15), "Wood")
+    b.box((fx - 0.17, Y0 + 0.02, fz - 0.12), (fx + 0.17, Y0 + 0.022, fz + 0.12), "Paper")
+    b.box((fx - 0.17, Y0 + 0.022, fz - 0.12), (fx + 0.17, Y0 + 0.024, fz - 0.04), "Glass")
+    b.box((fx - 0.05, Y0 + 0.024, fz - 0.06), (fx + 0.06, Y0 + 0.026, fz), "Yellow")
+    b.box((fx + 0.03, Y0 + 0.024, fz), (fx + 0.07, Y0 + 0.026, fz + 0.05), "Yellow")
+    b.box((fx + 0.07, Y0 + 0.026, fz + 0.015), (fx + 0.1, Y0 + 0.028, fz + 0.03), "Ochre")
+    # ventouse dans le coin du fond, côté porte
+    vx, vy = X1 - T - 0.12, Y0 + 0.1
+    b.cylinder((vx, vy, 0.008), (vx, vy, 0.07), 0.06, "DartRed", 10, radius_end=0.03)
+    b.cylinder((vx, vy, 0.07), (vx - 0.05, vy + 0.02, 0.62), 0.012, "Wood", 6)
+
 def main():
     kit.new_scene()
     b = kit.Builder("ToiletCabin")
     front_wall(b)
     side_wall(b)
+    interior(b)
     b.finish()
-    kit.save_and_export("toilet_cabin", budget_tris=2500)
+    kit.save_and_export("toilet_cabin", budget_tris=3500)
 
 
 main()

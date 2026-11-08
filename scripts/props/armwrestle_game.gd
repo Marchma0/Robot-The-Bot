@@ -107,10 +107,10 @@ func _sign_text() -> String:
 		State.COUNTDOWN:
 			return "%s\n%d" % [names, ceili(maxf(timer, 0.01))]
 		State.FIGHT:
-			return "%s\nTirez !" % names
+			return names + "\n" + tr("Tirez !")
 		State.WIN:
-			return "%s\n%s gagne !" % [names, winner_name]
-	return "BRAS DE FER\nasseyez-vous à deux"
+			return names + "\n" + tr("%s gagne !") % winner_name
+	return tr("BRAS DE FER") + "\n" + tr("asseyez-vous à deux")
 
 
 func _reset(new_state: int) -> void:

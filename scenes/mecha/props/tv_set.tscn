@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/props/tv_set.glb" id="1_model"]
+[ext_resource type="Shader" path="res://scenes/mecha/props/tv_screen.gdshader" id="2_tv"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tv"]
+shader = ExtResource("2_tv")
+
+[sub_resource type="QuadMesh" id="QuadMesh_tv"]
+material = SubResource("ShaderMaterial_tv")
+size = Vector2(0.68, 0.48)
+
+[node name="TvSet" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1_model")]
+
+[node name="Screen" type="MeshInstance3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -0.05, 0, -0.157)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_tv")
+
+[node name="Glow" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 0, -0.45)
+light_color = Color(0.55, 0.7, 1, 1)
+light_energy = 0.35
+omni_range = 2.2
