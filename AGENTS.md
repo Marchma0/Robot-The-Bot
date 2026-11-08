@@ -217,7 +217,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
   - [x] Nain découpé (2026-11-08) : apparence (`DwarfLook`, où iront les skins), caméra (`DwarfCamera`), corde (`DwarfClimb`) ; interface du joueur dans `scenes/ui/player_hud.tscn`, créée seulement pour le joueur local ; `dwarf.gd` passe de 780 à 590 lignes
   - [x] Base commune des bras (2026-11-08) : `MechaArm` (visée depuis le poste, limites, caméra, remise à zéro), `DrillArm` et `GrabberArm` n'ont plus que leur outil
   - [x] Traduction (2026-11-08) : textes visibles passés par `tr()`, tableau `assets/translations/texts.csv` (54 textes, fr + en), le jeu suit la langue du système (menu de langue : 6.2), vérification dans `run_tests.sh`
-  - [ ] Dette de `mecha.blend` (après 3.4) : retirer les anciens bras et l'ancienne console de `mecha_shell.py`, découper le vieux décor en objets avec leur collision, supprimer `MechaArmUtils.strip_*`
+  - [ ] Dette de `mecha.blend` `[en cours — Marchma0]` (avancé avant 3.4 à la demande du porteur du projet) : plus aucun décor dans le modèle du robot (coque seulement) ; anciens bras et anciennes consoles retirés par `mecha_shell.py` ; tout le décor refait en objets (`blender/props/`) placés dans `belly.tscn` / `head.tscn`, avec leur collision ; `MechaArmUtils.strip_*` supprimé
 
 ### Phase 2 — Les nains
 - [x] 2.1 Nain contrôlable dans un cockpit qui bouge, vue à la première personne (M1)
