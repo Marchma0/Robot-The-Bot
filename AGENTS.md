@@ -200,7 +200,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 > Avant de commencer une tâche : la marquer `[en cours — pseudo]` et pousser tout de suite. La cocher quand elle est fusionnée dans `main`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0) · 3.11 Fléchette au visage (Marchma0)
+**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0)
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) :
 - Bras de vue (`DwarfViewArms`) : sur certaines emotes, les bras se détachent du corps au moment où on lance l'emote (vu par Marchma0 le 2026-11-08). Pistes : le décalage propre à l'emote (`EMOTE_OFFSETS`) et la compensation du torse sont appliqués pendant que les bras montent ; le resserrement (`VIEW_SQUEEZE`, échelle non uniforme) déforme les os qui tournent.
@@ -244,7 +244,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 3.8 Skins du robot : peinture, décorations, choix synchronisé et sauvegardé — vendus en 4.5
 - [x] 3.9 Fléchettes dans le robot (2026-11-08) : le jeu quitte le camp pour la cible du salon (ramasser, lancer, « dans le mille », score après 3 lancers, fléchette plantée dans un allié qui doit la lui retirer)
 - [x] 3.10 Finitions du salon et vue des nains (2026-11-08) : collision des jambes du robot, score des fléchettes écrit à la craie sur l'ardoise, bouton marche/arrêt de la télé, jeu de dames jouable (vraies règles, depuis le canapé aussi, pendule d'échecs), vue à la première personne façon Lethal Company / Deep Rock (bras de vue pendant les gestes et les emotes), roue d'emotes avec images
-- [ ] 3.11 Fléchette dans un allié `[en cours — Marchma0]` : vue brouillée seulement si elle se plante au visage, sinon flash rouge de douleur (elle se plante dans le casque ou le corps)
+- [x] 3.11 Fléchette dans un allié (2026-11-08) : vue brouillée seulement si elle se plante au visage, sinon flash rouge de douleur (elle se plante dans le casque ou le corps), sans texte
 
 ### Phase 4 — Le camp de base (lobby)
 - [x] 4.1 Camp minier dans un canyon, robot au centre, terminal de mission (flèches + bouton), retour au camp (M12, M12.1)
