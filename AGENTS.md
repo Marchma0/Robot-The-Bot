@@ -197,7 +197,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 > Avant de commencer une tâche : la marquer `[en cours — pseudo]` et pousser tout de suite. La cocher quand elle est fusionnée dans `main`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0)
+**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 1.7 Rationalisation du code (Marchma0) · 3.4 Marche du robot (Marchma0)
 
 ### Phase 1 — Fondations (moteur, réseau, outils)
 - [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet (héberger / rejoindre en local), 4 nains (M0)
@@ -208,6 +208,14 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
   - [ ] À confirmer en vraie partie Steam (hôte + client, F9 pour comparer)
 - [ ] 1.5 Steam (M5) : GodotSteam (App ID 480), lobby, invitation ou code de lobby, export Windows `.exe` pour les testeurs — en place, reste à valider à distance (avec 1.4)
 - [x] 1.6 Pipeline 3D : un script Python par objet (`blender/props/`), palette partagée, planche de vues, refus des faces superposées, captures `interior_shots` (M6.7)
+- [ ] 1.7 **Rationalisation du code** `[en cours — Marchma0]` : rendre le code prêt pour le camp et les missions, sans rien changer en jeu (test réseau vert à chaque étape)
+  - [ ] Ménage : une seule façon de retrouver le nain d'un joueur, script à la racine du robot, petites bidouilles retirées, scènes de test à jour et lancées d'un coup
+  - [ ] Système d'interaction : chaque objet gère son utilisation, l'hôte tient à un seul endroit ce que chaque joueur tient ou occupe
+  - [ ] Nain découpé en composants (déplacement, caméra, corde, apparence), interface du joueur dans une scène à part
+  - [ ] Fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte et sauvegarde — conception à valider avec le porteur du projet
+  - [ ] Base commune des bras (foreuse, grappin)
+  - [ ] Traduction : tout texte visible passe par `tr()`, français + anglais
+  - [ ] Dette de `mecha.blend` (après 3.4) : retirer les anciens bras et l'ancienne console de `mecha_shell.py`, découper le vieux décor en objets avec leur collision, supprimer `MechaArmUtils.strip_*`
 
 ### Phase 2 — Les nains
 - [x] 2.1 Nain contrôlable dans un cockpit qui bouge, vue à la première personne (M1)
@@ -241,11 +249,12 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 ### Phase 5 — Les missions
 - [x] 5.1 Cadre : `MissionDirector`, niveau créé par l'hôte, mission de test (rochers, caisses) (M12, S1)
 - [ ] 5.2 Mission prototype A → B : régler le ressenti, la difficulté et la durée sur un vrai parcours (M11)
-- [ ] 5.3 Fin de mission : objectif atteint ou raté, récompenses, retour au camp (lié à 4.3)
+- [ ] 5.3 Cadre commun d'une mission : objectifs, réussie / ratée, récompenses, retour au camp (lié à 4.3) ; chaque mission le remplit à sa façon
 - [ ] 5.4 Histoire : le fil rouge des 10 missions, et la mécanique phare de chacune (à valider avec le porteur du projet)
 - [ ] 5.5 Les 10 missions, une par une (une ligne par mission ici une fois 5.4 validé) : environnement + mécanique propre + histoire
 
 ### Phase 6 — Finitions
 - [ ] 6.1 Son et musique
 - [ ] 6.2 Menus et options (touches, son, graphismes)
-- [ ] 6.3 Version à distribuer sur Steam
+- [ ] 6.3 Passe graphique : effets et couleurs créés dans le code (étincelles, éclats, câble…) passés en scènes et dans la palette
+- [ ] 6.4 Version à distribuer sur Steam (français et anglais)

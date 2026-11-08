@@ -76,6 +76,7 @@
 
 ## Principes qui valent partout
 - **Coop chaotique** : les commandes sont dans le cockpit, il faut se coordonner et se déplacer.
+- **Deux langues** : français et anglais.
 - **Rien d'écrit à l'écran** : des icônes « touche → action », au pire de petits mots en police Fredoka.
   Les infos de jeu (jauges, QTE, tour de qui) sont **dans le cockpit**.
 - **Tout ce qui bouge est animé**, rien ne glisse ni ne se téléporte.
