@@ -73,7 +73,7 @@ unique_name_in_owner = true
 
 [node name="Head" type="Node3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, -0.08)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, -0.2)
 
 [node name="Camera" type="Camera3D" parent="Head"]
 unique_name_in_owner = true
