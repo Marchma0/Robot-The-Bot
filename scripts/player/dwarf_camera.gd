@@ -13,6 +13,11 @@ extends Node
 ## le haut des épaules entre dans le bas de l'image avec l'angle de vue de 90°.
 const EYE_FORWARD: float = -0.2
 const EYE_FORWARD_LOOKING_DOWN: float = -0.36
+## Objet tenu à une main (bras tendu devant soi) : les yeux reculent, sinon la main passe sous le bas de
+## l'image (et à côté en regardant en haut) ; le bras tendu cache déjà le haut de l'épaule.
+const EYE_FORWARD_HOLDING: float = -0.08
+## Vitesse à laquelle les yeux avancent ou reculent quand on prend / range un objet (m/s).
+const EYE_SHIFT_SPEED: float = 0.6
 ## Inclinaison vers le bas (rad) à partir de laquelle les yeux sont tout à fait avancés.
 const LOOK_DOWN_FULL: float = deg_to_rad(80.0)
 ## Hauteur des yeux debout / accroupi (m).
@@ -51,6 +56,8 @@ var _kick_nudge: Vector2 = Vector2.ZERO
 var _eye_in_head: Vector3 = Vector3.ZERO
 var _eye_smoothed: Vector3 = Vector3.ZERO
 var _eye_ready: bool = false
+## Avancée des yeux en regard droit (EYE_FORWARD, ou EYE_FORWARD_HOLDING avec un objet en main), lissée.
+var _eye_forward: float = EYE_FORWARD
 
 
 func _ready() -> void:
@@ -60,7 +67,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	# En baissant les yeux, le point de vue avance un peu (on regarde par-dessus son ventre).
 	var looking_down: float = clampf(-head.rotation.x / LOOK_DOWN_FULL, 0.0, 1.0)
-	head.position.z = lerpf(EYE_FORWARD, EYE_FORWARD_LOOKING_DOWN, looking_down)
+	var wanted_forward: float = EYE_FORWARD_HOLDING if dwarf.anim_hold_item else EYE_FORWARD
+	_eye_forward = move_toward(_eye_forward, wanted_forward, delta * EYE_SHIFT_SPEED)
+	head.position.z = lerpf(_eye_forward, EYE_FORWARD_LOOKING_DOWN, looking_down)
 	# Les yeux descendent / remontent en douceur quand on s'accroupit / se relève.
 	var eye_height: float = CROUCH_EYE_HEIGHT if dwarf.anim_crouching else EYE_HEIGHT
 	head.position.y = move_toward(head.position.y, eye_height, delta * 2.5)
