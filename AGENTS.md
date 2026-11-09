@@ -210,6 +210,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet (héberger / rejoindre en local), 4 nains (M0)
 - [x] 1.2 Synchro lissée : lissage des autres joueurs et du robot, `physics_interpolation`, moins de trafic, ordre de calcul fixe (M6.6)
 - [x] 1.3 Interface en icônes « touche → action », police Fredoka, plus de texte d'aide brut (M6.6)
+- [x] 1.8 Interface sobre (2026-11-09) : point de visée qui devient un anneau sur ce qu'on peut utiliser, objet visé illuminé sur ses bords, petite icône de l'action à côté (touche affichée seulement si ce n'est pas le clic), plus de pastilles en bas de l'écran, panneau des postes replié tout seul, rappels du lobby effacés après 6 s
 - [ ] 1.4 **Synchro de toutes les interactions** (S1) `[en cours — Marchma0]` : chaque joueur voit exactement la même chose, y compris celui qui arrive en cours de partie
   - [x] Modèle réseau général (2026-11-08) : niveau créé par l'hôte (`LevelSpawner`), objets sous `NetSpawner`, cacas et caisses en `FREEZE_MODE_STATIC`, garde-fous (`net_test.sh`, F9, `NetGuard`), `docs/reseau.md`. Test auto vert sur toutes les interactions existantes
   - [ ] À confirmer en vraie partie Steam (hôte + client, F9 pour comparer)

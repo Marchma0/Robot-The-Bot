@@ -12,7 +12,7 @@ extends Node
 
 const PORT: int = 7791
 const STEP_WAIT: float = 1.5
-const TIMEOUT: float = 180.0
+const TIMEOUT: float = 300.0
 
 var _role: String = ""
 var _failures: int = 0
@@ -124,7 +124,12 @@ func _run_host() -> void:
 	await _client_step("fléchette lancée (client)", "Mecha/Controls/Darts", "throw")
 	await _client_step("fléchettes en main : assis au bras de fer, fléchettes rangées (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit")
 	await _client_step("levé du bras de fer, fléchettes revenues en main (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_leave")
-	await _client_step("fléchettes reposées (client)", "Mecha/Controls/Darts", "request_release")
+	await _client_step("G : une fléchette posée au sol (client)", "Mecha/Controls/Darts", "request_drop_one")
+	await _client_step("fléchette au sol ramassée, celle-là seulement (client)", "Mecha/Controls/Darts",
+		"stay:request_take_one", [_dart_on_floor()])
+	await _client_step("G : fléchette reposée au sol (client)", "Mecha/Controls/Darts", "request_drop_one")
+	await _client_step("G : la dernière fléchette posée au sol (client)", "Mecha/Controls/Darts", "request_drop_one")
+	await _client_step("clic sur la cible : fléchettes remises (client)", "Mecha/Controls/Darts", "request_reset")
 	await _dart_in_client_step()
 	await _client_step("bras de fer : assis (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit")
 	await _client_step("bras de fer : levé (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_leave")
@@ -219,9 +224,9 @@ func _dart_in_client_step() -> void:
 		_failures += 1
 		_log("ÉCHEC  fléchette retirée : pas dans l'inventaire de l'hôte")
 	await _check("fléchette retirée par l'hôte (dans son inventaire)")
-	darts.request_release.rpc_id(1)
+	darts.request_drop_one.rpc_id(1)
 	await get_tree().create_timer(STEP_WAIT).timeout
-	await _check("fléchette reposée sur la cible par l'hôte")
+	await _check("fléchette posée par l'hôte (G)")
 
 
 ## Fait faire une action au client, vérifie que l'hôte l'a appliquée, puis compare.
@@ -346,6 +351,15 @@ func _finish() -> void:
 
 
 # --- Outils ---
+
+## Numéro d'une fléchette posée hors de la cible (au sol), -1 s'il n'y en a pas.
+func _dart_on_floor() -> int:
+	var darts: DartsGame = _world.get_node("Mecha/Controls/Darts") as DartsGame
+	for i: int in DartsGame.DART_COUNT:
+		if darts.dart_where[i] == DartsGame.Where.PLANTED and not darts.is_on_board(i):
+			return i
+	return -1
+
 
 func _level() -> Node3D:
 	return _director.get_level()

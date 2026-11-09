@@ -14,6 +14,9 @@ const SLATE_SIZE: Vector2 = Vector2(0.4, 0.48)
 const SLATE_FRONT_Z: float = -0.022
 ## Manches passées affichées sous la manche en cours.
 const HISTORY_LINES: int = 3
+## Longueur max d'un pseudo (lettres) : au-delà il est coupé avec « … » (manche en cours, manches passées).
+const NAME_MAX: int = 11
+const HISTORY_NAME_MAX: int = 9
 ## Durée d'écriture d'un texte (s).
 const WRITE_TIME: float = 0.35
 const FONT: Font = preload("res://assets/fonts/caveat.tres")
@@ -53,7 +56,7 @@ func _process(_delta: float) -> void:
 		return
 	var shown: int = maxi(game.round_scores.size() - game.flying_count(), 0)
 	var active: bool = game.thrower_peer_id != 0 or not game.round_scores.is_empty()
-	_set_text(_name, "name", game.thrower_name if active else "")
+	_set_text(_name, "name", _short(game.thrower_name, NAME_MAX) if active else "")
 	for i: int in _throws.size():
 		var score: int = game.round_scores[i] if i < shown else -1
 		_set_text(_throws[i], "throw%d" % i, str(score) if score >= 0 else "")
@@ -66,7 +69,7 @@ func _process(_delta: float) -> void:
 	for i: int in HISTORY_LINES:
 		var k: int = i + skip
 		var has: bool = k < game.history_names.size()
-		_set_text(_history[i], "hist%d" % i, game.history_names[k] if has else "")
+		_set_text(_history[i], "hist%d" % i, _short(game.history_names[k], HISTORY_NAME_MAX) if has else "")
 		_set_text(_history_totals[i], "hist_total%d" % i, str(game.history_totals[k]) if has else "")
 
 
@@ -82,15 +85,19 @@ func _build_layout() -> void:
 		ring.visible = false
 		_canvas.add_child(ring)
 		_bull_rings.append(ring)
-	_total = _label(Vector2(250, 330), Vector2(300, 110), 112, HORIZONTAL_ALIGNMENT_RIGHT)
-	_total_line = _wobbly_line([Vector2(390, 432), Vector2(470, 428), Vector2(552, 435)], 5.0)
+	_total = _label(Vector2(215, 330), Vector2(300, 110), 112, HORIZONTAL_ALIGNMENT_RIGHT)
+	_total_line = _wobbly_line([Vector2(355, 446), Vector2(435, 442), Vector2(517, 449)], 5.0)
 	_total_line.visible = false
 	_canvas.add_child(_total_line)
 	_canvas.add_child(_wobbly_line([Vector2(40, 478), Vector2(300, 470), Vector2(560, 480)], 4.0))
 	for i: int in HISTORY_LINES:
 		var y: float = 490.0 + 75.0 * i
 		_history.append(_label(Vector2(40, y), Vector2(380, 80), 78, HORIZONTAL_ALIGNMENT_LEFT))
-		_history_totals.append(_label(Vector2(420, y), Vector2(140, 80), 78, HORIZONTAL_ALIGNMENT_RIGHT))
+		_history_totals.append(_label(Vector2(385, y), Vector2(140, 80), 78, HORIZONTAL_ALIGNMENT_RIGHT))
+	# Les nombres ne sont jamais coupés : l'écriture penchée dépasse un peu de leur zone (un « 0 » perdait son bord).
+	for label: Label in [_total] + _throws + _history_totals:
+		label.clip_text = false
+		label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 
 
 func _label(pos: Vector2, size: Vector2, font_size: int, align: HorizontalAlignment) -> Label:
@@ -100,6 +107,7 @@ func _label(pos: Vector2, size: Vector2, font_size: int, align: HorizontalAlignm
 	label.horizontal_alignment = align
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS   # sécurité si un texte est encore trop large
 	label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED   # noms et nombres, traduits à la main
 	label.add_theme_font_override(&"font", FONT)
 	label.add_theme_font_size_override(&"font_size", font_size)
@@ -133,6 +141,13 @@ func _wobbly_ring(center: Vector2, radius: Vector2) -> Line2D:
 
 
 ## Écrit `text` dans `label` s'il a changé, lettre après lettre comme à la craie.
+## Pseudo coupé à `max_chars` lettres, avec « … » s'il est plus long.
+static func _short(player_name: String, max_chars: int) -> String:
+	if player_name.length() <= max_chars:
+		return player_name
+	return player_name.left(max_chars - 1).strip_edges() + "…"
+
+
 func _set_text(label: Label, key: String, text: String) -> void:
 	if _drawn.get(key, null) == text:
 		return

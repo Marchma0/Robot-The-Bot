@@ -2,13 +2,17 @@ class_name HintPanel
 extends VBoxContainer
 ## Petit panneau en haut à gauche avec les touches d'un poste (assis au grappin / à la foreuse,
 ## ou un joystick en main) : une ligne « touche → icône » par action.
-## Tab (RB à la manette) le replie en un petit onglet « Tab ? », et le rouvre.
+## Ouvert en arrivant au poste, il se replie tout seul au bout de AUTO_COLLAPSE secondes en un petit onglet
+## « Tab ? » ; Tab (RB à la manette) le rouvre ou le replie.
 ## Purement local (interface du joueur), rien sur le réseau.
 
-## Replié ou non : gardé d'un poste à l'autre pendant la partie.
-static var collapsed: bool = false
+## Temps (s) pendant lequel le panneau reste ouvert en arrivant à un poste.
+const AUTO_COLLAPSE: float = 5.0
+
+var collapsed: bool = false
 
 var _key: String = ""
+var _open_time: float = 0.0
 var _panel: PanelContainer
 var _rows: VBoxContainer
 var _tab_chip: PanelContainer
@@ -54,9 +58,19 @@ func _ready() -> void:
 	_apply_collapsed()
 
 
+func _process(delta: float) -> void:
+	if not visible or collapsed or _open_time <= 0.0:
+		return
+	_open_time -= delta
+	if _open_time <= 0.0:
+		collapsed = true
+		_apply_collapsed()
+
+
 func _input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed(&"toggle_help"):
 		collapsed = not collapsed
+		_open_time = 0.0   # rouvert à la main : il reste ouvert
 		_apply_collapsed()
 		get_viewport().set_input_as_handled()
 
@@ -71,7 +85,13 @@ func show_hints(hints: Array[InputHint]) -> void:
 		child.queue_free()
 	for hint: InputHint in hints:
 		_rows.add_child(HintBar.make_row(hint))
+	var arriving: bool = not visible and not hints.is_empty()
 	visible = not hints.is_empty()
+	if arriving:
+		# On arrive à un poste : le panneau s'ouvre, puis se replie tout seul.
+		collapsed = false
+		_open_time = AUTO_COLLAPSE
+		_apply_collapsed()
 
 
 func _apply_collapsed() -> void:

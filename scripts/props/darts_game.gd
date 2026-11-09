@@ -3,7 +3,8 @@ extends Node3D
 ## Jeu de fléchettes du robot, sur la cible du salon (ventre). Trois fléchettes (DartHandle), plantées dans
 ## la cible au départ. On vise la cible (DartsTake) ou une fléchette plantée (E) pour prendre toutes les fléchettes
 ## libres d'un coup : elles vont ensemble dans une case de l'inventaire (Inventory). Case en main, on lance au
-## regard (clic), de n'importe où dans le robot ; G les repose sur la cible. La fléchette part en cloche
+## regard (clic), de n'importe où dans le robot ; G en pose une couchée au sol, devant soi. Si des fléchettes
+## traînent ailleurs, un clic sur la cible les y remet toutes (`request_reset`). La fléchette part en cloche
 ## et se plante là où elle tape : la cible (points selon l'anneau, « Dans le mille ! » au centre), un mur,
 ## un meuble… ou un autre nain : plantée au visage (de face, à hauteur de tête), il a la vue brouillée ; ailleurs
 ## (casque, corps), il a juste un flash rouge de douleur. Dans tous les cas, un autre nain doit venir la lui
@@ -35,6 +36,11 @@ const BULLSEYE_POINTS: int = 50
 ## Fléchettes au repos, plantées dans la cible (x, y sur la cible, un peu de biais).
 const REST_SPOTS: Array[Vector3] = [Vector3(0.09, 0.1, 0.0), Vector3(-0.11, 0.02, 0.0), Vector3(0.03, -0.13, 0.0)]
 const BOARD_FRONT_Z: float = -0.04
+## Rayon de la cible (m) : une fléchette plantée plus loin du centre « traîne » ailleurs (has_darts_away).
+const BOARD_RADIUS: float = 0.3
+## Fléchette posée au sol (G) : à cette distance devant le nain, et ce petit écart au-dessus du sol (m).
+const DROP_DISTANCE: float = 0.5
+const DROP_LIFT: float = 0.012
 ## Distance max pour prendre les fléchettes (depuis la cible ou une fléchette plantée) et pour en retirer une.
 const TAKE_REACH: float = 3.0
 const PULL_REACH: float = 2.5
@@ -199,44 +205,110 @@ func throw_from_hand(origin: Vector3, direction: Vector3) -> void:
 	request_throw.rpc_id(1, origin, direction)
 
 
-## Joueur local, fléchettes en main : les reposer sur la cible.
+## Joueur local, fléchettes en main (G) : en poser une par terre devant soi.
 func drop_from_hand() -> void:
-	request_release.rpc_id(1)
+	request_drop_one.rpc_id(1)
 
 
-## Prendre toutes les fléchettes libres (plantées ailleurs que dans un nain) : elles vont dans la case des
-## fléchettes du joueur s'il en a déjà, sinon dans une case libre.
+## Vrai si une fléchette traîne ailleurs que sur la cible (plantée dans un mur, posée au sol, dans un nain) :
+## viser la cible propose alors de toutes les y remettre (DartsTake).
+func has_darts_away() -> bool:
+	for i: int in DART_COUNT:
+		if dart_where[i] == Where.IN_DWARF or (dart_where[i] == Where.PLANTED and not is_on_board(i)):
+			return true
+	return false
+
+
+## Prendre les fléchettes plantées dans la cible (toutes d'un coup) : elles vont dans la case des fléchettes
+## du joueur s'il en a déjà, sinon dans une case libre. S'il n'y en a aucune dans la cible, toutes les libres.
 @rpc("any_peer", "call_local", "reliable")
 func request_take() -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
-	var dwarf: Dwarf = Dwarf.of_peer(sender)
-	if dwarf == null or not has_free_darts() or not _near_a_dart(dwarf):
+	var slot: int = _take_slot(sender)
+	if slot < 0 or not _near_a_dart(Dwarf.of_peer(sender)):
 		return
-	if Possession.holds_control(get_tree(), sender):
-		return   # assis, sur la corde ou un levier en main
-	var slot: int = _slot_for(sender)
-	if slot < 0:
-		return   # inventaire plein
+	var on_board: bool = false
 	for i: int in DART_COUNT:
-		if dart_where[i] == Where.PLANTED:
+		on_board = on_board or (dart_where[i] == Where.PLANTED and is_on_board(i))
+	for i: int in DART_COUNT:
+		if dart_where[i] == Where.PLANTED and (is_on_board(i) or not on_board):
 			_give(i, sender, slot)
 
 
-## Poser : les fléchettes du joueur (case en main) retournent sur la cible.
+## Prendre une seule fléchette, `index`, qui traîne hors de la cible (posée au sol, plantée dans un mur).
+## Visée dans la cible, elle les prend toutes (comme `request_take`).
 @rpc("any_peer", "call_local", "reliable")
-func request_release() -> void:
+func request_take_one(index: int) -> void:
+	if not multiplayer.is_server() or index < 0 or index >= DART_COUNT or dart_where[index] != Where.PLANTED:
+		return
+	if is_on_board(index):
+		request_take()
+		return
+	var sender: int = multiplayer.get_remote_sender_id()
+	var slot: int = _take_slot(sender)
+	if slot < 0 or Dwarf.of_peer(sender).global_position.distance_to(to_global(dart_pos[index])) > TAKE_REACH:
+		return
+	_give(index, sender, slot)
+
+
+## Hôte : case où ranger des fléchettes prises par `sender`, ou -1 s'il ne peut pas (pas de nain, assis,
+## sur la corde ou un levier en main, inventaire plein).
+func _take_slot(sender: int) -> int:
+	if Dwarf.of_peer(sender) == null or Possession.holds_control(get_tree(), sender):
+		return -1
+	return _slot_for(sender)
+
+
+## Poser (G) : une fléchette du joueur (case en main) est posée couchée au sol, devant lui ; on la ramasse
+## ensuite comme une fléchette plantée. Hors du robot (ou sans sol sous la main), elle retourne sur la cible.
+@rpc("any_peer", "call_local", "reliable")
+func request_drop_one() -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
-	if darts_held_by(sender) == 0 or not Inventory.is_in_hand(get_tree(), sender, _slot_of(sender)):
+	var dwarf: Dwarf = Dwarf.of_peer(sender)
+	var index: int = _first_held_by(sender)
+	if dwarf == null or index < 0 or not Inventory.is_in_hand(get_tree(), sender, dart_slot[index]):
+		return
+	var forward: Vector3 = -dwarf.global_basis.z
+	var above: Vector3 = dwarf.global_position + forward * DROP_DISTANCE + dwarf.global_basis.y * 0.8
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
+		above, above - dwarf.global_basis.y * 4.0, 1, [dwarf.get_rid()])
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty() or not (owner != null and owner.is_ancestor_of(hit["collider"] as Node)):
+		_put_on_board(index)
+	else:
+		# Couchée sur le sol, la pointe vers l'avant du nain, un peu au-dessus pour ne pas s'y enfoncer.
+		var where: PackedInt32Array = dart_where
+		var pos: PackedVector3Array = dart_pos
+		var dir: PackedVector3Array = dart_dir
+		var peer: PackedInt32Array = dart_peer
+		where[index] = Where.PLANTED
+		pos[index] = to_local((hit["position"] as Vector3) + dwarf.global_basis.y * DROP_LIFT)
+		dir[index] = (global_basis.inverse() * forward).normalized()
+		peer[index] = 0
+		dart_where = where
+		dart_pos = pos
+		dart_dir = dir
+		dart_peer = peer
+	if sender == thrower_peer_id and darts_held_by(sender) == 0:
+		_end_round()
+
+
+## Cible (clic) : toutes les fléchettes qui traînent ailleurs (murs, sol, nains) retournent sur la cible.
+## Celles qu'un joueur a dans son inventaire ne bougent pas.
+@rpc("any_peer", "call_local", "reliable")
+func request_reset() -> void:
+	if not multiplayer.is_server():
+		return
+	var dwarf: Dwarf = Dwarf.of_peer(multiplayer.get_remote_sender_id())
+	if dwarf == null or dwarf.global_position.distance_to(global_position) > TAKE_REACH:
 		return
 	for i: int in DART_COUNT:
-		if dart_where[i] == Where.IN_HAND and dart_peer[i] == sender:
+		if dart_where[i] != Where.IN_HAND:
 			_put_on_board(i)
-	if sender == thrower_peer_id:
-		_end_round()
 
 
 ## Lancer (hôte) : `origin` = les yeux du lanceur, `direction` = où il regarde (global).
@@ -466,6 +538,12 @@ func _start_round(peer_id: int, dwarf: Dwarf) -> void:
 	thrower_name = dwarf.get_display_name()
 	round_scores = PackedInt32Array()
 	round_done = false
+
+
+## Vrai si la fléchette `index`, plantée, est dans la cible (à sa place de repos ou lancée dedans).
+func is_on_board(index: int) -> bool:
+	var pos: Vector3 = dart_pos[index]
+	return Vector2(pos.x, pos.y).length() <= BOARD_RADIUS and absf(pos.z) < 0.15
 
 
 func _near_a_dart(dwarf: Dwarf) -> bool:

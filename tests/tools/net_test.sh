@@ -7,5 +7,5 @@ mkdir -p build
 "$GODOT_PATH" --headless --path . res://tests/tools/net_test.tscn -- --role=host > build/net_test_host.log 2>&1
 status=$?
 wait
-grep -h "net_test\|ERROR\|SCRIPT ERROR" build/net_test_host.log build/net_test_client.log
+grep -ah "net_test\|ERROR\|SCRIPT ERROR" build/net_test_host.log build/net_test_client.log
 exit $status

@@ -78,6 +78,7 @@ func _on_session_started() -> void:
 	if NetworkManager.is_steam_session() and not multiplayer.is_server():
 		_lobby_code_label.visible = false
 		_session_hints.show_hints([InputHint.make(&"pause", &"exit")])
+		_session_hints.fade_out_after(6.0)   # interface minimaliste : rappel au début seulement
 		_session_info.visible = true
 
 
@@ -87,6 +88,7 @@ func _on_steam_lobby_created(code: String) -> void:
 	_lobby_code_label.text = code
 	_lobby_code_label.visible = true
 	_session_hints.show_hints([InputHint.make(&"invite_friends", &"invite"), InputHint.make(&"pause", &"exit")])
+	_session_hints.fade_out_after(6.0)
 	_session_info.visible = true
 
 
