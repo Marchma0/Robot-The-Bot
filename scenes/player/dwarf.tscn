@@ -78,7 +78,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, -0.08)
 [node name="Camera" type="Camera3D" parent="Head"]
 unique_name_in_owner = true
 near = 0.05
-fov = 75.0
+fov = 90.0
 
 [node name="Interactor" type="RayCast3D" parent="Head/Camera"]
 unique_name_in_owner = true
