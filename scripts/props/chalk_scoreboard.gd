@@ -86,7 +86,7 @@ func _build_layout() -> void:
 		_canvas.add_child(ring)
 		_bull_rings.append(ring)
 	_total = _label(Vector2(215, 330), Vector2(300, 110), 112, HORIZONTAL_ALIGNMENT_RIGHT)
-	_total_line = _wobbly_line([Vector2(355, 432), Vector2(435, 428), Vector2(517, 435)], 5.0)
+	_total_line = _wobbly_line([Vector2(355, 446), Vector2(435, 442), Vector2(517, 449)], 5.0)
 	_total_line.visible = false
 	_canvas.add_child(_total_line)
 	_canvas.add_child(_wobbly_line([Vector2(40, 478), Vector2(300, 470), Vector2(560, 480)], 4.0))
@@ -94,6 +94,10 @@ func _build_layout() -> void:
 		var y: float = 490.0 + 75.0 * i
 		_history.append(_label(Vector2(40, y), Vector2(380, 80), 78, HORIZONTAL_ALIGNMENT_LEFT))
 		_history_totals.append(_label(Vector2(385, y), Vector2(140, 80), 78, HORIZONTAL_ALIGNMENT_RIGHT))
+	# Les nombres ne sont jamais coupés : l'écriture penchée dépasse un peu de leur zone (un « 0 » perdait son bord).
+	for label: Label in [_total] + _throws + _history_totals:
+		label.clip_text = false
+		label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 
 
 func _label(pos: Vector2, size: Vector2, font_size: int, align: HorizontalAlignment) -> Label:
