@@ -202,7 +202,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 > Avant de commencer une tâche : la marquer `[en cours — pseudo]` et pousser tout de suite. La cocher quand elle est fusionnée dans `main`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0)
+**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité)
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) : aucun pour l'instant.
 
@@ -238,7 +238,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 3.1 Modèle low poly (ventre + tête), postes, système d'interaction (boutons, leviers, joysticks toujours actifs) (M2, M3)
 - [x] 3.2 Circulation : rayon tracteur, trappe, corde, nain dehors (M6)
 - [x] 3.3 Intérieur modulaire et vie à bord : coque en tôle, salon, canapé, télé, toilettes et mini-jeu « Poussée », cacas, caca doré (M6.5, M6.7)
-- [ ] 3.4 **Marche** (M7) `[en cours — Marchma0]` — pendant 3.4, ne pas toucher à `blender/mecha.blend`, `assets/models/mecha.glb` ni aux jambes
+- [x] 3.4 **Marche** (M7, 2026-11-09) : marche en rythme, jauge d'erreur et chute, QTE de relèvement, saut et accroupi
   - [x] Squelette, IK 2 os, marche en rythme, voyant « à toi », élan du robot, ressenti des joysticks (M7.1)
   - [x] Jauge d'erreur, effondrement à genoux, QTE de relèvement à tour de rôle, système de QTE générique (M7.2)
   - [x] **Saut et accroupi** (M7.5, 2026-11-09) : sur l'écran « Prêt » des consoles, ↑ par les deux à moins d'1 s = QTE du saut (1re étape : les deux joysticks poussés dans la même direction, à 30° près, puis flèches à tour de rôle ; le robot saute dans cette direction) ; ↓ par les deux = QTE de l'accroupi, ↓ à nouveau pour se relever ; QTE qui traîne = annulé et jauge d'erreur. Remplace les panneaux muraux (M7.4, abandonnés le 2026-11-09)
