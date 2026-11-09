@@ -204,7 +204,8 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 
 **En cours** : rien pour l'instant.
 
-**Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) : aucun pour l'instant.
+**Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) :
+- Caisse portée (2026-11-09, signalé par Marchma0) : en marchant avec une caisse dans les mains, le nain se cogne sans arrêt dans la caisse, ce qui donne des à-coups désagréables (la caisse portée gêne sans doute le déplacement du nain).
 
 ### Phase 1 — Fondations (moteur, réseau, outils)
 - [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet (héberger / rejoindre en local), 4 nains (M0)
