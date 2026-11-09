@@ -9,7 +9,9 @@ extends Node
 ## Réseau : rien. Purement local, actif seulement sur le nain du joueur (`activate`).
 
 ## Position des yeux devant le centre du corps (m, -Z = devant) : regard droit / regard vers le bas.
-const EYE_FORWARD: float = -0.08
+## Les yeux sont au-dessus de l'avant du torse (qui va à 0,25 m, 0,29 m penché en marchant) : sinon
+## le haut des épaules entre dans le bas de l'image avec l'angle de vue de 90°.
+const EYE_FORWARD: float = -0.2
 const EYE_FORWARD_LOOKING_DOWN: float = -0.36
 ## Inclinaison vers le bas (rad) à partir de laquelle les yeux sont tout à fait avancés.
 const LOOK_DOWN_FULL: float = deg_to_rad(80.0)
