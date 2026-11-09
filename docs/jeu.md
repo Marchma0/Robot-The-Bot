@@ -100,10 +100,10 @@
 - Marcher, sauter, s'accroupir, roue d'emotes (6 gestes : coucou, pouce levé, pointer, danse, je sais pas, doigt d'honneur), bulle d'état avec mini-portrait animé en haut à droite.
 - **Inventaire de 5 cases** (barre en bas de l'écran) : un caca prend une case, les fléchettes une seule pour toutes.
   On choisit sa case avec 1 à 5, la molette ou la croix de la manette ; l'objet de la case choisie est en main
-  (dans sa main droite, bras tendu devant soi, qui suit le regard ; les autres le voient), clic = le lancer, G = le poser, E = ramasser même avec un objet en main.
+  (dans sa main droite, bras tendu devant soi, qui suit le regard ; les autres le voient), clic = l'utiliser (le lancer), G = le poser par terre (et rien d'autre), E ou clic = ramasser (E même avec un objet en main).
   Prendre un levier, la corde ou s'asseoir **range l'objet en main** tout seul ; il revient en main en lâchant.
   **Objets lourds** (caisses) : portés à deux mains devant soi (une main de chaque côté), ils prennent une case et restent en main (on ne
-  change plus de case, on ne ramasse rien d'autre, pas de levier ni de siège) ; clic ou G les pose devant soi.
+  change plus de case, on ne ramasse rien d'autre, pas de levier ni de siège) ; G les pose devant soi (le clic ne fait rien).
 - **Vue à la première personne, avec son vrai corps** : seule la tête est cachée (la caméra est dedans). En baissant
   les yeux, on voit son ventre et sa ceinture ; l'objet en main et la caisse portée se voient avec les mains qui les
   tiennent. Pas de bras à part accrochés à la caméra : ce qu'on voit de soi est exactement ce que voient les autres.
@@ -112,8 +112,8 @@
   toilettes dans la tête (mini-jeu « Poussée », cacas qu'on ramasse et qu'on lance, caca légendaire doré).
   Intérieur usé et encombré, jamais vide.
 - **Fléchettes** sur la cible du salon : on prend les fléchettes libres d'un coup (sur la cible ou là où elles sont
-  plantées, une case d'inventaire), on lance de n'importe où dans le robot, elles se plantent là où elles tapent. Centre = « Dans le mille ! »
-  (confettis) ; les scores s'écrivent à la craie sur l'ardoise d'à côté (lancers, total, 3 manches précédentes ;
+  plantées, une case d'inventaire), on lance de n'importe où dans le robot, elles se plantent là où elles tapent ; G en pose une couchée au sol devant soi. Si des fléchettes traînent ailleurs (mur, sol, dans un nain), viser la cible propose de les remettre : un clic les y ramène toutes (pas celles qu'un joueur a dans son inventaire). Centre = « Dans le mille ! »
+  (confettis) ; les scores s'écrivent à la craie sur l'ardoise d'à côté (lancers, total, 3 manches précédentes ; pseudos trop longs coupés avec « … » ;
   rien n'est gardé après la partie). Un nain touché a un flash rouge de douleur et la fléchette reste plantée là
   où elle l'a touché (casque, visage ou corps) ; au visage seulement, il a en plus la vue brouillée
   (aucun texte à l'écran). Un autre nain
@@ -127,7 +127,7 @@
 ## Principes qui valent partout
 - **Coop chaotique** : les commandes sont dans le cockpit, il faut se coordonner et se déplacer.
 - **Deux langues** : français et anglais.
-- **Rien d'écrit à l'écran, interface sobre** : la place est au jeu, pas aux touches. Ce qu'on peut utiliser se reconnaît en le visant : le **point de visée devient un petit anneau** et l'**objet s'illumine sur ses bords** (lueur chaude qui respire) ; à côté de l'anneau, en petit, l'**icône de l'action** (appuyer, grimper, s'asseoir…), avec sa touche seulement si ce n'est pas le clic (E pour ramasser, Espace pour lâcher la corde). « Viser » n'est jamais affiché ; la touche pour poser l'objet en main est un petit G sur sa case d'inventaire ; le panneau des touches d'un poste se replie tout seul après 5 s (Tab le rouvre) ; « Échap → quitter » s'efface après 6 s. Au pire de petits mots en police Fredoka.
+- **Rien d'écrit à l'écran, interface sobre** : la place est au jeu, pas aux touches. Ce qu'on peut utiliser se reconnaît en le visant : le **point de visée devient un petit anneau** et l'**objet s'illumine sur ses bords** (lueur chaude qui respire) ; à côté de l'anneau, en petit, l'**icône de l'action** (appuyer, grimper, s'asseoir…), avec sa touche seulement si ce n'est ni le clic ni E (ex. Espace pour lâcher la corde). « Viser » n'est jamais affiché ; la touche pour poser l'objet en main est un petit G sur sa case d'inventaire ; le panneau des touches d'un poste se replie tout seul après 5 s (Tab le rouvre) ; « Échap → quitter » s'efface après 6 s. Au pire de petits mots en police Fredoka.
   Seule exception : la bulle de texte du personnage de la radio (voir « L'intro et le tutoriel »).
   Les infos de jeu (jauges, QTE, tour de qui) sont **dans le cockpit**.
 - **Tout ce qui bouge est animé**, rien ne glisse ni ne se téléporte.

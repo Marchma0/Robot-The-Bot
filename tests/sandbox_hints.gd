@@ -1,7 +1,7 @@
 extends Node3D
 ## Bac à sable de l'interface sobre : un nain local dans le ventre vise des commandes.
 ## Rien de visé = simple point ; une commande visée = le viseur devient un anneau, l'objet s'illumine, et l'icône
-## de l'action s'affiche en petit à côté (sans touche pour le clic, avec la touche E pour les fléchettes) ;
+## de l'action s'affiche en petit à côté (logo seul, sans touche ; la cible propose « remettre » si des fléchettes traînent) ;
 ## avec un objet en main, plus de « lancer / poser » à côté du viseur (seul un petit G sur la case de l'inventaire).
 ## Captures dans build/views/hints_*.png.
 
@@ -35,8 +35,14 @@ func _ready() -> void:
 	await _aim("Controls/BeamSwitch_Belly", "interrupteur")
 	TestCheck.expect(_crosshair().targeting, "interrupteur visé : anneau")
 	await _aim("Controls/Darts", "flechettes")
-	TestCheck.expect(_bar_key().contains("interact"), "fléchettes visées : la touche E s'affiche (%s)" % _bar_key())
-	TestCheck.expect(_bar_glyph_count() == 1, "fléchettes visées : la touche E est dessinée")
+	TestCheck.expect(_bar_key().ends_with(":dart"), "fléchettes visées : le logo fléchette (%s)" % _bar_key())
+	TestCheck.expect(_bar_glyph_count() == 0, "fléchettes visées : le logo seul, sans touche")
+	var darts: DartsGame = _mecha.get_node("Controls/Darts") as DartsGame
+	darts._land(0, {"point": darts.to_global(Vector3(1.0, -0.5, -0.3)), "dir": Vector3.DOWN, "time": 0.0})
+	await _wait(0.3)
+	TestCheck.expect(_bar_key().ends_with(":darts_reset"), "une fléchette traîne : la cible propose de les remettre (%s)" % _bar_key())
+	await _shot("cible_remettre", 0.1)
+	darts._put_on_board(0)
 
 	var poop: Poop = POOP_SCENE.instantiate() as Poop
 	_mecha.get_node("Props").add_child(poop)

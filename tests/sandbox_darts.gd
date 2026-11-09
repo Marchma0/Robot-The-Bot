@@ -67,9 +67,20 @@ func _ready() -> void:
 	await _wait(0.3)
 	TestCheck.expect(in_ally >= 0 and _darts.dart_where[in_ally] == DartsGame.Where.IN_HAND and _darts.darts_held_by(1) == 1,
 		"on retire la fléchette de l'allié : elle va dans notre inventaire")
-	_darts.request_release.rpc_id(1)
+	_darts.request_drop_one.rpc_id(1)
 	await _wait(0.2)
-	TestCheck.expect(_darts.darts_held_by(1) == 0 and _darts.dart_where[in_ally] == DartsGame.Where.PLANTED, "G : elle retourne sur la cible")
+	TestCheck.expect(_darts.darts_held_by(1) == 0 and _darts.dart_where[in_ally] == DartsGame.Where.PLANTED,
+		"G : la fléchette est posée (plus dans l'inventaire)")
+	TestCheck.expect(_darts.has_darts_away(), "G : posée au sol, pas sur la cible")
+	var dropped: Vector3 = _dwarf.global_transform.affine_inverse() * _darts.to_global(_darts.dart_pos[in_ally])
+	TestCheck.expect(absf(dropped.y) < 0.1 and dropped.z < -0.2,
+		"G : couchée au sol, devant les pieds du nain (%s)" % dropped)
+	await _shot("2b_posee_au_sol", Vector3(0.1, 3.8, 0.6),
+		_mecha.to_local(_darts.to_global(_darts.dart_pos[in_ally])), 0.1)
+	_darts.request_reset.rpc_id(1)
+	await _wait(0.2)
+	TestCheck.expect(not _darts.has_darts_away() and _darts.has_free_darts(),
+		"clic sur la cible : toutes les fléchettes y retournent")
 
 	# Une fléchette en plein visage (elle arrive de face) : vue brouillée, et on ne peut pas se l'enlever soi-même.
 	var facing: Vector3 = -_dwarf.view_transform().basis.z

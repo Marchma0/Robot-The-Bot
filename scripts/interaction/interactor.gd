@@ -5,9 +5,10 @@ extends RayCast3D
 ## commande qui envoie sa demande à l'hôte. Une nouvelle commande n'a donc rien à changer ici.
 ## Garde aussi ce que le joueur tient ou occupe (`_claim` : levier, siège ou corde,
 ## un seul à la fois, voir Possession), attend que l'hôte le confirme, et gère les touches tant qu'on le tient.
-## Avec un objet de l'inventaire en main (voir Inventory) : clic = le lancer, G = le poser, E = ramasser ou
-## appuyer ; prendre un levier, la corde ou s'asseoir range l'objet (`Interactable.stows_hand_item`), sauf un
-## objet lourd (caisse) : clic ou G la pose, et il faut la poser avant de prendre une commande.
+## Avec un objet de l'inventaire en main (voir Inventory) : clic = l'utiliser (le lancer), G = le poser par
+## terre (et rien d'autre), E = ramasser ou appuyer ; prendre un levier, la corde ou s'asseoir range l'objet
+## (`Interactable.stows_hand_item`), sauf un objet lourd (caisse) : seul G la pose, et il faut la poser avant
+## de prendre une commande.
 ## Actif uniquement pour le joueur local.
 
 ## Les indices à afficher (touche → icône) ont changé (liste vide = rien à afficher).
@@ -260,12 +261,12 @@ func _handle_actions() -> void:
 	var item: Dictionary = _hand_item() if _claim == null else {}
 	var stows: bool = _target != null and _target.stows_hand_item()
 	if not item.is_empty() and not (stows and not item["heavy"]):
-		# Objet en main : clic = le lancer dans la direction du regard (objet lourd : le poser), G = le poser ;
-		# E = ramasser ou appuyer sur la commande visée. Levier, siège, corde : on passe à la suite (l'objet
-		# se range tout seul), sauf avec un objet lourd.
+		# Objet en main : clic = l'utiliser (le lancer dans la direction du regard ; un objet lourd ne s'utilise
+		# pas), G = le poser par terre ; E = ramasser ou appuyer sur la commande visée. Levier, siège, corde :
+		# on passe à la suite (l'objet se range tout seul), sauf avec un objet lourd.
 		if grab:
-			item["node"].call(&"throw_from_hand", global_position, -global_basis.z)
 			if not item["heavy"]:
+				item["node"].call(&"throw_from_hand", global_position, -global_basis.z)
 				thrown.emit()
 		elif Input.is_action_just_pressed("drop"):
 			item["node"].call(&"drop_from_hand")

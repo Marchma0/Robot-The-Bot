@@ -35,10 +35,11 @@ static func get_icon(icon_name: StringName) -> Texture2D:
 	return _icons[icon_name]
 
 
-## Vrai quand la touche va de soi (interface minimaliste) : le clic pour utiliser ce qu'on vise (appuyer,
-## attraper, s'asseoir…). À côté du viseur, on n'affiche alors que l'icône de l'action, sans la touche.
+## Vrai quand la touche va de soi (interface sobre) : le clic pour utiliser ce qu'on vise (appuyer, attraper,
+## s'asseoir…) et E pour ramasser ou se lever (le clic ramasse aussi). À côté du viseur, on n'affiche alors
+## que l'icône de l'action, sans la touche.
 static func is_obvious(hint: InputHint) -> bool:
-	return hint.action == &"grab"
+	return hint.action == &"grab" or hint.action == &"interact"
 
 
 ## Les indices à afficher : tous sauf « viser » (souris / stick), qui va de soi partout.
