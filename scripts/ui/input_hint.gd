@@ -35,6 +35,21 @@ static func get_icon(icon_name: StringName) -> Texture2D:
 	return _icons[icon_name]
 
 
+## Vrai pour un geste évident, jamais affiché (interface minimaliste) : le clic pour utiliser ce qu'on vise
+## (appuyer, attraper, s'asseoir, lancer…) et la souris / le stick pour viser.
+static func is_obvious(hint: InputHint) -> bool:
+	return hint.action == &"grab" or hint.action == LOOK
+
+
+## Les indices qui méritent d'être affichés (sans les gestes évidents).
+static func shown(hints: Array[InputHint]) -> Array[InputHint]:
+	var kept: Array[InputHint] = []
+	for hint: InputHint in hints:
+		if not is_obvious(hint):
+			kept.append(hint)
+	return kept
+
+
 ## Clé texte d'une liste d'indices (pour savoir si l'affichage doit changer).
 static func key_of(hints: Array[InputHint]) -> String:
 	var parts: PackedStringArray = []

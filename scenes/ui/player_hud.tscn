@@ -53,19 +53,17 @@ color = Color(1, 1, 1, 0.85)
 
 [node name="HintBar" type="HBoxContainer" parent="."]
 unique_name_in_owner = true
-anchors_preset = 7
+anchors_preset = 8
 anchor_left = 0.5
-anchor_top = 1.0
+anchor_top = 0.5
 anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -320.0
-offset_top = -160.0
-offset_right = 320.0
-offset_bottom = -108.0
-grow_horizontal = 2
-grow_vertical = 0
+anchor_bottom = 0.5
+offset_left = 20.0
+offset_top = -12.0
+offset_right = 420.0
+offset_bottom = 22.0
+scale = Vector2(0.7, 0.7)
 mouse_filter = 2
-alignment = 1
 script = ExtResource("2_hintbar")
 
 [node name="InventoryBar" type="HBoxContainer" parent="."]

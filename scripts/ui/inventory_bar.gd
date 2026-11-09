@@ -74,6 +74,15 @@ func _make_slot(index: int, slot: Dictionary, selected: bool) -> Control:
 			var count: Label = _label("×%d" % slot["count"], 17)
 			count.position = Vector2(SLOT_SIZE - 30.0, SLOT_SIZE - 26.0)
 			panel.add_child(count)
+		if selected:
+			# Seul rappel des touches de l'objet en main : la touche pour le poser, en tout petit dans le coin
+			# (le lancer au clic va de soi).
+			var drop: InputGlyph = InputGlyph.new()
+			drop.action = &"drop"
+			drop.scale = Vector2(0.5, 0.5)
+			drop.position = Vector2(SLOT_SIZE - 20.0, -9.0)
+			drop.modulate = Color(1.0, 1.0, 1.0, 0.8)
+			holder.add_child(drop)
 	var number: Label = _label(str(index + 1), 14)
 	number.position = Vector2(7.0, 2.0)
 	number.modulate = Color(1.0, 1.0, 1.0, 1.0 if selected else 0.6)

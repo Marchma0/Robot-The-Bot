@@ -314,11 +314,9 @@ func _update_prompt() -> void:
 	if stows and not item.is_empty() and not item["heavy"]:
 		hints = _target.get_hints()   # levier, siège, corde : l'objet en main se rangera
 	elif not item.is_empty():
+		# Lancer (clic) va de soi ; poser (G) est rappelé en petit sur la case de l'inventaire (InventoryBar).
 		if _target != null and not stows:
 			hints.append_array(_target.get_hints())   # ramasser, appuyer…
-		if not item["heavy"]:
-			hints.append(InputHint.make(&"grab", &"throw"))
-		hints.append(InputHint.make(&"drop", &"drop"))
 	elif _claim is Interactable and _claim_confirmed:
 		hints = (_claim as Interactable).get_hints()
 		if _claim is Seat and _target != null:

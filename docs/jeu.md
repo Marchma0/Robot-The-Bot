@@ -127,7 +127,7 @@
 ## Principes qui valent partout
 - **Coop chaotique** : les commandes sont dans le cockpit, il faut se coordonner et se déplacer.
 - **Deux langues** : français et anglais.
-- **Rien d'écrit à l'écran** : des icônes « touche → action », au pire de petits mots en police Fredoka.
+- **Rien d'écrit à l'écran, interface minimaliste** : la place est au jeu, pas aux touches. Les gestes évidents (clic pour utiliser ce qu'on vise, souris pour viser, avancer pour grimper) ne sont jamais affichés ; une touche moins évidente (E pour ramasser, Espace pour lâcher la corde) s'affiche en petit à droite du point de visée, seulement en visant ; la touche pour poser l'objet en main est un petit G sur sa case d'inventaire ; le panneau des touches d'un poste se replie tout seul après 5 s (Tab le rouvre) ; « Échap → quitter » s'efface après 6 s. Au pire de petits mots en police Fredoka.
   Seule exception : la bulle de texte du personnage de la radio (voir « L'intro et le tutoriel »).
   Les infos de jeu (jauges, QTE, tour de qui) sont **dans le cockpit**.
 - **Tout ce qui bouge est animé**, rien ne glisse ni ne se téléporte.

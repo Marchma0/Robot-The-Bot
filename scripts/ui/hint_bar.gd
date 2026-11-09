@@ -1,27 +1,30 @@
 class_name HintBar
 extends HBoxContainer
-## Rangée de pastilles « touche → icône » (remplace les textes d'aide à l'écran).
-## Chaque pastille : le dessin de la touche / du bouton (InputGlyph) puis l'icône de l'action.
+## Petite rangée « touche → icône », discrète : sans fond, en fondu, posée à droite du point de visée
+## (PlayerHud) ou en haut de l'écran (code du lobby). Chaque indice : le dessin de la touche / du bouton
+## (InputGlyph) puis l'icône de l'action. Les gestes évidents sont déjà retirés (InputHint.shown).
 
 const ICON_SIZE: float = 34.0
 const COLOR_BG: Color = Color(0.11, 0.08, 0.06, 0.72)
 const COLOR_BORDER: Color = Color("b87440")
+## Opacité une fois affichée, et durée du fondu (s).
+const SHOWN_ALPHA: float = 0.85
+const FADE_TIME: float = 0.15
 
 var _key: String = ""
-var _chip_style: StyleBoxFlat
+var _tween: Tween
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_theme_constant_override(&"separation", 10)
-	_chip_style = make_style()
+	add_theme_constant_override(&"separation", 12)
 
 
 func _input(event: InputEvent) -> void:
 	InputGlyph.track_device(event)
 
 
-## Affiche ces indices (liste vide = rien).
+## Affiche ces indices (liste vide = rien), en fondu.
 func show_hints(hints: Array[InputHint]) -> void:
 	var key: String = InputHint.key_of(hints)
 	if key == _key:
@@ -30,15 +33,25 @@ func show_hints(hints: Array[InputHint]) -> void:
 	for child: Node in get_children():
 		child.queue_free()
 	for hint: InputHint in hints:
-		add_child(_make_chip(hint))
+		add_child(make_row(hint))
+	if _tween != null:
+		_tween.kill()
+	if hints.is_empty():
+		modulate.a = 0.0
+		return
+	modulate.a = 0.0
+	_tween = create_tween()
+	_tween.tween_property(self, ^"modulate:a", SHOWN_ALPHA, FADE_TIME)
 
 
-func _make_chip(hint: InputHint) -> Control:
-	var chip: PanelContainer = PanelContainer.new()
-	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chip.add_theme_stylebox_override(&"panel", _chip_style)
-	chip.add_child(make_row(hint))
-	return chip
+## Efface la rangée en douceur au bout de `delay` secondes (ex. « Échap → quitter » en début de partie).
+func fade_out_after(delay: float) -> void:
+	if _tween != null:
+		_tween.kill()
+	modulate.a = SHOWN_ALPHA
+	_tween = create_tween()
+	_tween.tween_interval(delay)
+	_tween.tween_property(self, ^"modulate:a", 0.0, 0.6)
 
 
 ## Une ligne « dessin de la touche → icône de l'action » (sert aussi au panneau des postes).
@@ -61,7 +74,7 @@ static func make_row(hint: InputHint) -> HBoxContainer:
 	return row
 
 
-## Style des pastilles et du panneau : fond brun translucide, liseré cuivre.
+## Style du panneau des postes et des cases d'inventaire : fond brun translucide, liseré cuivre.
 static func make_style() -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = COLOR_BG

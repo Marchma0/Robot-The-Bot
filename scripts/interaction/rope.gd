@@ -57,7 +57,7 @@ func _process(delta: float) -> void:
 
 func get_hints() -> Array[InputHint]:
 	if is_held_locally():
-		return [InputHint.make(InputHint.MOVE_VERTICAL, &"climb"), InputHint.make(&"jump", &"jump_off")]
+		return [InputHint.make(&"jump", &"jump_off")]   # grimper (avancer / reculer) va de soi
 	if holder_peer_id != 0:
 		return [InputHint.state(&"locked")]
 	return [InputHint.make(&"grab", &"climb")]
