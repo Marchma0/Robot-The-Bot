@@ -8,6 +8,9 @@ extends Node
 ## AnimationTree construit en code :
 ##   base  = machine à états idle / walk / air / sit / float / climb (fondus)
 ##   grab  = Blend2 filtré sur le bras droit (tenir un levier, même en marchant)
+##   hold  = Blend2 filtré sur le bras droit : objet léger en main (caca, fléchettes), bras tendu devant soi ;
+##           trois poses (hold_low / hold_mid / hold_high) mélangées selon l'inclinaison du regard
+##   carry = Blend2 filtré sur les deux bras : objet lourd porté à deux mains (caisse)
 ##   press = OneShot filtré sur le bras droit (appuyer sur un bouton)
 ##   gesture = OneShot filtré sur le haut du corps (emotes « geste », jouables en marchant) ;
 ##             les emotes en boucle (danse) sont des états de la machine
@@ -23,6 +26,14 @@ const STATE_ANIMATIONS: Dictionary[StringName, StringName] = {
 const SCALED_STATES: Array[StringName] = [&"walk", &"climb", &"crouch_walk"]
 ## Os animés par la couche haut du corps (tenir / appuyer).
 const ARM_TRACK: NodePath = ^"DwarfRig/Skeleton3D:arm_R"
+## Os animés quand on porte un objet lourd à deux mains.
+const BOTH_ARM_TRACKS: Array[NodePath] = [^"DwarfRig/Skeleton3D:arm_L", ^"DwarfRig/Skeleton3D:arm_R"]
+## Poses « objet en main » : regard en bas (-1), droit devant (0), en haut (+1).
+const HOLD_POSES: Dictionary[StringName, float] = {&"hold_low": -1.0, &"hold_mid": 0.0, &"hold_high": 1.0}
+## Durée (s) pour lever / baisser les bras quand on prend ou pose un objet.
+const HOLD_BLEND_TIME: float = 0.18
+## Inclinaison du regard (rad) à laquelle le bras atteint la pose « en bas » / « en haut ».
+const HOLD_PITCH_RANGE: float = deg_to_rad(60.0)
 ## Os animés par les gestes (emotes) : tout le haut du corps, doigts compris.
 const UPPER_BODY_TRACKS: Array[NodePath] = [
 	^"DwarfRig/Skeleton3D:torso", ^"DwarfRig/Skeleton3D:head",
@@ -41,17 +52,16 @@ const WALK_THRESHOLD: float = 0.3
 ## Vitesse de grimpe (m/s) à laquelle l'animation "climb" joue à vitesse normale.
 @export var climb_reference_speed: float = 1.4
 ## Bac à sable : force un état ("idle", "walk", "air", "sit", "float", "climb", "crouch", "crouch_walk",
-## "grab", "press"), sinon vide.
+## "grab", "press", "hold", "hold_walk", "carry", "carry_walk"), sinon vide.
 @export var preview_state: String = ""
 ## Bac à sable : rejoue cette emote (index dans Emotes.LIST) toutes les 2,5 s, -1 = non.
 @export var preview_emote: int = Emotes.NONE
-## Bras de vue (première personne) : le bas du corps ne bouge pas (pas de balancement des bras en marchant,
-## en l'air, en grimpant) ; seuls les gestes, les objets tenus et la danse animent les bras.
-@export var view_arms: bool = false
 
 var _tree: AnimationTree
 var _playback: AnimationNodeStateMachinePlayback
 var _grab_amount: float = 0.0
+var _hold_amount: float = 0.0
+var _carry_amount: float = 0.0
 var _last_press_count: int = 0
 var _preview_timer: float = 0.0
 var _last_emote_count: int = 0
@@ -82,6 +92,8 @@ func _process(delta: float) -> void:
 	var airborne: bool = dwarf.anim_airborne
 	var seated: bool = dwarf.anim_seated
 	var holding: bool = dwarf.anim_holding
+	var hold_item: bool = dwarf.anim_hold_item
+	var carrying: bool = dwarf.anim_carrying
 	var press_count: int = dwarf.anim_press_count
 	var floating: bool = dwarf.anim_floating
 	var climbing: bool = dwarf.anim_climbing
@@ -91,7 +103,9 @@ func _process(delta: float) -> void:
 	var pooping: bool = dwarf.anim_pooping
 	if preview_state != "":
 		_preview_timer += delta
-		speed = walk_reference_speed if preview_state == "walk" else 0.0
+		speed = walk_reference_speed if preview_state in ["walk", "hold_walk", "carry_walk"] else 0.0
+		hold_item = preview_state in ["hold", "hold_walk"]
+		carrying = preview_state in ["carry", "carry_walk"]
 		if preview_state == "climb":
 			speed = climb_reference_speed
 		airborne = preview_state == "air"
@@ -123,8 +137,6 @@ func _process(delta: float) -> void:
 		target = &"air"
 	elif speed > WALK_THRESHOLD:
 		target = &"walk"
-	if view_arms and not (target in [&"dance", &"sit", &"poop"]):
-		target = &"idle"
 	if _playback.get_current_node() != target:
 		_playback.travel(target)
 	_tree.set("parameters/base/walk/scale/scale", clampf(speed / walk_reference_speed, 0.6, 2.0))
@@ -134,6 +146,13 @@ func _process(delta: float) -> void:
 
 	_grab_amount = move_toward(_grab_amount, 1.0 if holding else 0.0, delta * 6.0)
 	_tree.set("parameters/grab/blend_amount", _grab_amount)
+	# Objet en main : le bras suit le regard (l'objet reste dans le champ). Objet lourd : les deux bras.
+	var step: float = delta / HOLD_BLEND_TIME
+	_hold_amount = move_toward(_hold_amount, 1.0 if hold_item and not holding else 0.0, step)
+	_carry_amount = move_toward(_carry_amount, 1.0 if carrying else 0.0, step)
+	_tree.set("parameters/hold/blend_amount", smoothstep(0.0, 1.0, _hold_amount))
+	_tree.set("parameters/hold_pose/blend_position", clampf(dwarf.get_look_pitch() / HOLD_PITCH_RANGE, -1.0, 1.0))
+	_tree.set("parameters/carry/blend_amount", smoothstep(0.0, 1.0, _carry_amount))
 
 	if press_count != _last_press_count:
 		_last_press_count = press_count
@@ -199,6 +218,26 @@ func _build_tree() -> AnimationNodeBlendTree:
 	root.add_node(&"grab_anim", _animation_node(&"grab"))
 	root.connect_node(&"grab", 0, &"base")
 	root.connect_node(&"grab", 1, &"grab_anim")
+	var hold: AnimationNodeBlend2 = AnimationNodeBlend2.new()
+	hold.filter_enabled = true
+	hold.set_filter_path(ARM_TRACK, true)
+	root.add_node(&"hold", hold)
+	var hold_pose: AnimationNodeBlendSpace1D = AnimationNodeBlendSpace1D.new()
+	hold_pose.min_space = -1.0
+	hold_pose.max_space = 1.0
+	for pose: StringName in HOLD_POSES:
+		hold_pose.add_blend_point(_animation_node(pose), HOLD_POSES[pose])
+	root.add_node(&"hold_pose", hold_pose)
+	root.connect_node(&"hold", 0, &"grab")
+	root.connect_node(&"hold", 1, &"hold_pose")
+	var carry: AnimationNodeBlend2 = AnimationNodeBlend2.new()
+	carry.filter_enabled = true
+	for track: NodePath in BOTH_ARM_TRACKS:
+		carry.set_filter_path(track, true)
+	root.add_node(&"carry", carry)
+	root.add_node(&"carry_anim", _animation_node(&"carry"))
+	root.connect_node(&"carry", 0, &"hold")
+	root.connect_node(&"carry", 1, &"carry_anim")
 	var press: AnimationNodeOneShot = AnimationNodeOneShot.new()
 	press.filter_enabled = true
 	press.set_filter_path(ARM_TRACK, true)
@@ -206,7 +245,7 @@ func _build_tree() -> AnimationNodeBlendTree:
 	press.fadeout_time = 0.1
 	root.add_node(&"press", press)
 	root.add_node(&"press_anim", _animation_node(&"press"))
-	root.connect_node(&"press", 0, &"grab")
+	root.connect_node(&"press", 0, &"carry")
 	root.connect_node(&"press", 1, &"press_anim")
 
 	var gesture: AnimationNodeOneShot = AnimationNodeOneShot.new()

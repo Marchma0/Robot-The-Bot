@@ -14,7 +14,7 @@ const ICON_RENDER: int = 192
 const ICON_SIZE: float = 96.0
 const ICON_SIZE_SELECTED: float = 112.0
 const POSE_AT: Dictionary[StringName, float] = {
-	&"emote_wave": 0.3, &"emote_clap": 0.42, &"emote_dance": 0.3,
+	&"emote_wave": 0.3, &"emote_dance": 0.3,
 }
 const DEFAULT_POSE_AT: float = 0.5
 ## Distance (en pixels de souris accumulés) avant qu'une part soit choisie.

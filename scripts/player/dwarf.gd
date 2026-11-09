@@ -24,10 +24,11 @@ const MAX_NAME_LENGTH: int = 18
 ## Hauteur de la capsule de collision debout / accroupi (m). Accroupi, les jambes rentrent dans le corps.
 const STAND_HEIGHT: float = 1.2
 const CROUCH_HEIGHT: float = 0.72
-## Position d'un objet tenu en main, par rapport aux yeux (m).
-const HOLD_OFFSET: Vector3 = Vector3(0.2, -0.22, -0.4)
-## Position du dessous d'un objet lourd porté à deux mains (caisse), par rapport aux pieds (m).
-const CARRY_OFFSET: Vector3 = Vector3(0.0, 0.3, -0.62)
+## Creux de la main droite (repère du corps, pose de repos) : un objet léger tenu en main y est placé.
+const PALM_R: Vector3 = Vector3(0.36, 0.4, -0.02)
+## Position du dessous d'un objet lourd porté à deux mains (caisse), par rapport aux pieds (m) :
+## entre les mains de l'animation « carry », sous les yeux.
+const CARRY_OFFSET: Vector3 = Vector3(0.0, 0.2, -0.64)
 ## Durée du glissement jusqu'au siège (s).
 const SIT_GLIDE_TIME: float = 0.4
 ## Bits de `anim_flags` (états d'animation envoyés ensemble, en un seul nombre).
@@ -38,6 +39,8 @@ const FLAG_FLOATING: int = 8
 const FLAG_CLIMBING: int = 16
 const FLAG_CROUCHING: int = 32
 const FLAG_POOPING: int = 64
+const FLAG_HOLD_ITEM: int = 128
+const FLAG_CARRYING: int = 256
 
 @export var walk_speed: float = 3.5
 @export var ground_acceleration: float = 30.0
@@ -64,7 +67,12 @@ var player_name: String = "":
 ## Vitesse au sol (m/s, relative au cockpit).
 var anim_speed: float = 0.0
 var anim_airborne: bool = false
+## Tient un levier, un joystick ou une commande (bras droit tendu vers elle).
 var anim_holding: bool = false
+## Un objet léger de l'inventaire en main (caca, fléchettes) : bras droit devant soi, suit le regard.
+var anim_hold_item: bool = false
+## Porte un objet lourd à deux mains (caisse).
+var anim_carrying: bool = false
 var anim_seated: bool = false
 ## Augmente à chaque appui sur un bouton (déclenche l'animation "press" chez tout le monde).
 var anim_press_count: int = 0
@@ -97,7 +105,7 @@ var anim_flags: int:
 		return (FLAG_AIRBORNE if anim_airborne else 0) | (FLAG_HOLDING if anim_holding else 0) \
 			| (FLAG_SEATED if anim_seated else 0) | (FLAG_FLOATING if anim_floating else 0) \
 			| (FLAG_CLIMBING if anim_climbing else 0) | (FLAG_CROUCHING if anim_crouching else 0) \
-			| (FLAG_POOPING if anim_pooping else 0)
+			| (FLAG_POOPING if anim_pooping else 0) | (FLAG_HOLD_ITEM if anim_hold_item else 0) 			| (FLAG_CARRYING if anim_carrying else 0)
 	set(value):
 		anim_airborne = value & FLAG_AIRBORNE != 0
 		anim_holding = value & FLAG_HOLDING != 0
@@ -106,6 +114,8 @@ var anim_flags: int:
 		anim_climbing = value & FLAG_CLIMBING != 0
 		anim_crouching = value & FLAG_CROUCHING != 0
 		anim_pooping = value & FLAG_POOPING != 0
+		anim_hold_item = value & FLAG_HOLD_ITEM != 0
+		anim_carrying = value & FLAG_CARRYING != 0
 
 ## Case de l'inventaire choisie (0 à Inventory.SIZE - 1) : son objet est en main. Écrite par le propriétaire,
 ## répliquée (les autres voient ce qu'il a en main, l'hôte vérifie les lancers avec).
@@ -177,6 +187,7 @@ func _ready() -> void:
 	# Permet à l'hôte de retrouver le nain d'un joueur (validation de portée des commandes).
 	add_to_group(&"dwarves")
 	get_torso_attach()   # prêt avant qu'une fléchette s'y plante (sa place doit déjà suivre l'os)
+	_hand_point()   # idem pour un objet tenu en main
 
 	var is_local: bool = is_multiplayer_authority()
 	set_physics_process(is_local)
@@ -190,7 +201,6 @@ func _ready() -> void:
 		_hud.poop_game.finished.connect(_on_poop_game_finished)
 		_camera_rig.activate(_hud.crosshair)
 		_appearance.set_first_person()
-		DwarfViewArms.new().setup(self, _camera, _appearance, slot)
 		player_name = NetworkManager.get_local_player_name()
 		_interactor.add_exception(self)
 		_interactor.set_active(true)
@@ -328,7 +338,10 @@ func _physics_process(delta: float) -> void:
 	_air_time = 0.0 if is_on_floor() or anim_floating else _air_time + delta
 	anim_speed = horizontal.length()
 	anim_airborne = _air_time > AIRBORNE_DELAY
-	anim_holding = _interactor.is_holding() or _interactor.has_item_in_hand()
+	anim_holding = _interactor.is_holding()
+	var in_hand: Dictionary = Inventory.item_in_hand(get_tree(), peer_id)
+	anim_carrying = not in_hand.is_empty() and in_hand["heavy"]
+	anim_hold_item = not in_hand.is_empty() and not anim_carrying
 	anim_seated = false
 	anim_pooping = false
 	anim_climbing = false
@@ -381,10 +394,18 @@ func view_transform() -> Transform3D:
 	return Transform3D(global_basis * _head.basis, get_global_transform_interpolated() * _head.position)
 
 
-## Où se trouve un objet tenu en main (devant soi, en bas à droite de la vue), en global.
-## Suit l'inclinaison du regard, pour que l'objet reste visible.
+## Inclinaison du regard (rad, + = vers le haut), répliquée : le bras qui tient un objet la suit.
+func get_look_pitch() -> float:
+	return _head.rotation.x
+
+
+## Où se trouve un objet tenu en main, en global : dans la main droite (qui suit l'animation, chez tout le
+## monde), tourné comme le regard. Le bras suit l'inclinaison du regard : l'objet reste dans le champ.
 func get_hold_transform() -> Transform3D:
-	return view_transform() * Transform3D(Basis.IDENTITY, HOLD_OFFSET)
+	var hand: Node3D = _hand_point()
+	var in_body: Transform3D = global_transform.affine_inverse() * hand.global_transform
+	var origin: Vector3 = get_global_transform_interpolated() * in_body.origin
+	return Transform3D(view_transform().basis, origin)
 
 
 ## Où se trouve un objet lourd porté à deux mains (caisse), en global : devant le nain, à hauteur de ventre,
@@ -415,6 +436,23 @@ func receive_dart() -> void:
 ## Os de la tête (suit les animations) : une fléchette qui touche ce nain s'y plante.
 func get_head_attach() -> Node3D:
 	return get_node("BodyModel/DwarfRig/Skeleton3D/HeadBone") as Node3D
+
+
+## Creux de la main droite (suit les animations). Créé à la demande.
+func _hand_point() -> Node3D:
+	var skeleton: Skeleton3D = get_node("BodyModel/DwarfRig/Skeleton3D") as Skeleton3D
+	var point: Node3D = skeleton.get_node_or_null(^"HandBone/Palm") as Node3D
+	if point == null:
+		var attach: BoneAttachment3D = BoneAttachment3D.new()
+		attach.name = "HandBone"
+		skeleton.add_child(attach)
+		attach.bone_name = "arm_R"
+		point = Node3D.new()
+		point.name = "Palm"
+		var rest: Transform3D = skeleton.get_bone_global_rest(skeleton.find_bone("arm_R"))
+		point.position = rest.affine_inverse() * PALM_R
+		attach.add_child(point)
+	return point
 
 
 ## Os du torse (suit les animations) : une fléchette qui touche le corps s'y plante. Créé à la demande.
@@ -486,6 +524,8 @@ func _set_body_state(seated: bool, pooping: bool) -> void:
 	anim_speed = 0.0
 	anim_airborne = false
 	anim_holding = false
+	anim_hold_item = false
+	anim_carrying = false
 	anim_floating = false
 	anim_climbing = false
 	anim_crouching = false

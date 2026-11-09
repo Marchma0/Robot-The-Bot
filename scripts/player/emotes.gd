@@ -14,10 +14,8 @@ const LIST: Array[Dictionary] = [
 	{"label": "Coucou", "animation": &"emote_wave", "loop": false, "duration": 1.5},
 	{"label": "Pouce levé", "animation": &"emote_thumbs_up", "loop": false, "duration": 1.6},
 	{"label": "Pointer", "animation": &"emote_point", "loop": false, "duration": 1.7},
-	{"label": "Applaudir", "animation": &"emote_clap", "loop": false, "duration": 1.9},
 	{"label": "Danse", "animation": &"emote_dance", "loop": true, "duration": 0.0},
 	{"label": "Je sais pas", "animation": &"emote_shrug", "loop": false, "duration": 1.35},
-	{"label": "Salut nain", "animation": &"emote_salute", "loop": false, "duration": 1.75},
 	{"label": "Doigt d'honneur", "animation": &"emote_middle_finger", "loop": false, "duration": 1.85},
 ]
 

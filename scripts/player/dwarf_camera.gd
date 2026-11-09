@@ -1,8 +1,8 @@
 class_name DwarfCamera
 extends Node
 ## Caméra du joueur local, à la première personne façon Lethal Company : les yeux suivent en partie l'os de
-## la tête (la vue vit avec la marche, l'accroupi, l'assise), on ne voit de soi que ses bras de vue pendant un
-## geste ou une emote (DwarfViewArms), le corps ne garde que son ombre (DwarfLook). Petit à-coup du « clac » des
+## la tête (la vue vit avec la marche, l'accroupi, l'assise), on voit son propre corps en baissant les yeux,
+## la tête ne garde que son ombre (DwarfLook). Petit à-coup du « clac » des
 ## joysticks des jambes, et traveling jusqu'à l'écran d'un poste quand on s'y assoit (puis plein écran sur la
 ## caméra du bras).
 ##
@@ -10,9 +10,9 @@ extends Node
 
 ## Position des yeux devant le centre du corps (m, -Z = devant) : regard droit / regard vers le bas.
 const EYE_FORWARD: float = -0.08
-const EYE_FORWARD_LOOKING_DOWN: float = -0.18
+const EYE_FORWARD_LOOKING_DOWN: float = -0.36
 ## Inclinaison vers le bas (rad) à partir de laquelle les yeux sont tout à fait avancés.
-const LOOK_DOWN_FULL: float = deg_to_rad(60.0)
+const LOOK_DOWN_FULL: float = deg_to_rad(80.0)
 ## Hauteur des yeux debout / accroupi (m).
 const EYE_HEIGHT: float = 0.95
 const CROUCH_EYE_HEIGHT: float = 0.7
@@ -144,6 +144,9 @@ func _eyes_view(delta: float) -> Transform3D:
 	var eye_local: Vector3 = body.affine_inverse() * (head_bone.get_global_transform_interpolated() * _eye_in_head)
 	var rest_eye: Vector3 = Vector3(0.0, head.position.y, head.position.z)
 	eye_local = rest_eye.lerp(eye_local, HEAD_FOLLOW_AMOUNT)
+	# L'avancée du regard vers le bas ne doit pas être amortie par l'os de la tête (qui ne la connaît pas) :
+	# sinon les yeux restent au-dessus des épaules et on ne voit que le haut de son torse.
+	eye_local.z += (head.position.z - EYE_FORWARD) * HEAD_FOLLOW_AMOUNT
 	if not _eye_ready:
 		_eye_smoothed = eye_local
 		_eye_ready = true
