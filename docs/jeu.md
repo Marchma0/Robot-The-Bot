@@ -74,16 +74,17 @@
 
 ## Les nains
 - Nain de 1,2 m, vue à la première personne (on voit son corps, pas sa tête), clavier + manette.
-- Marcher, sauter, s'accroupir, roue d'emotes (8 gestes), bulle d'état avec mini-portrait animé en haut à droite.
+- Marcher, sauter, s'accroupir, roue d'emotes (6 gestes : coucou, pouce levé, pointer, danse, je sais pas, doigt d'honneur), bulle d'état avec mini-portrait animé en haut à droite.
 - **Inventaire de 5 cases** (barre en bas de l'écran) : un caca prend une case, les fléchettes une seule pour toutes.
   On choisit sa case avec 1 à 5, la molette ou la croix de la manette ; l'objet de la case choisie est en main
-  (les autres le voient), clic = le lancer, G = le poser, E = ramasser même avec un objet en main.
+  (dans sa main droite, bras tendu devant soi, qui suit le regard ; les autres le voient), clic = le lancer, G = le poser, E = ramasser même avec un objet en main.
   Prendre un levier, la corde ou s'asseoir **range l'objet en main** tout seul ; il revient en main en lâchant.
-  **Objets lourds** (caisses) : portés à deux mains devant soi, ils prennent une case et restent en main (on ne
+  **Objets lourds** (caisses) : portés à deux mains devant soi (une main de chaque côté), ils prennent une case et restent en main (on ne
   change plus de case, on ne ramasse rien d'autre, pas de levier ni de siège) ; clic ou G les pose devant soi.
-- **Vue à la première personne façon Lethal Company / Deep Rock Galactic** : on ne voit pas son corps ; ses bras
-  montent dans le champ pendant un geste (appuyer, tenir, lancer, emote) et redescendent sinon. Les emotes restent
-  à la première personne : on voit son bras pointer, saluer, applaudir…
+- **Vue à la première personne, avec son vrai corps** : seule la tête est cachée (la caméra est dedans). En baissant
+  les yeux, on voit son ventre et sa ceinture ; l'objet en main et la caisse portée se voient avec les mains qui les
+  tiennent. Pas de bras à part accrochés à la caméra : ce qu'on voit de soi est exactement ce que voient les autres.
+  Les emotes se jouent sur le corps (on les voit en entier dans la bulle d'état en haut à droite).
 - **Vie à bord** : salon dans le ventre (canapé où s'asseoir, télé animée qu'on allume et éteint avec son bouton, lampe qui se balance),
   toilettes dans la tête (mini-jeu « Poussée », cacas qu'on ramasse et qu'on lance, caca légendaire doré).
   Intérieur usé et encombré, jamais vide.

@@ -89,4 +89,11 @@ static func _same(a: Variant, b: Variant) -> bool:
 		return absf(a - b) <= FLOAT_TOLERANCE
 	if a is Vector3:
 		return (a as Vector3).distance_to(b) <= POSITION_TOLERANCE
+	if a is Transform3D:
+		# Place d'un objet : à quelques cm près (un objet tenu suit la main, qui bouge avec l'animation).
+		var ta: Transform3D = a
+		var tb: Transform3D = b
+		return ta.origin.distance_to(tb.origin) <= POSITION_TOLERANCE \
+			and (ta.basis.x - tb.basis.x).length() + (ta.basis.y - tb.basis.y).length() \
+			+ (ta.basis.z - tb.basis.z).length() <= 3.0 * FLOAT_TOLERANCE
 	return a == b

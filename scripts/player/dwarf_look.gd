@@ -44,12 +44,12 @@ func tint_model(model: Node3D, slot: int) -> void:
 				mesh.set_surface_override_material(i, tunic)
 
 
-## Joueur local, vue à la première personne : son corps et sa tête ne gardent que leur ombre (on ne se voit
-## pas le torse ni les bras qui pendent) ; ses gestes se voient avec les bras de vue (`DwarfViewArms`).
-## Ni son pseudo.
+## Joueur local, vue à la première personne : on voit son vrai corps (en baissant les yeux : ventre, bras,
+## mains, jambes ; un objet en main ou une caisse portée), seule la tête ne garde que son ombre (la caméra
+## est dedans). Pas de pseudo non plus.
 func set_first_person() -> void:
 	name_label.visible = false
-	for mesh: MeshInstance3D in meshes_of(body_model):
+	for mesh: MeshInstance3D in meshes_of(head_model):
 		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 
 

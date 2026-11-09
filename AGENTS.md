@@ -116,7 +116,7 @@ tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (
 
 ## Animation — tout ce qui bouge est animé
 - **Règle** : une mécanique n'est pas finie tant que ce qui bouge n'est pas animé (nains, jambes et bras du robot, foreuse, grappin, leviers, sac à dos…). Pas d'objet qui glisse ou qui se téléporte.
-- **Nains** : squelette (armature) fait dans Blender, animations exportées dans le `.glb` (actions nommées : `idle`, `walk`, `jump`, `float`, `climb`, `grab`, `press`, `sit`, `crouch`, `crouch_walk`, `poop`, `throw`, `hit`, `emote_*`…), jouées dans Godot via un `AnimationTree`.
+- **Nains** : squelette (armature) fait dans Blender, animations exportées dans le `.glb` (actions nommées : `idle`, `walk`, `jump`, `float`, `climb`, `grab`, `press`, `sit`, `crouch`, `crouch_walk`, `poop`, `throw`, `hit`, `hold_low`/`hold_mid`/`hold_high`, `carry`, `emote_*`…), jouées dans Godot via un `AnimationTree`.
 - **Robot** : les jambes et les bras sont animés **à partir de l'état simulé par l'hôte** (angles des articulations, extension de la foreuse…). Ce sont des animations procédurales ou des blend d'actions Blender, jamais des positions inventées côté client.
 - **Réseau** : on synchronise l'**état** (vitesse, au sol, tient un levier, assis, glisse…), jamais l'animation elle-même. Chaque peer joue l'animation correspondante localement.
 
@@ -202,9 +202,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 
 **En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0) · 2.7 Vue du corps et animations de port (Marchma0)
 
-**Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) :
-- Caisse portée (2.6) : le nain n'a pas encore d'animation « porter à deux mains » (`carry`, à faire dans Blender), il garde la pose d'un objet tenu à une main (noté le 2026-11-09).
-- Bras de vue (`DwarfViewArms`) : sur certaines emotes, les bras se détachent du corps au moment où on lance l'emote (vu par Marchma0 le 2026-11-08). Pistes : le décalage propre à l'emote (`EMOTE_OFFSETS`) et la compensation du torse sont appliqués pendant que les bras montent ; le resserrement (`VIEW_SQUEEZE`, échelle non uniforme) déforme les os qui tournent.
+**Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) : aucun pour l'instant.
 
 ### Phase 1 — Fondations (moteur, réseau, outils)
 - [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet (héberger / rejoindre en local), 4 nains (M0)

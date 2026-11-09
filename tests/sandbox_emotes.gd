@@ -1,9 +1,13 @@
 extends Node3D
 ## Bac à sable des emotes : une rangée de nains de démonstration qui rejouent chacun
-## une emote, plus deux nains accroupis, devant le nain jouable "1"
+## une emote, plus des nains accroupis, qui tiennent un objet à une main ou portent à deux mains, devant le nain jouable "1"
 ## (maintenir B / LB pour la roue, Ctrl / B manette pour s'accroupir ; bulle d'état en haut à droite).
 
-const EXTRA_STATES: Array[String] = ["crouch", "crouch_walk"]
+const EXTRA_STATES: Array[String] = ["crouch", "crouch_walk", "hold", "hold_walk", "carry", "carry_walk"]
+const EXTRA_LABELS: Dictionary[String, String] = {
+	"crouch": "Accroupi", "crouch_walk": "Se dandine", "hold": "Tient", "hold_walk": "Tient en marchant",
+	"carry": "Porte", "carry_walk": "Porte en marchant",
+}
 
 
 func _ready() -> void:
@@ -22,4 +26,4 @@ func _ready() -> void:
 			label.text = Emotes.LIST[i]["label"]
 		else:
 			animator.preview_state = EXTRA_STATES[i - Emotes.count()]
-			label.text = "Accroupi" if animator.preview_state == "crouch" else "Se dandine"
+			label.text = EXTRA_LABELS[animator.preview_state]
