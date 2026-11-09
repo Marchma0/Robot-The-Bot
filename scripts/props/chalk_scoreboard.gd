@@ -85,15 +85,15 @@ func _build_layout() -> void:
 		ring.visible = false
 		_canvas.add_child(ring)
 		_bull_rings.append(ring)
-	_total = _label(Vector2(250, 330), Vector2(300, 110), 112, HORIZONTAL_ALIGNMENT_RIGHT)
-	_total_line = _wobbly_line([Vector2(390, 432), Vector2(470, 428), Vector2(552, 435)], 5.0)
+	_total = _label(Vector2(215, 330), Vector2(300, 110), 112, HORIZONTAL_ALIGNMENT_RIGHT)
+	_total_line = _wobbly_line([Vector2(355, 432), Vector2(435, 428), Vector2(517, 435)], 5.0)
 	_total_line.visible = false
 	_canvas.add_child(_total_line)
 	_canvas.add_child(_wobbly_line([Vector2(40, 478), Vector2(300, 470), Vector2(560, 480)], 4.0))
 	for i: int in HISTORY_LINES:
 		var y: float = 490.0 + 75.0 * i
 		_history.append(_label(Vector2(40, y), Vector2(380, 80), 78, HORIZONTAL_ALIGNMENT_LEFT))
-		_history_totals.append(_label(Vector2(420, y), Vector2(140, 80), 78, HORIZONTAL_ALIGNMENT_RIGHT))
+		_history_totals.append(_label(Vector2(385, y), Vector2(140, 80), 78, HORIZONTAL_ALIGNMENT_RIGHT))
 
 
 func _label(pos: Vector2, size: Vector2, font_size: int, align: HorizontalAlignment) -> Label:
