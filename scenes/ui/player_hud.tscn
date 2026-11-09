@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/ui/dart_blind_overlay.gd" id="8_dartblind"]
 [ext_resource type="Script" path="res://scripts/ui/hurt_overlay.gd" id="9_hurt"]
 [ext_resource type="Script" path="res://scripts/ui/inventory_bar.gd" id="10_invbar"]
+[ext_resource type="Script" path="res://scripts/ui/crosshair.gd" id="11_crosshair"]
 
 [node name="PlayerHud" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -36,20 +37,16 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("9_hurt")
 
-[node name="Crosshair" type="CenterContainer" parent="."]
+[node name="Crosshair" type="Control" parent="."]
 unique_name_in_owner = true
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-
-[node name="Dot" type="ColorRect" parent="Crosshair"]
-custom_minimum_size = Vector2(4, 4)
-layout_mode = 2
-mouse_filter = 2
-color = Color(1, 1, 1, 0.85)
+script = ExtResource("11_crosshair")
 
 [node name="HintBar" type="HBoxContainer" parent="."]
 unique_name_in_owner = true
@@ -62,7 +59,7 @@ offset_left = 20.0
 offset_top = -12.0
 offset_right = 420.0
 offset_bottom = 22.0
-scale = Vector2(0.7, 0.7)
+scale = Vector2(0.8, 0.8)
 mouse_filter = 2
 script = ExtResource("2_hintbar")
 

@@ -35,19 +35,27 @@ static func get_icon(icon_name: StringName) -> Texture2D:
 	return _icons[icon_name]
 
 
-## Vrai pour un geste évident, jamais affiché (interface minimaliste) : le clic pour utiliser ce qu'on vise
-## (appuyer, attraper, s'asseoir, lancer…) et la souris / le stick pour viser.
+## Vrai quand la touche va de soi (interface minimaliste) : le clic pour utiliser ce qu'on vise (appuyer,
+## attraper, s'asseoir…). À côté du viseur, on n'affiche alors que l'icône de l'action, sans la touche.
 static func is_obvious(hint: InputHint) -> bool:
-	return hint.action == &"grab" or hint.action == LOOK
+	return hint.action == &"grab"
 
 
-## Les indices qui méritent d'être affichés (sans les gestes évidents).
+## Les indices à afficher : tous sauf « viser » (souris / stick), qui va de soi partout.
 static func shown(hints: Array[InputHint]) -> Array[InputHint]:
 	var kept: Array[InputHint] = []
 	for hint: InputHint in hints:
-		if not is_obvious(hint):
+		if hint.action != LOOK:
 			kept.append(hint)
 	return kept
+
+
+## Vrai si la liste ne contient que des états sans touche (ex. « occupé par un autre »).
+static func only_states(hints: Array[InputHint]) -> bool:
+	for hint: InputHint in hints:
+		if hint.action != &"":
+			return false
+	return true
 
 
 ## Clé texte d'une liste d'indices (pour savoir si l'affichage doit changer).

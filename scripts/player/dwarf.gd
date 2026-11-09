@@ -483,7 +483,7 @@ func _on_hints_changed(hints: Array[InputHint]) -> void:
 ## la même image que la demande pour s'asseoir, avant que l'Interactor ne la confirme.
 func _route_hints() -> void:
 	var seat: Seat = _interactor.get_seat()
-	_hud.show_hints(_hints, (seat != null and seat.has_screen) or _interactor.is_holding())
+	_hud.show_hints(_hints, (seat != null and seat.has_screen) or _interactor.is_holding(), _interactor.is_aiming())
 
 
 ## Changer de case de l'inventaire : 1 à 5, molette, croix de la manette (gauche / droite).

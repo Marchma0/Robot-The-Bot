@@ -109,6 +109,11 @@ func release_rope() -> void:
 		_release_claim()
 
 
+## Vrai quand le joueur vise une commande qu'il peut utiliser maintenant (le viseur devient un anneau).
+func is_aiming() -> bool:
+	return is_instance_valid(_target)
+
+
 ## Vrai quand le joueur a un objet de l'inventaire en main (caca, fléchettes…).
 func has_item_in_hand() -> bool:
 	return not _hand_item().is_empty()

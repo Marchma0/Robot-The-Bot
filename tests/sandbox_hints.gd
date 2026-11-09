@@ -1,8 +1,8 @@
 extends Node3D
-## Bac à sable de l'interface minimaliste : un nain local dans le ventre vise des commandes.
-## Les gestes évidents (clic pour utiliser, souris pour viser) ne s'affichent jamais ; une touche moins évidente
-## (E pour prendre les fléchettes) s'affiche en petit à droite du point de visée ; avec un objet en main, plus de
-## « lancer / poser » à côté du viseur (seul un petit G sur la case de l'inventaire).
+## Bac à sable de l'interface sobre : un nain local dans le ventre vise des commandes.
+## Rien de visé = simple point ; une commande visée = le viseur devient un anneau, l'objet s'illumine, et l'icône
+## de l'action s'affiche en petit à côté (sans touche pour le clic, avec la touche E pour les fléchettes) ;
+## avec un objet en main, plus de « lancer / poser » à côté du viseur (seul un petit G sur la case de l'inventaire).
 ## Captures dans build/views/hints_*.png.
 
 const DWARF_SCENE: PackedScene = preload("res://scenes/player/dwarf.tscn")
@@ -23,12 +23,20 @@ func _ready() -> void:
 	_camera = _dwarf.get_node("%Camera") as Camera3D
 	await _wait(1.0)
 
+	_dwarf.rotation.y = PI / 2.0   # vers un mur nu
+	await _shot("rien", 0.4)
+	TestCheck.expect(not _crosshair().targeting, "rien de visé : simple point")
+	TestCheck.expect(_bar_key().is_empty(), "rien de visé : rien d'affiché")
+
 	await _aim("Controls/Rope", "corde")
-	TestCheck.expect(_bar_key().is_empty(), "corde visée : rien d'affiché (clic évident)")
+	TestCheck.expect(_crosshair().targeting, "corde visée : le viseur devient un anneau")
+	TestCheck.expect(_bar_key() == "grab:climb", "corde visée : l'icône « grimper » seule, sans touche (%s)" % _bar_key())
+	TestCheck.expect(_bar_glyph_count() == 0, "corde visée : pas de dessin de touche pour le clic")
 	await _aim("Controls/BeamSwitch_Belly", "interrupteur")
-	TestCheck.expect(_bar_key().is_empty(), "interrupteur visé : rien d'affiché (clic évident)")
+	TestCheck.expect(_crosshair().targeting, "interrupteur visé : anneau")
 	await _aim("Controls/Darts", "flechettes")
 	TestCheck.expect(_bar_key().contains("interact"), "fléchettes visées : la touche E s'affiche (%s)" % _bar_key())
+	TestCheck.expect(_bar_glyph_count() == 1, "fléchettes visées : la touche E est dessinée")
 
 	var poop: Poop = POOP_SCENE.instantiate() as Poop
 	_mecha.get_node("Props").add_child(poop)
@@ -57,7 +65,21 @@ func _aim(path: String, shot_name: String) -> void:
 
 
 func _bar_key() -> String:
-	return (_dwarf.get("_hud") as PlayerHud).get_node("%HintBar").get("_key")
+	return _hud().get_node("%HintBar").get("_key")
+
+
+## Nombre de touches dessinées à côté du viseur (les icônes seules ne comptent pas).
+func _bar_glyph_count() -> int:
+	return _hud().get_node("%HintBar").find_children("*", "InputGlyph", true, false).filter(
+		func(n: Node) -> bool: return not n.is_queued_for_deletion()).size()
+
+
+func _crosshair() -> Crosshair:
+	return _hud().crosshair
+
+
+func _hud() -> PlayerHud:
+	return _dwarf.get("_hud") as PlayerHud
 
 
 func _shot(shot_name: String, delay: float) -> void:

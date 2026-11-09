@@ -2,7 +2,7 @@ class_name HintBar
 extends HBoxContainer
 ## Petite rangée « touche → icône », discrète : sans fond, en fondu, posée à droite du point de visée
 ## (PlayerHud) ou en haut de l'écran (code du lobby). Chaque indice : le dessin de la touche / du bouton
-## (InputGlyph) puis l'icône de l'action. Les gestes évidents sont déjà retirés (InputHint.shown).
+## (InputGlyph) puis l'icône de l'action ; pour le clic, qui va de soi, l'icône seule (InputHint.is_obvious).
 
 const ICON_SIZE: float = 34.0
 const COLOR_BG: Color = Color(0.11, 0.08, 0.06, 0.72)
@@ -33,7 +33,7 @@ func show_hints(hints: Array[InputHint]) -> void:
 	for child: Node in get_children():
 		child.queue_free()
 	for hint: InputHint in hints:
-		add_child(make_row(hint))
+		add_child(make_row(hint, not InputHint.is_obvious(hint)))
 	if _tween != null:
 		_tween.kill()
 	if hints.is_empty():
@@ -55,11 +55,12 @@ func fade_out_after(delay: float) -> void:
 
 
 ## Une ligne « dessin de la touche → icône de l'action » (sert aussi au panneau des postes).
-static func make_row(hint: InputHint) -> HBoxContainer:
+## `show_key` faux : l'icône seule (la touche va de soi, voir InputHint.is_obvious).
+static func make_row(hint: InputHint, show_key: bool = true) -> HBoxContainer:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override(&"separation", 7)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if hint.action != &"":
+	if hint.action != &"" and show_key:
 		var glyph: InputGlyph = InputGlyph.new()
 		glyph.action = hint.action
 		glyph.size_flags_vertical = Control.SIZE_SHRINK_CENTER

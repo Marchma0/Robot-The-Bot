@@ -12,7 +12,8 @@ extends Area3D
 enum Use { NONE, DONE, CLAIM }
 
 const INTERACTABLE_LAYER: int = 3
-const HIGHLIGHT_COLOR: Color = Color(1.0, 0.95, 0.6, 0.35)
+## Surbrillance de la commande visée : lueur chaude sur ses bords, qui respire.
+const HIGHLIGHT_SHADER: Shader = preload("res://scenes/mecha/controls/interact_highlight.gdshader")
 
 @export var display_name: String = "Commande"
 ## Distance max (en m) entre le nain et la commande pour l'utiliser.
@@ -22,7 +23,7 @@ const HIGHLIGHT_COLOR: Color = Color(1.0, 0.95, 0.6, 0.35)
 ## Utilisable assis sur un simple siège (canapé), au clic : ex. le jeu de dames de la table basse.
 @export var usable_seated: bool = false
 
-static var _highlight_material: StandardMaterial3D
+static var _highlight_material: ShaderMaterial
 
 
 func _ready() -> void:
@@ -31,10 +32,8 @@ func _ready() -> void:
 	set_collision_layer_value(INTERACTABLE_LAYER, true)
 	monitoring = false
 	if _highlight_material == null:
-		_highlight_material = StandardMaterial3D.new()
-		_highlight_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		_highlight_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		_highlight_material.albedo_color = HIGHLIGHT_COLOR
+		_highlight_material = ShaderMaterial.new()
+		_highlight_material.shader = HIGHLIGHT_SHADER
 
 
 ## Joueur local : il vise la commande et vient d'appuyer sur E (`press`) ou clic / RT (`grab`).
