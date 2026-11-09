@@ -214,7 +214,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 1.4 **Synchro de toutes les interactions** (S1, 2026-11-09) : chaque joueur voit exactement la même chose, y compris celui qui arrive en cours de partie
   - [x] Modèle réseau général (2026-11-08) : niveau créé par l'hôte (`LevelSpawner`), objets sous `NetSpawner`, cacas et caisses en `FREEZE_MODE_STATIC`, garde-fous (`net_test.sh`, F9, `NetGuard`), `docs/reseau.md`. Test auto vert sur toutes les interactions existantes
   - [x] Confirmé en vraie partie (2026-11-09, validé par Marchma0)
-- [ ] 1.5 Steam (M5) : GodotSteam (App ID 480), lobby, invitation ou code de lobby, export Windows `.exe` pour les testeurs — en place, reste à valider à distance (avec 1.4)
+- [x] 1.5 Steam (M5, 2026-11-09) : GodotSteam (App ID 480), lobby, invitation ou code de lobby, export Windows `.exe` pour les testeurs — validé à distance par Marchma0
 - [x] 1.6 Pipeline 3D : un script Python par objet (`blender/props/`), palette partagée, planche de vues, refus des faces superposées, captures `interior_shots` (M6.7)
 - [x] 1.7 **Rationalisation du code** (2026-11-08) : rendre le code prêt pour le camp et les missions, sans rien changer en jeu (test réseau vert à chaque étape)
   - [x] Ménage (2026-11-08) : une seule façon de retrouver le nain d'un joueur (`Dwarf.of_peer`) et son nom (« Joueur N » partout), petites bidouilles retirées, pieds du robot typés, scènes de test obsolètes supprimées, vérifications automatiques + `tests/tools/run_tests.sh`. Le script à la racine du robot attend les skins du robot (3.8)
