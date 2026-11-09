@@ -28,6 +28,9 @@ const STICK_DEADZONE: float = 0.2
 ## puis revient au centre à cette vitesse (par seconde), comme un vrai manche qu'on relâche.
 const STICK_HOLD_TIME: float = 0.14
 const STICK_RETURN_SPEED: float = 7.0
+## Assis sur un simple siège (canapé), la visée porte plus loin : la télé est à 4 m du canapé.
+## Seules les commandes `usable_seated` (damier, télé) sont visées assis.
+const SEATED_REACH: float = 4.5
 
 ## Variation de la valeur du levier par pixel de souris.
 @export var mouse_lever_sensitivity: float = 0.006
@@ -50,10 +53,19 @@ var _pushed: bool = false
 var _since_push: float = 0.0
 var _stick_armed: bool = true
 var _hints_key: String = ""
+## Longueur du rayon de visée debout (celle de la scène du nain).
+var _base_reach: float = 2.2
 
 
 func _ready() -> void:
+	_base_reach = -target_position.z
 	set_active(false)
+
+
+## Longueur du rayon de visée (m).
+func _set_reach(reach: float) -> void:
+	if not is_equal_approx(-target_position.z, reach):
+		target_position = Vector3(0.0, 0.0, -reach)
 
 
 func _physics_process(delta: float) -> void:
@@ -65,6 +77,7 @@ func _physics_process(delta: float) -> void:
 		_update_seat_or_rope()
 	else:
 		_exclude_seat(null)
+		_set_reach(_base_reach)
 		_update_target()
 		_handle_actions()
 		if is_holding():
@@ -226,6 +239,7 @@ func _exclude_seat(seat: Seat) -> void:
 func _update_seated_target() -> void:
 	var seat: Seat = _claim as Seat
 	_exclude_seat(seat if seat != null and not seat.has_screen else null)
+	_set_reach(SEATED_REACH if seat != null and not seat.has_screen else _base_reach)
 	if seat == null or seat.has_screen or not _holds_claim():
 		_set_target(null)
 		return
@@ -267,8 +281,8 @@ func _handle_actions() -> void:
 		if grab:
 			if item["heavy"]:
 				pass
-			elif _target != null and _target.picks_up_with_item():
-				# Une fléchette qui traîne : le clic la ramasse au lieu de lancer celle qu'on a en main.
+			elif _target != null and _target.takes_click_with_item():
+				# Ex. une fléchette qui traîne, la télé : le clic l'utilise au lieu de lancer l'objet en main.
 				if _target.interact(true, false, false) == Interactable.Use.DONE:
 					button_pressed.emit()
 			else:

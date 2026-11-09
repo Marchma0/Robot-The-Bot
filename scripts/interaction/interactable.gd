@@ -42,9 +42,9 @@ func interact(_press: bool, _grab: bool, _hands_free: bool) -> Use:
 	return Use.NONE
 
 
-## Vrai si, avec un objet léger en main, le clic sur cette chose la ramasse au lieu de lancer l'objet
-## (ex. une fléchette qui traîne au sol). À surcharger.
-func picks_up_with_item() -> bool:
+## Vrai si, avec un objet léger en main, le clic sur cette chose l'utilise au lieu de lancer l'objet
+## (ex. ramasser une fléchette qui traîne au sol, jouer à la télé). À surcharger.
+func takes_click_with_item() -> bool:
 	return false
 
 

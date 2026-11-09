@@ -79,6 +79,7 @@ func _run_host() -> void:
 	# Le client agit lui-même (il se place à portée, puis envoie la même demande que le jeu).
 	await _client_step("interrupteur du rayon (client)", "Mecha/Controls/BeamSwitch_Belly", "request_press")
 	await _client_step("porte des toilettes (client)", "Mecha/ToiletDoor/Handle", "request_toggle")
+	await _robo_jet_steps()
 	await _client_step("télé éteinte (client)", "Mecha/InteriorBelly/TvSet/Power", "request_press")
 	await _client_step("dames : pion choisi (client)", "Mecha/InteriorBelly/CoffeeTable/Checkers", "request_cell", [17])
 	await _client_step("dames : pion joué (client)", "Mecha/InteriorBelly/CoffeeTable/Checkers", "request_cell", [26])
@@ -323,6 +324,14 @@ func _client_action(path: String, action: String, args: Array) -> void:
 				(target as Seat).submit_controls.rpc_id(1, args[0], Vector2.ZERO, args[1], 0)
 				await get_tree().create_timer(1.0 / 30.0).timeout
 			(target as Seat).submit_controls.rpc_id(1, Vector2.ZERO, Vector2.ZERO, false, 0)
+		"robo_jet_tap":
+			# Devant la télé (au sol du ventre), puis un clic sur l'écran, comme le joueur.
+			var player: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
+			var front: Vector3 = target.global_position + target.global_basis.z * 1.3 - target.global_basis.y * 1.2
+			player.global_position = front
+			player.set(&"_world_position", front)
+			await get_tree().create_timer(0.6).timeout
+			(target as RoboJetTouch).game.tap()
 		"darts_take", "throw":
 			# Devant la cible du salon (au sol du ventre), puis : prendre, ou lancer vers la cible.
 			var thrower: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
@@ -353,6 +362,24 @@ func _finish() -> void:
 
 
 # --- Outils ---
+
+## Jeu de la télé (Robo-Jet) : le client vise l'écran et clique, l'hôte lui donne la partie (joueur, graine) ;
+## sans autre clic, son robot s'écrase chez lui et l'hôte garde son score (partie finie, record).
+func _robo_jet_steps() -> void:
+	var game: RoboJetGame = _world.get_node("Mecha/InteriorBelly/TvSet/RoboJet") as RoboJetGame
+	await _client_step("télé : le client lance une partie de Robo-Jet", "Mecha/InteriorBelly/TvSet/Touch", "robo_jet_tap")
+	if game.player_peer != _client_id:   # (la partie a pu déjà finir : personne ne clique)
+		_failures += 1
+		_log("ÉCHEC  télé : la partie n'est pas au client")
+	var deadline: int = Time.get_ticks_msec() + 6000
+	while game.running and Time.get_ticks_msec() < deadline:
+		await get_tree().create_timer(0.2).timeout
+	await get_tree().create_timer(STEP_WAIT).timeout
+	if game.running:
+		_failures += 1
+		_log("ÉCHEC  télé : le robot du client ne s'est pas écrasé")
+	await _check("télé : partie du client finie, score gardé par l'hôte")
+
 
 ## Accroupi du robot (M7.5) : ↓ par le pilote de l'hôte puis par celui du client = QTE de l'accroupi, joué
 ## jusqu'au bout (appuis de l'hôte), robot accroupi ; puis ↓ par les deux = relevé.

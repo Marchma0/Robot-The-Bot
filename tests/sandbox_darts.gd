@@ -79,11 +79,11 @@ func _ready() -> void:
 		_mecha.to_local(_darts.to_global(_darts.dart_pos[in_ally])), 0.1)
 	var handles: Array[Node] = _darts.find_children("*", "DartHandle", true, false)
 	var floor_handle: DartHandle = handles.filter(func(h: Node) -> bool: return (h as DartHandle).index == in_ally)[0]
-	TestCheck.expect(floor_handle.picks_up_with_item(), "objet en main : le clic sur la fléchette au sol la ramasse (au lieu de lancer)")
+	TestCheck.expect(floor_handle.takes_click_with_item(), "objet en main : le clic sur la fléchette au sol la ramasse (au lieu de lancer)")
 	for h: Node in handles:
 		var handle: DartHandle = h as DartHandle
 		if _darts.dart_where[handle.index] == DartsGame.Where.PLANTED and _darts.is_on_board(handle.index):
-			TestCheck.expect(not handle.picks_up_with_item(), "objet en main : le clic vers la cible lance toujours")
+			TestCheck.expect(not handle.takes_click_with_item(), "objet en main : le clic vers la cible lance toujours")
 	var planted_before: int = _darts.dart_where.count(DartsGame.Where.PLANTED)
 	_darts.request_take_one.rpc_id(1, in_ally)
 	await _wait(0.2)
