@@ -14,6 +14,8 @@ const LAMP_STEP: Color = Color(0.3, 1.0, 0.35)
 @export var leg: int = 0
 @export var walker: MechaWalker
 @export var qte: QteSequence
+## Saut et accroupi : icônes de l'écran « Prêt » (facultatif).
+@export var maneuvers: MechaManeuvers
 ## Débattement de l'aiguille (degrés de chaque côté du centre).
 @export var needle_sweep_degrees: float = 120.0
 ## Cadran : centre (repère du tableau de bord), rayons de l'arc de couleur, hauteur au-dessus du plateau.
@@ -67,7 +69,7 @@ func _build_screen() -> void:
 	material.albedo_texture = _viewport.get_texture()
 	_screen.material_override = material
 	if qte != null:
-		(%QteScreen as QteScreen).setup(qte, leg)
+		(%QteScreen as QteScreen).setup(qte, leg, maneuvers, walker)
 
 
 ## Arc de couleur autour de l'aiguille (vert = début, jaune, rouge = chute) + butées de début et de fin.

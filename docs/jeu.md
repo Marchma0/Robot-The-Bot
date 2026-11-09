@@ -78,9 +78,16 @@
   le **petit écran de chaque console**, façon « Just Dance », fait défiler les flèches à faire
   jusqu'à une cible (les siennes en grand et en cyan, celles de l'autre en petit et en violet), flash rouge à
   chaque erreur, « Bravo ! » à la fin.
-- **À venir** : **panneaux muraux** dans le ventre (s'accroupir, se relever…) par des **combinaisons à deux**
-  gravées sur les murs par l'ancien propriétaire (aucun QTE affiché à l'écran) ; **saut directionnel**
-  (un joueur tient la direction au joystick pendant que l'autre fait la combinaison ; réception ratée = jauge d'erreur ou chute).
+- **Saut et accroupi** (validé le 2026-11-09, remplace les panneaux muraux) : au repos, le petit écran de chaque
+  console affiche « Prêt » avec **↑ saut** et **↓ accroupi**. Les deux pilotes appuient sur la même flèche de leur
+  croix à moins d'1 s d'écart (après le premier appui, l'écran dit « Attends l'autre… » / « Appuie aussi ! »).
+  - **↑ = QTE du saut** : 1re étape « Ensemble ! », les deux poussent leur joystick dans la direction qu'ils ont
+    choisie (à 30° près) ; puis des flèches à tour de rôle. Réussi : le robot plie les genoux, saute (environ 5,5 m
+    vers l'avant, 4 m sur les côtés ou en arrière, 2,2 m de haut) et se réceptionne en amortissant.
+  - **↓ = QTE de l'accroupi** (des flèches) : le robot descend d'1 m et y reste, il marche à petits pas.
+    Accroupi, ↓ par les deux le relève, sans QTE ; pas de saut accroupi.
+  - Pendant ces QTE, les joysticks ne font pas marcher. Un QTE où personne ne progresse pendant 3 s s'annule
+    (flash rouge) et la **jauge d'erreur** monte (0,35) ; pleine, le robot tombe.
 
 ### Les bras : postes assis
 - Le nain **s'assoit** devant un petit écran : la caméra fait un traveling jusqu'à l'écran puis passe sur la

@@ -241,8 +241,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 3.4 **Marche** (M7) `[en cours — Marchma0]` — pendant 3.4, ne pas toucher à `blender/mecha.blend`, `assets/models/mecha.glb` ni aux jambes
   - [x] Squelette, IK 2 os, marche en rythme, voyant « à toi », élan du robot, ressenti des joysticks (M7.1)
   - [x] Jauge d'erreur, effondrement à genoux, QTE de relèvement à tour de rôle, système de QTE générique (M7.2)
-  - [ ] Panneaux muraux : boutons et leviers sur les murs du ventre, combinaisons à deux gravées sur les murs (s'accroupir, se relever…) (M7.4)
-  - [ ] Saut directionnel : direction tenue au joystick pendant la combinaison, trajectoire calculée par l'hôte, réception ratée = jauge d'erreur ou chute (M7.5)
+  - [x] **Saut et accroupi** (M7.5, 2026-11-09) : sur l'écran « Prêt » des consoles, ↑ par les deux à moins d'1 s = QTE du saut (1re étape : les deux joysticks poussés dans la même direction, à 30° près, puis flèches à tour de rôle ; le robot saute dans cette direction) ; ↓ par les deux = QTE de l'accroupi, ↓ à nouveau pour se relever ; QTE qui traîne = annulé et jauge d'erreur. Remplace les panneaux muraux (M7.4, abandonnés le 2026-11-09)
 - [x] 3.5 Foreuse : bras qui s'étend jusqu'à 3 m, mèche, minage des rochers, caisse de minerai (M8)
 - [x] 3.6 Grappin : pince articulée, caméra sur le bras, lancer au bout d'un câble ; postes assis des deux bras, image brouillée, bras bornés hors de la coque (M9, M9.5)
 - [x] 3.7 Sac à dos : rangement automatique animé, contenu synchronisé (M10)

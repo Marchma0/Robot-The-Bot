@@ -84,8 +84,10 @@ func _run_host() -> void:
 	await _client_step("dames : pion joué (client)", "Mecha/InteriorBelly/CoffeeTable/Checkers", "request_cell", [26])
 	await _client_step("dames : nouvelle partie à la pendule (client)", "Mecha/InteriorBelly/CoffeeTable/Checkers", "request_new_game")
 	await _client_step("bouton du pad (client)", "Mecha/Controls/LegL_PadUp", "request_press")
-	# QTE : la séquence entière et les erreurs sont synchronisées (écran « Just Dance » des consoles).
+	await get_tree().create_timer(STEP_WAIT).timeout   # la flèche ↑ en attente de l'autre pilote expire
 	var qte: QteSequence = _world.get_node("Mecha/RecoveryQte") as QteSequence
+	await _maneuver_steps(qte)
+	# QTE : la séquence entière et les erreurs sont synchronisées (écran « Just Dance » des consoles).
 	qte.start([Vector2i(0, QteSequence.Arrow.UP), Vector2i(1, QteSequence.Arrow.LEFT), Vector2i(0, QteSequence.Arrow.RIGHT)])
 	await get_tree().create_timer(STEP_WAIT).timeout
 	await _check("QTE lancé par l'hôte (séquence)")
@@ -351,6 +353,32 @@ func _finish() -> void:
 
 
 # --- Outils ---
+
+## Accroupi du robot (M7.5) : ↓ par le pilote de l'hôte puis par celui du client = QTE de l'accroupi, joué
+## jusqu'au bout (appuis de l'hôte), robot accroupi ; puis ↓ par les deux = relevé.
+func _maneuver_steps(qte: QteSequence) -> void:
+	var walker: MechaWalker = _world.get_node("Mecha/Walker") as MechaWalker
+	var host_pad: PushButton = _world.get_node("Mecha/Controls/LegR_PadDown") as PushButton
+	host_pad.pressed.emit(1)
+	await _client_step("↓ par les deux pilotes : QTE de l'accroupi (client)", "Mecha/Controls/LegL_PadDown", "request_press")
+	if not qte.active:
+		_failures += 1
+		_log("ÉCHEC  ↓ par les deux pilotes : pas de QTE")
+		return
+	while qte.active:
+		var pads: Array[PushButton] = qte.pads_left if qte.current_leg == 0 else qte.pads_right
+		pads[qte.current_arrow].pressed.emit(1)
+		await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(STEP_WAIT).timeout
+	if not walker.crouched:
+		_failures += 1
+		_log("ÉCHEC  QTE de l'accroupi réussi : le robot n'est pas accroupi")
+	await _check("robot accroupi")
+	host_pad.pressed.emit(1)
+	await _client_step("↓ par les deux pilotes : robot relevé (client)", "Mecha/Controls/LegL_PadDown", "request_press")
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _check("robot debout")
+
 
 ## Numéro d'une fléchette posée hors de la cible (au sol), -1 s'il n'y en a pas.
 func _dart_on_floor() -> int:

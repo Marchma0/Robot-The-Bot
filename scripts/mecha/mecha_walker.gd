@@ -3,6 +3,8 @@ extends Node
 ## Marche en rythme du mécha (M7.1, voir docs/jeu.md « Les jambes »).
 ## Un coup de joystick = un pas de la jambe de ce joystick. Les pas alternés font avancer le robot.
 ##
+## Accroupi et saut (M7.5) : voir `set_crouched` et `jump`, lancés par MechaManeuvers.
+##
 ## Réseau : tout est calculé sur l'hôte. Les clients n'envoient que leurs joysticks (Lever, déjà en place).
 ## L'hôte déplace le corps du mécha (synchronisé et lissé par le NetSmoother du mécha) et les deux
 ## cibles de pied (`FootL`, `FootR`, chacune avec son NetSmoother, même horloge que le corps).
@@ -15,9 +17,9 @@ signal fell
 signal got_up
 
 enum Leg { LEFT, RIGHT }
-## WALKING : on marche. FALLING / FALLEN : jauge d'erreur pleine, il s'effondre puis attend le QTE.
-## GETTING_UP : QTE réussi, il se relève.
-enum Phase { WALKING, FALLING, FALLEN, GETTING_UP }
+## WALKING : on marche (debout ou accroupi, voir `crouched`). FALLING / FALLEN : jauge d'erreur pleine, il
+## s'effondre puis attend le QTE. GETTING_UP : QTE réussi, il se relève. JUMPING : saut (élan, vol, réception).
+enum Phase { WALKING, FALLING, FALLEN, GETTING_UP, JUMPING }
 
 ## Hanches dans le repère du mécha (Godot), hauteur des hanches au-dessus du sol debout,
 ## et longueur max hanche -> cheville (jambes jamais tout à fait tendues).
@@ -75,6 +77,21 @@ const MAX_MOMENTUM_LEAD: float = 0.9
 @export var fall_time: float = 0.9
 @export var get_up_time: float = 1.6
 
+@export_group("Accroupi et saut (M7.5)")
+## Accroupi : le corps descend de ça (m), les pas sont raccourcis d'autant, en ce temps (s).
+@export var crouch_drop: float = 1.0
+@export_range(0.2, 1.0) var crouch_stride_scale: float = 0.55
+@export var crouch_time: float = 0.6
+## Saut : distance vers l'avant (m), vers les côtés ou l'arrière, hauteur de la cloche (m).
+@export var jump_distance: float = 5.5
+@export var jump_distance_other: float = 4.0
+@export var jump_height: float = 2.2
+## Saut : temps d'élan (genoux pliés), de vol et de réception (s), et descente du corps à l'élan (m).
+@export var jump_prep_time: float = 0.35
+@export var jump_air_time: float = 1.0
+@export var jump_land_time: float = 0.45
+@export var jump_dip: float = 0.6
+
 ## Où le pied va se poser, et s'il est en l'air (pour la marque lumineuse). Autorité : hôte.
 var landing_left: Vector3 = Vector3.ZERO
 var landing_right: Vector3 = Vector3.ZERO
@@ -86,7 +103,14 @@ var phase: Phase = Phase.WALKING
 ## À qui le tour de faire un pas (voyant vert sur la console) : 0 = gauche, 1 = droite, -1 = les deux.
 ## Autorité : hôte (synchronisé).
 var next_leg: int = -1
+## Accroupi (QTE de l'accroupi réussi, jusqu'à ce que les deux rappuient sur ↓). Autorité : hôte (synchronisé).
+var crouched: bool = false
 
+## Hôte : 0 = debout, 1 = tout à fait accroupi (suit `crouched` en douceur).
+var _crouch_amount: float = 0.0
+## Hôte : saut en cours (départ et arrivée du centre des hanches).
+var _jump_from: Vector3 = Vector3.ZERO
+var _jump_to: Vector3 = Vector3.ZERO
 var _phase_time: float = 0.0
 var _last_error_time: float = -10.0
 
@@ -125,10 +149,17 @@ func _physics_process(delta: float) -> void:
 	_time += delta
 	_phase_time += delta
 	_stumble = maxf(0.0, _stumble - delta)
+	_crouch_amount = move_toward(_crouch_amount, 1.0 if crouched else 0.0, delta / crouch_time)
 	match phase:
 		Phase.WALKING:
-			_read_stick(Leg.LEFT, stick_left)
-			_read_stick(Leg.RIGHT, stick_right)
+			if recovery_qte != null and recovery_qte.active:
+				# QTE du saut ou de l'accroupi : les joysticks servent au QTE, pas à marcher. Il faudra les
+				# relâcher avant le prochain pas.
+				_armed = [false, false]
+				_pending = [NAN, NAN]
+			else:
+				_read_stick(Leg.LEFT, stick_left)
+				_read_stick(Leg.RIGHT, stick_right)
 			for leg: int in 2:
 				_try_pending(leg)
 			# Plus de pas depuis un moment : les deux peuvent repartir.
@@ -145,16 +176,66 @@ func _physics_process(delta: float) -> void:
 			if _phase_time >= get_up_time:
 				_set_phase(Phase.WALKING)
 				got_up.emit()
-	for leg: int in 2:
-		_advance_swing(leg, delta)
-	_place_body(delta)
+		Phase.JUMPING:
+			if _phase_time >= jump_prep_time + jump_air_time + jump_land_time:
+				_end_jump()
+	if phase == Phase.JUMPING:
+		_place_jump()
+	else:
+		for leg: int in 2:
+			_advance_swing(leg, delta)
+		_place_body(delta)
 	_publish()
+
+
+## Vrai si le robot peut lancer un saut ou s'accroupir (il marche, aucun pied en l'air).
+func can_maneuver() -> bool:
+	return _ready_done and phase == Phase.WALKING and not _feet[Leg.LEFT].swing and not _feet[Leg.RIGHT].swing
+
+
+## Hôte : la jauge d'erreur monte de `amount` (QTE raté…) ; pleine, le robot tombe.
+func add_error(amount: float) -> void:
+	if phase != Phase.WALKING:
+		return
+	error_gauge = minf(1.0, error_gauge + amount)
+	_last_error_time = _time
+	if error_gauge >= 1.0:
+		fall()
+
+
+## Hôte : le robot s'accroupit (QTE réussi) ou se relève. Le corps descend / remonte en douceur.
+func set_crouched(value: bool) -> void:
+	crouched = value
+
+
+## Hôte : le robot saute vers `angle` (radians, repère du robot : 0 = vers l'avant, positif = vers la droite).
+## Élan genoux pliés, vol en cloche, réception amortie ; les pieds se posent à l'arrivée.
+func jump(angle: float) -> void:
+	if not can_maneuver():
+		return
+	crouched = false
+	_crouch_amount = 0.0
+	var forward: bool = absf(angle) <= deg_to_rad(30.0)
+	var distance: float = jump_distance if forward else jump_distance_other
+	var move: Vector3 = Basis(Vector3.UP, _yaw) * Vector3(sin(angle), 0.0, -cos(angle)) * distance
+	for foot: Foot in _feet:
+		foot.from = foot.pos
+		foot.to = _ground_at(foot.pos + move)
+		foot.from_yaw = foot.yaw
+		foot.to_yaw = foot.yaw
+		foot.t = 0.0
+	_jump_from = _hip_center
+	var ground_y: float = (_feet[Leg.LEFT].to.y + _feet[Leg.RIGHT].to.y) / 2.0
+	var mid: Vector3 = (_feet[Leg.LEFT].to + _feet[Leg.RIGHT].to) / 2.0
+	_jump_to = Vector3(mid.x, ground_y + HIP_HEIGHT, mid.z)
+	_set_phase(Phase.JUMPING)
 
 
 ## Hôte : fait tomber le robot tout de suite (utilisé par la jauge pleine, et pour les tests).
 func fall() -> void:
 	if phase != Phase.WALKING:
 		return
+	crouched = false
 	error_gauge = 1.0
 	_pending = [NAN, NAN]
 	_set_phase(Phase.FALLING)
@@ -173,6 +254,8 @@ func reset_to(xform: Transform3D) -> void:
 	_pending = [NAN, NAN]
 	_stumble = 0.0
 	error_gauge = 0.0
+	crouched = false
+	_crouch_amount = 0.0
 	_body_velocity = Vector2.ZERO
 	_last_step_leg = -1
 	_set_phase(Phase.WALKING)
@@ -253,6 +336,7 @@ func _start_step(leg: int, angle: float) -> void:
 	# Plus on enchaîne vite après l'autre jambe, plus le pas est long.
 	var since: float = _time - _last_step_time if _last_step_leg == other else 10.0
 	var stride: float = lerpf(stride_fast, stride_slow, clampf((since - 0.45) / 0.8, 0.0, 1.0))
+	stride *= lerpf(1.0, crouch_stride_scale, _crouch_amount)   # accroupi : petits pas
 	if a <= deg_to_rad(30.0):
 		advance = stride
 	elif a <= deg_to_rad(70.0):
@@ -326,7 +410,8 @@ func _place_body(delta: float) -> void:
 	_yaw = lerp_angle(_yaw, target_yaw, k)
 	# Hauteur : hanches à HIP_HEIGHT au-dessus du sol moyen, sans dépasser la portée des jambes.
 	var ground_y: float = (minf(left.pos.y, left.to.y) + minf(right.pos.y, right.to.y)) / 2.0
-	var hip_y: float = ground_y + HIP_HEIGHT - dip
+	var crouch: float = _crouch_amount * _crouch_amount * (3.0 - 2.0 * _crouch_amount)
+	var hip_y: float = ground_y + HIP_HEIGHT - dip - crouch_drop * crouch
 	var basis: Basis = Basis(Vector3.UP, _yaw)
 	for leg: int in 2:
 		if _feet[leg].swing:
@@ -361,6 +446,53 @@ func _place_body(delta: float) -> void:
 		pitch += sin(_time * 13.0) * deg_to_rad(3.0) * shake
 	var full: Basis = Basis.from_euler(Vector3(pitch, _yaw, roll))
 	body.global_transform = Transform3D(full, _hip_center - full * Vector3(0.0, HIP_LOCAL[0].y, 0.0))
+
+
+## Saut : élan (le corps descend, genoux pliés), vol en cloche des hanches et des pieds (pieds un peu repliés),
+## réception (le corps descend puis remonte). Les jambes se plient d'elles-mêmes (LegIK, chez chaque peer).
+func _place_jump() -> void:
+	var t: float = _phase_time
+	var up: Vector3 = Vector3.UP
+	var low_from: Vector3 = _jump_from - up * jump_dip
+	var low_to: Vector3 = _jump_to - up * jump_dip
+	var s: float = 0.0   # avancement du vol, 0 à 1
+	if t < jump_prep_time:
+		_hip_center = _jump_from.lerp(low_from, _smooth(t / jump_prep_time))
+	elif t < jump_prep_time + jump_air_time:
+		s = (t - jump_prep_time) / jump_air_time
+		var arc: float = jump_height * 4.0 * s * (1.0 - s)
+		_hip_center = low_from.lerp(low_to, s) + up * arc
+		for foot: Foot in _feet:
+			foot.swing = true
+			foot.pos = (foot.from as Vector3).lerp(foot.to, s) + up * (arc + 0.3 * sin(PI * s))
+	else:
+		s = 1.0
+		for foot: Foot in _feet:
+			foot.swing = false
+			foot.pos = foot.to
+		_hip_center = low_to.lerp(_jump_to, _smooth((t - jump_prep_time - jump_air_time) / jump_land_time))
+	_body_velocity = Vector2.ZERO
+	# Un peu penché vers l'avant pendant le vol.
+	var pitch: float = -deg_to_rad(6.0) * sin(PI * s)
+	var full: Basis = Basis.from_euler(Vector3(pitch, _yaw, 0.0))
+	body.global_transform = Transform3D(full, _hip_center - full * Vector3(0.0, HIP_LOCAL[0].y, 0.0))
+
+
+## Fin du saut : pieds posés à l'arrivée, le robot remarche.
+func _end_jump() -> void:
+	for foot: Foot in _feet:
+		foot.swing = false
+		foot.pos = foot.to
+		foot.from = foot.to
+	_hip_center = _jump_to
+	_last_step_leg = -1
+	_armed = [false, false]
+	_set_phase(Phase.WALKING)
+
+
+static func _smooth(x: float) -> float:
+	var c: float = clampf(x, 0.0, 1.0)
+	return c * c * (3.0 - 2.0 * c)
 
 
 ## Position d'un pied pour placer le corps : s'il est en l'air, on regarde déjà vers où il va.

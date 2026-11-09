@@ -1,22 +1,37 @@
 class_name QteSequence
 extends Node
-## QTE à deux, à tour de rôle, sur les pads à 4 flèches des consoles des jambes.
-## Une séquence = une suite d'étapes (jambe gauche / droite + flèche). Seule l'étape en cours compte :
-## la bonne flèche du bon joueur la valide ; toute autre flèche fait reculer la séquence un peu.
-## Générique : sert au relèvement du robot (M7.2), resservira pour les autres QTE (panneaux muraux M7.4, saut M7.5…).
+## QTE à deux sur les consoles des jambes. Une séquence = une suite d'étapes :
+## - une flèche (jambe gauche / droite + flèche), à tour de rôle : la bonne flèche du bon joueur la valide,
+##   toute autre flèche fait reculer la séquence un peu ;
+## - une étape joystick (`BOTH`) : les deux pilotes poussent leur joystick dans la même direction (à
+##   `stick_tolerance_degrees` près). La direction choisie est gardée (`stick_direction`) : sert au saut.
+## Sert au relèvement du robot (M7.2), au saut et à l'accroupi (MechaManeuvers).
+## Un QTE lancé avec `fail_after` échoue (signal `failed`) si personne ne progresse pendant ce temps.
 ##
-## Réseau : l'hôte tient la séquence et reçoit les appuis (signal `pressed` des PushButton, déjà validés).
-## Il synchronise la séquence entière (`sequence`), l'étape en cours (`current_leg`, `current_arrow`),
-## l'avancement et le nombre d'erreurs : chaque peer dessine lui-même l'écran du QTE (QteScreen).
+## Réseau : l'hôte tient la séquence, reçoit les appuis (signal `pressed` des PushButton, déjà validés) et lit
+## les joysticks (valeurs déjà envoyées par les pilotes, voir Lever). Il synchronise la séquence entière
+## (`sequence`), l'étape en cours (`current_leg`, `current_arrow`), l'avancement et le nombre d'erreurs :
+## chaque peer dessine lui-même l'écran du QTE (QteScreen).
 
 signal completed
 signal mistake(leg: int)
+signal failed
 
 enum Arrow { UP, DOWN, LEFT, RIGHT }
+
+## « Jambe » d'une étape joystick à faire par les deux pilotes (Vector2i(BOTH, 0) dans `start`).
+const BOTH: int = 2
+## Seuil de poussée d'un joystick pour l'étape joystick (comme un pas, voir MechaWalker).
+const STICK_TRIGGER: float = 0.6
 
 ## Pads de chaque console, dans l'ordre : haut, bas, gauche, droite.
 @export var pads_left: Array[PushButton] = []
 @export var pads_right: Array[PushButton] = []
+## Joysticks des deux consoles (étape joystick).
+@export var stick_left: Lever
+@export var stick_right: Lever
+## Écart max entre les deux joysticks pour l'étape joystick (degrés).
+@export var stick_tolerance_degrees: float = 30.0
 ## Nombre d'étapes perdues à chaque erreur.
 @export var penalty_steps: int = 1
 ## La jauge se vide avec le temps (étapes par seconde) : si on traîne, on perd l'étape d'avant.
@@ -32,13 +47,19 @@ var current_leg: int = -1
 var current_arrow: int = -1
 ## Remplissage de la jauge, en étapes (step_index au plus, baisse en continu). Autorité : hôte.
 var progress_steps: float = 0.0
-## Toute la séquence, une case par étape : jambe * 4 + flèche. Autorité : hôte (synchronisé, pour l'écran).
+## Toute la séquence, une case par étape : jambe * 4 + flèche (BOTH * 4 = étape joystick).
+## Autorité : hôte (synchronisé, pour l'écran).
 var sequence: PackedInt32Array = PackedInt32Array()
 ## Nombre d'erreurs depuis le début de la partie (l'écran clignote en rouge quand il change). Autorité : hôte.
 var mistake_count: int = 0
+## Hôte : direction choisie à l'étape joystick (radians : 0 = vers l'avant, positif = vers la droite).
+var stick_direction: float = 0.0
 
 var _steps: Array[Vector2i] = []
 var _grace: float = 0.0
+## Hôte : temps sans progrès, et délai avant l'échec (0 = jamais).
+var _stall: float = 0.0
+var _fail_after: float = 0.0
 
 
 func _ready() -> void:
@@ -50,6 +71,14 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if not multiplayer.is_server() or not active:
+		return
+	if current_leg == BOTH:
+		_check_sticks()
+		if not active:
+			return
+	_stall += delta
+	if _fail_after > 0.0 and _stall > _fail_after:
+		_fail()
 		return
 	if _grace > 0.0:
 		_grace -= delta
@@ -66,30 +95,38 @@ func get_progress() -> float:
 	return progress_steps / float(step_count) if step_count > 0 else 0.0
 
 
-## Hôte : tire une séquence au hasard. `turns` tours qui alternent les joueurs, 1 ou 2 flèches par tour.
-func start_random(turns: int) -> void:
+## `turns` tours qui alternent les joueurs, 1 ou 2 flèches par tour, tirés au hasard.
+static func random_steps(turns: int) -> Array[Vector2i]:
 	var steps: Array[Vector2i] = []
 	var first: int = randi() % 2
 	for turn: int in turns:
 		var leg: int = (first + turn) % 2
 		for i: int in 1 + randi() % 2:
 			steps.append(Vector2i(leg, randi() % 4))
-	start(steps)
+	return steps
 
 
-## Hôte : lance une séquence donnée (x = jambe 0/1, y = flèche).
-func start(steps: Array[Vector2i]) -> void:
+## Hôte : tire une séquence au hasard (voir `random_steps`).
+func start_random(turns: int) -> void:
+	start(random_steps(turns))
+
+
+## Hôte : lance une séquence donnée (x = jambe 0/1 ou BOTH pour l'étape joystick, y = flèche).
+## `fail_after` > 0 : le QTE échoue si personne ne progresse pendant ce temps (s).
+func start(steps: Array[Vector2i], fail_after: float = 0.0) -> void:
 	if not multiplayer.is_server() or steps.is_empty():
 		return
 	_steps = steps
 	var packed: PackedInt32Array = PackedInt32Array()
 	for step: Vector2i in steps:
-		packed.append(step.x * 4 + step.y)
+		packed.append(step.x * 4 + (0 if step.x == BOTH else step.y))
 	sequence = packed
 	step_index = 0
 	progress_steps = 0.0
 	step_count = steps.size()
 	_grace = start_grace
+	_stall = 0.0
+	_fail_after = fail_after
 	active = true
 	_update_current()
 
@@ -101,24 +138,52 @@ func cancel() -> void:
 
 
 func _on_pad(_peer_id: int, leg: int, arrow: int) -> void:
-	if not multiplayer.is_server() or not active:
-		return
+	if not multiplayer.is_server() or not active or current_leg == BOTH:
+		return   # pendant l'étape joystick, les flèches ne comptent pas
 	var expected: Vector2i = _steps[step_index]
 	if leg == expected.x and arrow == expected.y:
-		step_index += 1
-		progress_steps = float(step_index)
-		if step_index >= step_count:
-			cancel()
-			completed.emit()
-			return
-	else:
-		step_index = maxi(0, step_index - penalty_steps)
-		progress_steps = minf(progress_steps, float(step_index))
-		mistake_count += 1
-		mistake.emit(leg)
+		_advance()
+		return
+	step_index = maxi(0, step_index - penalty_steps)
+	progress_steps = minf(progress_steps, float(step_index))
+	mistake_count += 1
+	mistake.emit(leg)
 	_update_current()
+
+
+## Étape joystick : les deux joysticks poussés, dans la même direction (à la tolérance près).
+func _check_sticks() -> void:
+	if stick_left == null or stick_right == null:
+		return
+	var a: Vector2 = stick_left.value
+	var b: Vector2 = stick_right.value
+	if a.length() < STICK_TRIGGER or b.length() < STICK_TRIGGER:
+		return
+	if rad_to_deg(absf(a.angle_to(b))) > stick_tolerance_degrees:
+		return
+	var mean: Vector2 = a.normalized() + b.normalized()
+	stick_direction = atan2(mean.x, mean.y)   # 0 = vers l'avant (le hublot), positif = vers la droite
+	_advance()
+
+
+func _advance() -> void:
+	step_index += 1
+	progress_steps = float(step_index)
+	_stall = 0.0
+	if step_index >= step_count:
+		cancel()
+		completed.emit()
+		return
+	_update_current()
+
+
+## Personne n'a progressé à temps : le QTE s'annule (l'écran clignote en rouge).
+func _fail() -> void:
+	mistake_count += 1
+	cancel()
+	failed.emit()
 
 
 func _update_current() -> void:
 	current_leg = _steps[step_index].x
-	current_arrow = _steps[step_index].y
+	current_arrow = _steps[step_index].y if current_leg != BOTH else -1
