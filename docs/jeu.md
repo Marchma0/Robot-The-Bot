@@ -82,8 +82,8 @@
   console affiche « Prêt » avec **↑ saut** et **↓ accroupi**. Les deux pilotes appuient sur la même flèche de leur
   croix à moins d'1 s d'écart (après le premier appui, l'écran dit « Attends l'autre… » / « Appuie aussi ! »).
   - **↑ = QTE du saut** : 1re étape « Ensemble ! », les deux poussent leur joystick dans la direction qu'ils ont
-    choisie (à 30° près) ; puis des flèches à tour de rôle. Réussi : le robot plie les genoux, saute (environ 4 m
-    vers l'avant, 3 m sur les côtés ou en arrière, 1,6 m de haut) et se réceptionne en amortissant.
+    choisie (à 30° près) ; puis des flèches à tour de rôle. Réussi : le robot plie les genoux, saute (environ 5,5 m
+    vers l'avant, 4 m sur les côtés ou en arrière, 2,2 m de haut) et se réceptionne en amortissant.
   - **↓ = QTE de l'accroupi** (des flèches) : le robot descend d'1 m et y reste, il marche à petits pas.
     Accroupi, ↓ par les deux le relève, sans QTE ; pas de saut accroupi.
   - Pendant ces QTE, les joysticks ne font pas marcher. Un QTE où personne ne progresse pendant 3 s s'annule

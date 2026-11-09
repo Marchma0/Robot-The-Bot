@@ -13,7 +13,8 @@ Fiche
   - croix en (0.22, 0) : socle rond + croix creuse sous les 4 pads (pads à 0,075 m du centre, posés à 0,035 m) ;
   - cadran en (-0.04, 0.1), au centre du plateau (pas caché par l'écran) : boîtier rond, fond crème, bague en cuivre (l'arc de couleur et l'aiguille sont
     dessinés par leg_dashboard.gd, à 0,0215 et 0,026 m) ;
-  - voyant « à toi » (marche) en (-0.22, 0.19) : posé par leg_dashboard.tscn ;
+  - voyant « à toi » (marche) en (-0.32, 0.17), à gauche derrière le joystick (pas caché par le manche quand
+    on est en face) : posé par leg_dashboard.tscn ;
   - écran du QTE derrière la croix, centre (0.22, 0.22, 0.09), incliné de 50° vers le pilote ; la dalle
     (quad 0,24 x 0,135 m de leg_dashboard.tscn) est 1,5 mm devant la face du boîtier. Liserés néon (Neon).
 
@@ -32,6 +33,7 @@ JOY = (-0.22, -0.03)
 JOY_PIVOT_Z = 0.05
 DPAD = (0.22, 0.0)
 DIAL = (-0.04, 0.1)
+LAMP = (-0.32, 0.17)
 SCREEN_C = Vector((0.22, 0.22, 0.09))
 SCREEN_TILT = math.radians(-50.0)
 SCREEN_W, SCREEN_H = 0.24, 0.135
@@ -99,7 +101,7 @@ def main():
         b.sphere((x, y, 0.03), 0.006, "Iron", segments=6)
 
     # socle du voyant « à toi » (le voyant est dans leg_dashboard.tscn)
-    b.cylinder((-0.22, 0.19, -0.003), (-0.22, 0.19, 0.008), 0.045, "Patch", segments=12)
+    b.cylinder((LAMP[0], LAMP[1], -0.003), (LAMP[0], LAMP[1], 0.008), 0.045, "Patch", segments=12)
 
     # écran du QTE : boîtier incliné, liserés néon, pied et petite antenne
     rot = Matrix.Rotation(SCREEN_TILT, 4, "X")

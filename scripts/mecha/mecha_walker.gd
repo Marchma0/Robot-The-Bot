@@ -83,12 +83,12 @@ const MAX_MOMENTUM_LEAD: float = 0.9
 @export_range(0.2, 1.0) var crouch_stride_scale: float = 0.55
 @export var crouch_time: float = 0.6
 ## Saut : distance vers l'avant (m), vers les côtés ou l'arrière, hauteur de la cloche (m).
-@export var jump_distance: float = 4.0
-@export var jump_distance_other: float = 3.0
-@export var jump_height: float = 1.6
+@export var jump_distance: float = 5.5
+@export var jump_distance_other: float = 4.0
+@export var jump_height: float = 2.2
 ## Saut : temps d'élan (genoux pliés), de vol et de réception (s), et descente du corps à l'élan (m).
 @export var jump_prep_time: float = 0.35
-@export var jump_air_time: float = 0.85
+@export var jump_air_time: float = 1.0
 @export var jump_land_time: float = 0.45
 @export var jump_dip: float = 0.6
 

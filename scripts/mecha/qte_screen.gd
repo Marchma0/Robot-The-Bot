@@ -26,6 +26,8 @@ const ARROW_ANGLES: Array[float] = [0.0, PI, -PI / 2.0, PI / 2.0]
 
 ## Étape joystick (les deux pilotes ensemble) et icônes ↑ saut / ↓ accroupi de l'écran « Prêt ».
 const BOTH_COLOR: Color = Color(1.0, 0.8, 0.3)
+## Taille du petit robot des icônes saut / accroupi.
+const ROBOT_SCALE: float = 1.4
 
 var qte: QteSequence
 ## Jambe de cette console (0 = gauche, 1 = droite) : ses flèches sont « à moi ».
@@ -108,41 +110,79 @@ func _draw_ready(w: float, h: float) -> void:
 	var waiting: int = maneuvers.waiting_arrow
 	var pulse: float = 0.45 + 0.25 * sin(_time * 2.5)
 	if waiting < 0:
-		_draw_text(tr("Prêt"), Vector2(w / 2.0, 36.0), 24, Color(MINE, pulse))
+		_draw_text(tr("Prêt"), Vector2(w / 2.0, 30.0), 24, Color(MINE, pulse))
 	elif maneuvers.waiting_leg == leg:
-		_draw_text(tr("Attends l'autre…"), Vector2(w / 2.0, 36.0), 20, Color(OTHER, 0.85))
+		_draw_text(tr("Attends l'autre…"), Vector2(w / 2.0, 30.0), 20, Color(OTHER, 0.85))
 	else:
 		var beat: float = 0.75 + 0.25 * sin(_time * 10.0)
-		_draw_text(tr("Appuie aussi !"), Vector2(w / 2.0, 36.0), 24, Color(MINE, beat))
+		_draw_text(tr("Appuie aussi !"), Vector2(w / 2.0, 30.0), 24, Color(MINE, beat))
 	var can_act: bool = walker.can_maneuver()
 	var items: Array[Dictionary] = [
-		{"arrow": QteSequence.Arrow.UP, "x": w * 0.3, "on": can_act and not walker.crouched},
-		{"arrow": QteSequence.Arrow.DOWN, "x": w * 0.7, "on": can_act},
+		{"arrow": QteSequence.Arrow.UP, "x": w * 0.27, "on": can_act and not walker.crouched},
+		{"arrow": QteSequence.Arrow.DOWN, "x": w * 0.71, "on": can_act},
 	]
+	var ground: float = h * 0.88
 	for item: Dictionary in items:
 		var arrow: int = item["arrow"]
-		var center: Vector2 = Vector2(item["x"], h * 0.62)
-		var alpha: float = 0.9 if item["on"] else 0.25
-		var radius: float = 17.0
+		var x: float = item["x"]
+		var alpha: float = 0.95 if item["on"] else 0.25
+		var radius: float = 13.0
 		if waiting == arrow:
 			radius *= 1.15 + 0.12 * sin(_time * 10.0)
 			alpha = 1.0
-		_draw_arrow(center + Vector2(-16.0, 0.0), radius, ARROW_ANGLES[arrow], Color(MINE, alpha))
-		var glyph: Vector2 = center + Vector2(22.0, 0.0)
-		var ink: Color = Color(BOTH_COLOR, alpha)
+		# La flèche de la croix à utiliser, et le petit robot qui montre ce qu'elle fait (animé en boucle).
+		_draw_arrow(Vector2(x - 42.0, ground - 26.0), radius, ARROW_ANGLES[arrow], Color(MINE, alpha))
+		draw_line(Vector2(x - 20.0, ground), Vector2(x + 40.0, ground), Color(BOTH_COLOR, alpha * 0.45), 2.0)
+		var p: float = fmod(_time, 1.8) / 1.8 if item["on"] else 0.0
+		var lift: float = 0.0
+		var bend: float = 0.0
 		if arrow == QteSequence.Arrow.UP:
-			# Saut : une cloche en pointillés.
-			for i: int in 5:
-				var u: float = float(i) / 4.0
-				draw_circle(glyph + Vector2(-14.0 + 28.0 * u, 8.0 - 26.0 * u * (1.0 - u) * 1.6), 2.6, ink)
-		elif walker.crouched:
-			# Accroupi : ↓ le relève (barre en haut, flèche vers le haut à côté).
-			draw_line(glyph + Vector2(-12.0, -12.0), glyph + Vector2(12.0, -12.0), ink, 4.0)
-			draw_line(glyph + Vector2(0.0, 12.0), glyph + Vector2(0.0, -6.0), ink, 3.0)
+			# Saut : il plie les genoux, bondit, retombe.
+			if p < 0.2:
+				bend = p / 0.2
+			elif p < 0.7:
+				var s: float = (p - 0.2) / 0.5
+				lift = 34.0 * 4.0 * s * (1.0 - s)
+				bend = 0.7
+			else:
+				bend = 0.6 * (1.0 - (p - 0.7) / 0.3)
 		else:
-			# S'accroupir : une barre écrasée par deux chevrons.
-			draw_line(glyph + Vector2(-13.0, 12.0), glyph + Vector2(13.0, 12.0), ink, 4.0)
-			draw_polyline([glyph + Vector2(-8.0, -6.0), glyph + Vector2(0.0, 2.0), glyph + Vector2(8.0, -6.0)], ink, 3.0)
+			# Accroupi : il se tasse et reste en bas un moment (déjà accroupi : il se relève).
+			var down: float = clampf(p / 0.25, 0.0, 1.0) * clampf((1.0 - p) / 0.15, 0.0, 1.0)
+			bend = 1.0 - down if walker.crouched else down
+		_draw_robot(Vector2(x + 10.0, ground - 2.0 - lift), bend, alpha)
+		if arrow == QteSequence.Arrow.UP and lift > 4.0:
+			# Petits traits de vitesse sous lui en l'air.
+			for k: int in 3:
+				var lx: float = x + 2.0 + 8.0 * k
+				draw_line(Vector2(lx, ground - lift + 6.0), Vector2(lx, ground - lift + 14.0), Color(BOTH_COLOR, alpha * 0.6), 2.0)
+
+
+## Petit robot de l'écran « Prêt » : corps à hublots, antenne, deux jambes ; `bend` (0 à 1) plie les genoux et
+## le fait descendre. `feet` = milieu des pieds.
+func _draw_robot(feet: Vector2, bend: float, alpha: float) -> void:
+	# Dessiné à l'échelle ROBOT_SCALE autour de ses pieds.
+	draw_set_transform(feet * (1.0 - ROBOT_SCALE), 0.0, Vector2.ONE * ROBOT_SCALE)
+	var body_color: Color = Color(BOTH_COLOR, alpha)
+	var ink: Color = Color(0.05, 0.03, 0.1, alpha)
+	var leg_height: float = lerpf(18.0, 7.0, bend)
+	var hip_y: float = feet.y - leg_height
+	for side: float in [-1.0, 1.0]:
+		var hip: Vector2 = Vector2(feet.x + side * 7.0, hip_y)
+		var foot: Vector2 = Vector2(feet.x + side * 9.0, feet.y)
+		var knee: Vector2 = (hip + foot) / 2.0 + Vector2(side * 7.0 * bend, 0.0)
+		draw_polyline([hip, knee, foot], body_color, 4.0)
+		draw_rect(Rect2(foot + Vector2(-5.0, -2.0), Vector2(10.0, 4.0)), body_color)
+	var body: Rect2 = Rect2(feet.x - 14.0, hip_y - 22.0, 28.0, 22.0)
+	draw_rect(body, body_color)
+	draw_rect(body, ink, false, 1.5)
+	for side: float in [-1.0, 1.0]:
+		var eye: Vector2 = Vector2(feet.x + side * 6.5, hip_y - 13.0)
+		draw_circle(eye, 4.2, ink)
+		draw_circle(eye, 2.4, Color(MINE, alpha))
+	draw_line(Vector2(feet.x, hip_y - 22.0), Vector2(feet.x + 3.0, hip_y - 29.0), body_color, 2.0)
+	draw_circle(Vector2(feet.x + 3.0, hip_y - 30.0), 2.2, Color(BAD, alpha))
+	draw_set_transform(Vector2.ZERO)
 
 
 ## Étape joystick : un joystick sur son socle, à pousser par les deux pilotes ensemble.

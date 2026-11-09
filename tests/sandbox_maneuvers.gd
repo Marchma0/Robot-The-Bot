@@ -1,7 +1,7 @@
 extends Node3D
 ## Bac à sable du saut et de l'accroupi (M7.5), on est l'hôte, sans réseau. Le script joue les deux pilotes :
 ## ↓ ensemble → QTE de l'accroupi → accroupi ; ↑ refusé tant qu'il est accroupi ; ↓ ensemble → debout ;
-## ↑ ensemble → QTE du saut (joysticks d'abord en désaccord, puis ensemble vers l'avant) → saut d'environ 4 m ;
+## ↑ ensemble → QTE du saut (joysticks d'abord en désaccord, puis ensemble vers l'avant) → saut d'environ 5,5 m ;
 ## enfin un QTE abandonné : annulé, la jauge d'erreur monte. Images dans build/views/maneuvers_<nom>.png.
 
 @onready var _mecha: Node3D = $Mecha
@@ -72,8 +72,8 @@ func _ready() -> void:
 	await _wait(_walker.jump_air_time * 0.5 + _walker.jump_land_time + 0.5)
 	var moved: Vector3 = _mecha.global_position - start
 	TestCheck.expect(_walker.phase == MechaWalker.Phase.WALKING, "réception : il remarche")
-	TestCheck.expect(moved.dot(forward) > 3.2 and moved.dot(forward) < 4.8,
-		"il a sauté d'environ 4 m vers l'avant (%.2f m)" % moved.dot(forward))
+	TestCheck.expect(absf(moved.dot(forward) - _walker.jump_distance) < 0.8,
+		"il a sauté d'environ %.1f m vers l'avant (%.2f m)" % [_walker.jump_distance, moved.dot(forward)])
 	await _shot("5_arrive", _cam_outside)
 
 	# QTE abandonné : annulé, la jauge d'erreur monte.
