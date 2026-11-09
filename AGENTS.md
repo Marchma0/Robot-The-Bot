@@ -202,7 +202,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 > Avant de commencer une tâche : la marquer `[en cours — pseudo]` et pousser tout de suite. La cocher quand elle est fusionnée dans `main`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : rien pour l'instant.
+**En cours** : 3.12 Télé « Robo-Jet » (Marchma0)
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) : aucun pour l'instant.
 
@@ -249,6 +249,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 3.9 Fléchettes dans le robot (2026-11-08) : le jeu quitte le camp pour la cible du salon (ramasser, lancer, « dans le mille », score après 3 lancers, fléchette plantée dans un allié qui doit la lui retirer)
 - [x] 3.10 Finitions du salon et vue des nains (2026-11-08) : collision des jambes du robot, score des fléchettes écrit à la craie sur l'ardoise, bouton marche/arrêt de la télé, jeu de dames jouable (vraies règles, depuis le canapé aussi, pendule d'échecs), vue à la première personne façon Lethal Company / Deep Rock (bras de vue pendant les gestes et les emotes), roue d'emotes avec images
 - [x] 3.11 Fléchette dans un allié (2026-11-08) : vue brouillée seulement si elle se plante au visage, sinon flash rouge de douleur (elle se plante dans le casque ou le corps), sans texte
+- [ ] 3.12 **Télé : jeu « Robo-Jet »** `[en cours — Marchma0]` : la télé allumée lance un petit jeu (notre robot à réacteur passe entre stalactites et poutres de mine, un clic sur l'écran = un coup de réacteur), jouable debout ou depuis le canapé, un joueur à la fois, les autres regardent, meilleur score
 
 ### Phase 4 — Le camp de base (lobby)
 - [x] 4.1 Camp minier dans un canyon, robot au centre, terminal de mission (flèches + bouton), retour au camp (M12, M12.1)
