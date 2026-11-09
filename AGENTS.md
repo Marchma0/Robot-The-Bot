@@ -200,7 +200,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 > Avant de commencer une tâche : la marquer `[en cours — pseudo]` et pousser tout de suite. La cocher quand elle est fusionnée dans `main`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0)
+**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité) · 3.4 Marche du robot (Marchma0) · 2.7 Vue du corps et animations de port (Marchma0)
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) :
 - Caisse portée (2.6) : le nain n'a pas encore d'animation « porter à deux mains » (`carry`, à faire dans Blender), il garde la pose d'un objet tenu à une main (noté le 2026-11-09).
@@ -230,6 +230,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 2.4 Skins des nains : pièces interchangeables (barbe, casque, couleurs…), choix synchronisé et sauvegardé — vendus en 4.5
 - [ ] 2.5 Améliorations des nains : liste à définir avec le porteur du projet (pistes dans `docs/ideas.md`) — vendues en 4.6
 - [x] 2.6 Inventaire (2026-11-09) : barre de 5 cases (caca, fléchettes…), l'objet de la case choisie est en main, rangé tout seul en prenant une commande ; caisses portées à deux mains (objet lourd) ; panneau des touches des postes descendu sous la ligne « Échap »
+- [ ] 2.7 **Vue du corps et animations de port** `[en cours — Marchma0]` : à la première personne on voit son vrai corps en baissant les yeux (plus de bras de vue détachés), animations « tenir à une main » et « porter à deux mains », emotes applaudir et salut nain retirées
 
 ### Phase 3 — Le robot
 - [x] 3.1 Modèle low poly (ventre + tête), postes, système d'interaction (boutons, leviers, joysticks toujours actifs) (M2, M3)
