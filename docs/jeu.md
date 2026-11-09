@@ -6,7 +6,9 @@
 
 ## La boucle du jeu (vision du porteur du projet, 2026-11-08)
 
-1. **Le camp de base** : les 4 joueurs arrivent au camp, qui sert de lobby. On y trouve des mini-jeux,
+0. **L'intro** (une seule fois, au tout début d'une nouvelle partie) : les nains viennent d'acheter un vieux robot
+   à la casse et doivent le ramener jusqu'à leur garage. C'est aussi le tutoriel (voir « L'intro et le tutoriel »).
+1. **Le camp de base** : un garage sous une montagne, qui sert de lobby. On y trouve des mini-jeux,
    des marchands de **skins** (pour son nain et pour le robot) et un **marchand d'améliorations** pour les nains.
 2. **Lancer une mission** quand tout le monde est prêt, au terminal devant le robot, parmi les **10 missions** du jeu,
    reliées par une **histoire**.
@@ -15,9 +17,18 @@
    est le socle, pas la règle). On réutilise les commandes du robot de façon nouvelle, ou on en ajoute.
 4. **Retour au camp** avec ce qu'on a gagné, puis mission suivante.
 
-## Le camp de base (lobby)
-- Camp minier au fond d'un canyon, au soleil couchant (falaises ocre, toile, bois, guirlandes d'ampoules).
-- Les nains apparaissent dehors, le robot est garé au centre.
+## Le camp de base (lobby) : le garage sous la montagne (validé le 2026-11-09)
+- **Un garage creusé sous une montagne** : roche froide, lumière chaude des lampes et d'une **forge**, et une grande
+  ouverture sur l'extérieur pour garder un coin de ciel. Il **remplace le camp minier du canyon** actuel
+  (au soleil couchant) quand il est construit.
+- Le robot est garé sur un **pont élévateur**, sous une grue ; on monte à bord par une passerelle.
+- **Départ et retour de mission par un monte-charge géant** : le robot est descendu ou monté avec lui, ce qui
+  sert aussi de transition pendant que le niveau se crée.
+- **Mini-jeux de garage** : bras de fer sur l'établi, course de chariots de mécano (planches à roulettes),
+  lancer de nain dans un pneu, wagonnets sur les rails.
+- **Le garage grandit** au fil des missions : trophées accrochés au mur, nouveaux outils, plaques des clients satisfaits.
+- Aujourd'hui (en attendant le garage) : camp minier au fond d'un canyon, au soleil couchant ; les nains apparaissent dehors,
+  le robot est garé au centre.
 - **Terminal de mission** devant le robot : 2 flèches pour choisir la mission, un gros bouton vert pour lancer
   un compte à rebours de 20 s ; la mission part quand tous les nains sont à bord.
 - **Mini-jeux** jouables : bras de fer (machine à bras mécaniques). Les fléchettes se jouent dans le robot (voir « Vie à bord »). Les wagonnets sont du décor pour l'instant.
@@ -25,6 +36,16 @@
   d'autres mini-jeux.
 - **Sauvegarde** : tout est gardé chez l'hôte (une partie = une sauvegarde de l'hôte) ; un ami qui revient dans
   la partie retrouve son nain et ses achats. L'économie (argent, prix) sera conçue plus tard.
+
+## L'intro et le tutoriel (validé le 2026-11-09)
+- **Point de départ de l'histoire** : les nains achètent un vieux robot à la casse. La première fois qu'on apparaît
+  dans une nouvelle partie, on est à la casse, et la première mission est de **ramener le robot jusqu'au garage**.
+  Pas de cinématique longue : on joue tout de suite. Une fois au garage, on est dans le lobby normal.
+- **On apprend une mécanique à la fois, en la faisant** : des choses à faire pour entrer dans le robot, le démarrer,
+  marcher, utiliser la foreuse et le grappin, se relever après une chute… L'ordre exact se règle en construisant la mission.
+- **Un personnage parle par un poste radio** posé dans le cockpit : une **voix en charabia** (pas de vrai doublage)
+  et une **bulle de texte** à côté de la radio (texte traduit par `tr()`). Il réagit à ce que font les joueurs.
+- Le reste vient du décor : la commande à utiliser clignote, des dessins de l'ancien propriétaire sur les murs.
 
 ## Les missions
 - 10 missions, une histoire qui les relie.
@@ -73,6 +94,8 @@
   Seul le robot y range les caisses (grappin, ou lancées dans l'ouverture) ; les nains peuvent seulement les porter pour les déplacer.
 
 ## Les nains
+- **Nains garagistes** (validé le 2026-11-09) : combinaison de travail, ceinture à outils, casquette ou masque de soudeur,
+  taches de cambouis. Le nouveau modèle garde **le même squelette** (mêmes os, mêmes noms) pour garder toutes les animations.
 - Nain de 1,2 m, vue à la première personne (on voit son corps, pas sa tête), clavier + manette.
 - Marcher, sauter, s'accroupir, roue d'emotes (6 gestes : coucou, pouce levé, pointer, danse, je sais pas, doigt d'honneur), bulle d'état avec mini-portrait animé en haut à droite.
 - **Inventaire de 5 cases** (barre en bas de l'écran) : un caca prend une case, les fléchettes une seule pour toutes.
@@ -105,6 +128,7 @@
 - **Coop chaotique** : les commandes sont dans le cockpit, il faut se coordonner et se déplacer.
 - **Deux langues** : français et anglais.
 - **Rien d'écrit à l'écran** : des icônes « touche → action », au pire de petits mots en police Fredoka.
+  Seule exception : la bulle de texte du personnage de la radio (voir « L'intro et le tutoriel »).
   Les infos de jeu (jauges, QTE, tour de qui) sont **dans le cockpit**.
 - **Tout ce qui bouge est animé**, rien ne glisse ni ne se téléporte.
 - **Tout est synchronisé** : ce qu'un joueur fait, tous le voient (voir `docs/reseau.md`).

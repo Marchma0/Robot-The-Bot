@@ -90,7 +90,7 @@ Tableau des missions sous forme de carte avec les 10 missions.
 
 ### Les 10 missions (pistes, à trier)
 Chaque mission = un environnement + une mécanique phare (validé). Lesquelles, et l'histoire qui les relie : à décider.
-1. **La Mine** *(tutoriel)* : descendre dans une mine, forer les filons, ramasser les pépites au grappin. Apprend la marche, la foreuse et le grappin.
+1. **La Mine** : descendre dans une mine, forer les filons, ramasser les pépites au grappin (n'est plus le tutoriel : c'est maintenant la mission « Ramener le robot de la casse », voir `docs/jeu.md`).
 2. **La Vallée de la Mort** : canyon plein de gouffres ; sortir du robot, ramasser des troncs, rochers, poutres et construire des ponts assez solides pour le robot.
 3. **La Mission sans robot** : robot en panne au fond d'un trou ; les 4 nains à pied vont chercher la pièce de rechange dans une forteresse en ruines (infiltration, énigmes à deux, portes à leviers), puis réparent.
 4. **Le Marais** : sol instable, chaque pas peut faire couler une jambe ; lire le terrain, poser des planches, tirer le robot au grappin accroché aux arbres.
