@@ -8,8 +8,8 @@
 #   sh tests/tools/run_tests.sh --lent          # en temps réel, un test après l'autre (pour chercher un souci de timing)
 # GODOT_PATH doit pointer vers Godot 4.7.2.
 #
-# Pour aller vite : les tests tournent en temps accéléré (`--fixed-fps 60` : sans fenêtre, le jeu calcule
-# ses images aussi vite que possible, une image = 1/60 s de jeu) et plusieurs à la fois.
+# Pour aller vite : les scènes de test tournent en temps accéléré (`--fixed-fps 60` : sans fenêtre, le jeu calcule
+# ses images aussi vite que possible, une image = 1/60 s de jeu) et plusieurs à la fois ; le test réseau reste en temps réel.
 # Une scène échoue si elle plante, affiche une erreur de script, une « [test] ÉCHEC », ou dépasse le temps.
 # Journaux complets dans build/tests/<scène>.log. Sortie : « TOUS LES TESTS OK » ou la liste des échecs.
 cd "$(dirname "$0")/../.." || exit 2
@@ -42,7 +42,8 @@ VISUAL="sandbox_dwarf_anim sandbox_emotes sandbox_interaction"
 
 start=$(date +%s)
 
-# Le test réseau est le plus long : il part en premier, en parallèle des scènes.
+# Le test réseau tourne en temps réel (en accéléré, l'hôte et le client se décalent et il rate au hasard) :
+# c'est le plus long (environ 1 min 45), il part en premier, en parallèle des scènes.
 if [ $NET -eq 1 ]; then
 	(sh tests/tools/net_test.sh > build/tests/net_test.log 2>&1; echo $? > build/tests/net_test.result) &
 fi

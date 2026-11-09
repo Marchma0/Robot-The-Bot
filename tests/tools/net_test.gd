@@ -13,17 +13,11 @@ extends Node
 const PORT: int = 7791
 const STEP_WAIT: float = 1.5
 const TIMEOUT: float = 180.0
-## En temps accéléré (run_tests.sh), le jeu va plus vite que le réseau : une comparaison ou une demande
-## qui n'a pas encore abouti est refaite, au plus ce délai en temps réel (ms).
-const PATIENCE_MS: int = 5000
-## Temps réel minimum d'une attente d'étape (ms) : laisse aux messages le temps de passer.
-const MIN_REAL_WAIT_MS: int = 150
 
 var _role: String = ""
 var _failures: int = 0
 var _client_id: int = 0
 var _pending_check: String = ""
-var _last_diffs: PackedStringArray = PackedStringArray()
 
 @onready var _main: Node = $Main
 @onready var _world: Node3D = $Main/World
@@ -234,10 +228,7 @@ func _dart_in_client_step() -> void:
 func _client_step(step: String, path: String, action: String, args: Array = []) -> void:
 	var before: Dictionary = NetAudit.snapshot(_world, true)
 	_client_action.rpc_id(_client_id, path, action, args)
-	await _step_wait()
-	var deadline: int = Time.get_ticks_msec() + PATIENCE_MS
-	while NetAudit.diff(before, NetAudit.snapshot(_world, true)).is_empty() and Time.get_ticks_msec() < deadline:
-		await get_tree().create_timer(0.1).timeout
+	await get_tree().create_timer(STEP_WAIT).timeout
 	if NetAudit.diff(before, NetAudit.snapshot(_world, true)).is_empty():
 		# L'hôte a refusé la demande (ou elle ne l'a jamais atteint) : rien n'a changé.
 		_failures += 1
@@ -251,7 +242,7 @@ func _client_step(step: String, path: String, action: String, args: Array = []) 
 func _client_refused(step: String, path: String, action: String, stay: bool = true, args: Array = []) -> void:
 	var before: Dictionary = NetAudit.snapshot(_world, true)
 	_client_action.rpc_id(_client_id, path, ("stay:" if stay else "") + action, args)
-	await _step_wait()
+	await get_tree().create_timer(STEP_WAIT).timeout
 	var diffs: PackedStringArray = NetAudit.diff(before, NetAudit.snapshot(_world, true))
 	if diffs.is_empty():
 		_log("OK     %s" % step)
@@ -262,39 +253,24 @@ func _client_refused(step: String, path: String, action: String, stay: bool = tr
 			_log("         %s" % line)
 
 
-## Envoie l'état de l'hôte au client, qui compare et répond. Tant qu'il y a un écart, on recommence
-## (des messages peuvent être encore en route), au plus PATIENCE_MS de temps réel.
+## Envoie l'état de l'hôte au client, qui compare et répond.
 func _check(step: String) -> void:
-	var deadline: int = Time.get_ticks_msec() + PATIENCE_MS
-	while true:
-		_pending_check = step
-		_compare.rpc_id(_client_id, step, NetAudit.snapshot(_world))
-		while _pending_check == step:
-			await get_tree().process_frame
-		if _last_diffs.is_empty() or Time.get_ticks_msec() > deadline:
-			break
-		await get_tree().create_timer(0.1).timeout
-	if _last_diffs.is_empty():
+	_pending_check = step
+	_compare.rpc_id(_client_id, step, NetAudit.snapshot(_world))
+	while _pending_check == step:
+		await get_tree().process_frame
+
+
+@rpc("any_peer", "reliable")
+func _report(step: String, diffs: PackedStringArray) -> void:
+	if diffs.is_empty():
 		_log("OK     %s" % step)
 	else:
 		_failures += 1
 		_log("ÉCHEC  %s" % step)
-		for line: String in _last_diffs:
+		for line: String in diffs:
 			_log("         %s" % line)
-
-
-@rpc("any_peer", "reliable")
-func _report(_step: String, diffs: PackedStringArray) -> void:
-	_last_diffs = diffs
 	_pending_check = ""
-
-
-## Attente d'une étape : STEP_WAIT de temps de jeu, et au moins MIN_REAL_WAIT_MS de temps réel.
-func _step_wait() -> void:
-	var start: int = Time.get_ticks_msec()
-	await get_tree().create_timer(STEP_WAIT).timeout
-	while Time.get_ticks_msec() - start < MIN_REAL_WAIT_MS:
-		await get_tree().process_frame
 
 
 # --- Client ---
