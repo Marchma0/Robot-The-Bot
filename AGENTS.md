@@ -202,7 +202,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 > Avant de commencer une tâche : la marquer `[en cours — pseudo]` et pousser tout de suite. La cocher quand elle est fusionnée dans `main`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : 1.4 Synchro de toutes les interactions (Marchma0, priorité)
+**En cours** : rien pour l'instant.
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) : aucun pour l'instant.
 
@@ -211,9 +211,9 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 1.2 Synchro lissée : lissage des autres joueurs et du robot, `physics_interpolation`, moins de trafic, ordre de calcul fixe (M6.6)
 - [x] 1.3 Interface en icônes « touche → action », police Fredoka, plus de texte d'aide brut (M6.6)
 - [x] 1.8 Interface sobre (2026-11-09) : point de visée qui devient un anneau sur ce qu'on peut utiliser, objet visé illuminé sur ses bords, petite icône de l'action à côté (touche affichée seulement si ce n'est pas le clic), plus de pastilles en bas de l'écran, panneau des postes replié tout seul, rappels du lobby effacés après 6 s
-- [ ] 1.4 **Synchro de toutes les interactions** (S1) `[en cours — Marchma0]` : chaque joueur voit exactement la même chose, y compris celui qui arrive en cours de partie
+- [x] 1.4 **Synchro de toutes les interactions** (S1, 2026-11-09) : chaque joueur voit exactement la même chose, y compris celui qui arrive en cours de partie
   - [x] Modèle réseau général (2026-11-08) : niveau créé par l'hôte (`LevelSpawner`), objets sous `NetSpawner`, cacas et caisses en `FREEZE_MODE_STATIC`, garde-fous (`net_test.sh`, F9, `NetGuard`), `docs/reseau.md`. Test auto vert sur toutes les interactions existantes
-  - [ ] À confirmer en vraie partie Steam (hôte + client, F9 pour comparer)
+  - [x] Confirmé en vraie partie (2026-11-09, validé par Marchma0)
 - [ ] 1.5 Steam (M5) : GodotSteam (App ID 480), lobby, invitation ou code de lobby, export Windows `.exe` pour les testeurs — en place, reste à valider à distance (avec 1.4)
 - [x] 1.6 Pipeline 3D : un script Python par objet (`blender/props/`), palette partagée, planche de vues, refus des faces superposées, captures `interior_shots` (M6.7)
 - [x] 1.7 **Rationalisation du code** (2026-11-08) : rendre le code prêt pour le camp et les missions, sans rien changer en jeu (test réseau vert à chaque étape)
