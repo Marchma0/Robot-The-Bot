@@ -229,6 +229,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 2.5 Améliorations des nains : liste à définir avec le porteur du projet (pistes dans `docs/ideas.md`) — vendues en 4.6
 - [x] 2.6 Inventaire (2026-11-09) : barre de 5 cases (caca, fléchettes…), l'objet de la case choisie est en main, rangé tout seul en prenant une commande ; caisses portées à deux mains (objet lourd) ; panneau des touches des postes descendu sous la ligne « Échap »
 - [x] 2.7 Vue du corps et animations de port (2026-11-09) : à la première personne on voit son vrai corps en baissant les yeux (plus de bras de vue détachés), animations « tenir à une main » et « porter à deux mains », emotes applaudir et salut nain retirées, angle de vue de 90°
+- [ ] 2.8 **Nains garagistes** (nouvelle DA, validée le 2026-11-09) : nouveau modèle (combinaison de travail, ceinture à outils, casquette ou masque de soudeur, cambouis) sur **le même squelette** (mêmes os, mêmes noms : toutes les animations restent) ; à faire avant les skins (2.4), qui en découleront
 
 ### Phase 3 — Le robot
 - [x] 3.1 Modèle low poly (ventre + tête), postes, système d'interaction (boutons, leviers, joysticks toujours actifs) (M2, M3)
@@ -251,15 +252,20 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 4.1 Camp minier dans un canyon, robot au centre, terminal de mission (flèches + bouton), retour au camp (M12, M12.1)
 - [x] 4.2 Mini-jeux : bras de fer (M12.1) ; les fléchettes sont passées dans le robot (3.9)
 - [ ] 4.3 Monnaie et sauvegarde de la partie (économie reportée par le porteur du projet le 2026-11-08) : fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte, sauvegarde **chez l'hôte** (validé) ; argent par nain ou commun : à décider
-- [ ] 4.4 Plus de mini-jeux (les wagonnets sont déjà en décor ; pistes dans `docs/ideas.md`)
+- [ ] 4.4 Plus de mini-jeux de garage : course de chariots de mécano, lancer de nain dans un pneu, wagonnets sur les rails, bras de fer déplacé sur l'établi (autres pistes dans `docs/ideas.md`)
 - [ ] 4.5 Marchands de skins : un pour les nains (2.4), un pour le robot (3.8)
 - [ ] 4.6 Marchand d'améliorations des nains (2.5)
+- [ ] 4.7 **Garage sous la montagne** (nouvelle DA, validée le 2026-11-09) : remplace le camp du canyon ; roche froide, lumière chaude (lampes, forge), grande ouverture sur l'extérieur ; robot sur un pont élévateur sous une grue, passerelle pour monter à bord ; terminal de mission et bras de fer déplacés dedans
+- [ ] 4.8 **Monte-charge géant** : départ et retour de mission (le robot descend ou monte avec lui), sert de transition pendant que l'hôte crée le niveau
+- [ ] 4.9 Le garage grandit au fil des missions : trophées au mur, nouveaux outils, plaques des clients (lié à 4.3 pour la sauvegarde)
 
 ### Phase 5 — Les missions
 - [x] 5.1 Cadre : `MissionDirector`, niveau créé par l'hôte, mission de test (rochers, caisses) (M12, S1)
 - [ ] 5.2 Mission prototype A → B : régler le ressenti, la difficulté et la durée sur un vrai parcours (M11)
 - [ ] 5.3 Cadre commun d'une mission : objectifs, réussie / ratée, récompenses, retour au camp (lié à 4.3) ; chaque mission le remplit à sa façon
-- [ ] 5.4 Histoire : le fil rouge des 10 missions, et la mécanique phare de chacune (à valider avec le porteur du projet)
+- [ ] 5.4 Histoire : le fil rouge des 10 missions, et la mécanique phare de chacune (à valider avec le porteur du projet) ; point de départ validé : le robot acheté à la casse (5.7)
+- [ ] 5.6 **Radio du personnage guide** : poste radio dans le cockpit, voix en charabia + bulle de texte traduite (`tr()`), réagit aux actions des joueurs (chute, caca lancé…) ; répliques déclenchées par l'hôte, vues et entendues par tous
+- [ ] 5.7 **Intro = mission tutoriel « Ramener le robot de la casse »** : au premier lancement d'une nouvelle partie, les nains apparaissent à la casse et ramènent le robot au garage ; une mécanique à la fois (entrer, démarrer, marcher, foreuse, grappin, se relever) guidée par la radio (5.6) ; arrivée au garage par le monte-charge (4.8). Dépend de 3.4 (marche finie), 5.3 (cadre de mission) et 4.3 (savoir si la partie est neuve)
 - [ ] 5.5 Les 10 missions, une par une (une ligne par mission ici une fois 5.4 validé) : environnement + mécanique propre + histoire
 
 ### Phase 6 — Finitions
