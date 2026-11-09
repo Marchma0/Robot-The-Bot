@@ -105,11 +105,11 @@ for result in build/tests/*.result; do
 	[ -f "$result" ] || continue
 	name=$(basename "$result" .result)
 	if [ "$name" = "net_test" ]; then
-		if [ "$(cat "$result")" = "0" ] && grep -q "NET TEST OK" build/tests/net_test.log; then
+		if [ "$(cat "$result")" = "0" ] && grep -aq "NET TEST OK" build/tests/net_test.log; then
 			echo "OK     net_test"
 		else
 			echo "ÉCHEC  net_test (voir build/net_test_host.log et build/net_test_client.log)"
-			grep -E "écart|ÉCHEC|ERROR" build/tests/net_test.log | head -8 | sed 's/^/        /'
+			grep -aE "écart|ÉCHEC|ERROR" build/tests/net_test.log | head -8 | sed 's/^/        /'
 			failed="$failed net_test"
 		fi
 		continue

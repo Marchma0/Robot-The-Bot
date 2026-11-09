@@ -265,7 +265,13 @@ func _handle_actions() -> void:
 		# pas), G = le poser par terre ; E = ramasser ou appuyer sur la commande visée. Levier, siège, corde :
 		# on passe à la suite (l'objet se range tout seul), sauf avec un objet lourd.
 		if grab:
-			if not item["heavy"]:
+			if item["heavy"]:
+				pass
+			elif _target != null and _target.picks_up_with_item():
+				# Une fléchette qui traîne : le clic la ramasse au lieu de lancer celle qu'on a en main.
+				if _target.interact(true, false, false) == Interactable.Use.DONE:
+					button_pressed.emit()
+			else:
 				item["node"].call(&"throw_from_hand", global_position, -global_basis.z)
 				thrown.emit()
 		elif Input.is_action_just_pressed("drop"):

@@ -42,6 +42,12 @@ func interact(_press: bool, _grab: bool, _hands_free: bool) -> Use:
 	return Use.NONE
 
 
+## Vrai si, avec un objet léger en main, le clic sur cette chose la ramasse au lieu de lancer l'objet
+## (ex. une fléchette qui traîne au sol). À surcharger.
+func picks_up_with_item() -> bool:
+	return false
+
+
 ## Vrai si l'utiliser range l'objet de l'inventaire en main (levier, siège, corde…) : avec un objet en main,
 ## l'Interactor la traite comme à main vide (clic = l'attraper, pas lancer). Pas possible avec un objet
 ## lourd (caisse) : il faut le poser. À surcharger.

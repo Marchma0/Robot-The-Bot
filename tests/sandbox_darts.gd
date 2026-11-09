@@ -77,6 +77,20 @@ func _ready() -> void:
 		"G : couchée au sol, devant les pieds du nain (%s)" % dropped)
 	await _shot("2b_posee_au_sol", Vector3(0.1, 3.8, 0.6),
 		_mecha.to_local(_darts.to_global(_darts.dart_pos[in_ally])), 0.1)
+	var handles: Array[Node] = _darts.find_children("*", "DartHandle", true, false)
+	var floor_handle: DartHandle = handles.filter(func(h: Node) -> bool: return (h as DartHandle).index == in_ally)[0]
+	TestCheck.expect(floor_handle.picks_up_with_item(), "objet en main : le clic sur la fléchette au sol la ramasse (au lieu de lancer)")
+	for h: Node in handles:
+		var handle: DartHandle = h as DartHandle
+		if _darts.dart_where[handle.index] == DartsGame.Where.PLANTED and _darts.is_on_board(handle.index):
+			TestCheck.expect(not handle.picks_up_with_item(), "objet en main : le clic vers la cible lance toujours")
+	var planted_before: int = _darts.dart_where.count(DartsGame.Where.PLANTED)
+	_darts.request_take_one.rpc_id(1, in_ally)
+	await _wait(0.2)
+	TestCheck.expect(_darts.darts_held_by(1) == 1 and _darts.dart_where.count(DartsGame.Where.PLANTED) == planted_before - 1,
+		"fléchette au sol ramassée : celle-là seulement")
+	_darts.request_drop_one.rpc_id(1)
+	await _wait(0.2)
 	_darts.request_reset.rpc_id(1)
 	await _wait(0.2)
 	TestCheck.expect(not _darts.has_darts_away() and _darts.has_free_darts(),

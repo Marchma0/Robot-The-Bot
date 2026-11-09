@@ -214,29 +214,51 @@ func drop_from_hand() -> void:
 ## viser la cible propose alors de toutes les y remettre (DartsTake).
 func has_darts_away() -> bool:
 	for i: int in DART_COUNT:
-		if dart_where[i] == Where.IN_DWARF or (dart_where[i] == Where.PLANTED and not _is_on_board(i)):
+		if dart_where[i] == Where.IN_DWARF or (dart_where[i] == Where.PLANTED and not is_on_board(i)):
 			return true
 	return false
 
 
-## Prendre toutes les fléchettes libres (plantées ailleurs que dans un nain) : elles vont dans la case des
-## fléchettes du joueur s'il en a déjà, sinon dans une case libre.
+## Prendre les fléchettes plantées dans la cible (toutes d'un coup) : elles vont dans la case des fléchettes
+## du joueur s'il en a déjà, sinon dans une case libre. S'il n'y en a aucune dans la cible, toutes les libres.
 @rpc("any_peer", "call_local", "reliable")
 func request_take() -> void:
 	if not multiplayer.is_server():
 		return
 	var sender: int = multiplayer.get_remote_sender_id()
-	var dwarf: Dwarf = Dwarf.of_peer(sender)
-	if dwarf == null or not has_free_darts() or not _near_a_dart(dwarf):
+	var slot: int = _take_slot(sender)
+	if slot < 0 or not _near_a_dart(Dwarf.of_peer(sender)):
 		return
-	if Possession.holds_control(get_tree(), sender):
-		return   # assis, sur la corde ou un levier en main
-	var slot: int = _slot_for(sender)
-	if slot < 0:
-		return   # inventaire plein
+	var on_board: bool = false
 	for i: int in DART_COUNT:
-		if dart_where[i] == Where.PLANTED:
+		on_board = on_board or (dart_where[i] == Where.PLANTED and is_on_board(i))
+	for i: int in DART_COUNT:
+		if dart_where[i] == Where.PLANTED and (is_on_board(i) or not on_board):
 			_give(i, sender, slot)
+
+
+## Prendre une seule fléchette, `index`, qui traîne hors de la cible (posée au sol, plantée dans un mur).
+## Visée dans la cible, elle les prend toutes (comme `request_take`).
+@rpc("any_peer", "call_local", "reliable")
+func request_take_one(index: int) -> void:
+	if not multiplayer.is_server() or index < 0 or index >= DART_COUNT or dart_where[index] != Where.PLANTED:
+		return
+	if is_on_board(index):
+		request_take()
+		return
+	var sender: int = multiplayer.get_remote_sender_id()
+	var slot: int = _take_slot(sender)
+	if slot < 0 or Dwarf.of_peer(sender).global_position.distance_to(to_global(dart_pos[index])) > TAKE_REACH:
+		return
+	_give(index, sender, slot)
+
+
+## Hôte : case où ranger des fléchettes prises par `sender`, ou -1 s'il ne peut pas (pas de nain, assis,
+## sur la corde ou un levier en main, inventaire plein).
+func _take_slot(sender: int) -> int:
+	if Dwarf.of_peer(sender) == null or Possession.holds_control(get_tree(), sender):
+		return -1
+	return _slot_for(sender)
 
 
 ## Poser (G) : une fléchette du joueur (case en main) est posée couchée au sol, devant lui ; on la ramasse
@@ -253,7 +275,7 @@ func request_drop_one() -> void:
 	var forward: Vector3 = -dwarf.global_basis.z
 	var above: Vector3 = dwarf.global_position + forward * DROP_DISTANCE + dwarf.global_basis.y * 0.8
 	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
-		above, above - dwarf.global_basis.y * 2.0, 1, [dwarf.get_rid()])
+		above, above - dwarf.global_basis.y * 4.0, 1, [dwarf.get_rid()])
 	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty() or not (owner != null and owner.is_ancestor_of(hit["collider"] as Node)):
 		_put_on_board(index)
@@ -519,7 +541,7 @@ func _start_round(peer_id: int, dwarf: Dwarf) -> void:
 
 
 ## Vrai si la fléchette `index`, plantée, est dans la cible (à sa place de repos ou lancée dedans).
-func _is_on_board(index: int) -> bool:
+func is_on_board(index: int) -> bool:
 	var pos: Vector3 = dart_pos[index]
 	return Vector2(pos.x, pos.y).length() <= BOARD_RADIUS and absf(pos.z) < 0.15
 

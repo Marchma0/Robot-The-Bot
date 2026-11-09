@@ -112,7 +112,7 @@
   toilettes dans la tête (mini-jeu « Poussée », cacas qu'on ramasse et qu'on lance, caca légendaire doré).
   Intérieur usé et encombré, jamais vide.
 - **Fléchettes** sur la cible du salon : on prend les fléchettes libres d'un coup (sur la cible ou là où elles sont
-  plantées, une case d'inventaire), on lance de n'importe où dans le robot, elles se plantent là où elles tapent ; G en pose une couchée au sol devant soi. Si des fléchettes traînent ailleurs (mur, sol, dans un nain), viser la cible propose de les remettre : un clic les y ramène toutes (pas celles qu'un joueur a dans son inventaire). Centre = « Dans le mille ! »
+  plantées, une case d'inventaire), on lance de n'importe où dans le robot, elles se plantent là où elles tapent ; G en pose une couchée au sol devant soi. Viser une fléchette qui traîne (sol, mur) ne ramasse qu'elle, même avec des fléchettes en main : le clic la ramasse au lieu de lancer (vers la cible, le clic lance toujours). Si des fléchettes traînent ailleurs (mur, sol, dans un nain), viser la cible propose de les remettre : un clic les y ramène toutes (pas celles qu'un joueur a dans son inventaire). Centre = « Dans le mille ! »
   (confettis) ; les scores s'écrivent à la craie sur l'ardoise d'à côté (lancers, total, 3 manches précédentes ; pseudos trop longs coupés avec « … » ;
   rien n'est gardé après la partie). Un nain touché a un flash rouge de douleur et la fléchette reste plantée là
   où elle l'a touché (casque, visage ou corps) ; au visage seulement, il a en plus la vue brouillée
