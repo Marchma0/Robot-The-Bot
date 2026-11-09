@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/sandbox_robo_jet.gd" id="1_sandbox"]
+[ext_resource type="PackedScene" path="res://scenes/levels/test_ground.tscn" id="2_ground"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="3_mecha"]
+
+[node name="SandboxRoboJet" type="Node3D"]
+script = ExtResource("1_sandbox")
+
+[node name="TestGround" parent="." instance=ExtResource("2_ground")]
+
+[node name="Mecha" parent="." instance=ExtResource("3_mecha")]
+
+[node name="Camera" type="Camera3D" parent="."]
+fov = 50.0
+current = true

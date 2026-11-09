@@ -1,16 +1,43 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://assets/models/props/tv_set.glb" id="1_model"]
-[ext_resource type="Shader" path="res://scenes/mecha/props/tv_screen.gdshader" id="2_tv"]
+[ext_resource type="Shader" path="res://scenes/mecha/props/tv_game.gdshader" id="2_tv"]
 [ext_resource type="Script" path="res://scripts/props/tv_set.gd" id="3_script"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/controls/push_button.tscn" id="4_button"]
+[ext_resource type="Script" path="res://scripts/props/robo_jet_game.gd" id="5_game"]
+[ext_resource type="Script" path="res://scripts/props/robo_jet_screen.gd" id="6_screen"]
+[ext_resource type="Script" path="res://scripts/props/robo_jet_touch.gd" id="7_touch"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tv"]
+resource_local_to_scene = true
 shader = ExtResource("2_tv")
 
 [sub_resource type="QuadMesh" id="QuadMesh_tv"]
 material = SubResource("ShaderMaterial_tv")
 size = Vector2(0.68, 0.48)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_touch"]
+size = Vector3(0.68, 0.48, 0.06)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_robojet"]
+properties/0/path = NodePath(".:running")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:player_peer")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:player_name")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:seed_value")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:best_score")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:best_name")
+properties/5/spawn = true
+properties/5/replication_mode = 2
 
 [node name="TvSet" type="Node3D" node_paths=PackedStringArray("power")]
 script = ExtResource("3_script")
@@ -23,6 +50,41 @@ unique_name_in_owner = true
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -0.05, 0, -0.157)
 cast_shadow = 0
 mesh = SubResource("QuadMesh_tv")
+
+[node name="ScreenViewport" type="SubViewport" parent="."]
+unique_name_in_owner = true
+disable_3d = true
+size = Vector2i(340, 240)
+render_target_update_mode = 4
+
+[node name="RoboJetScreen" type="Control" parent="ScreenViewport"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("6_screen")
+
+[node name="RoboJet" type="Node" parent="." node_paths=PackedStringArray("tv")]
+unique_name_in_owner = true
+script = ExtResource("5_game")
+tv = NodePath("..")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="RoboJet"]
+replication_config = SubResource("SceneReplicationConfig_robojet")
+
+[node name="Touch" type="Area3D" parent="." node_paths=PackedStringArray("game")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -0.05, 0, -0.157)
+script = ExtResource("7_touch")
+game = NodePath("../RoboJet")
+display_name = "Télé — Robo-Jet"
+reach = 5.5
+usable_seated = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Touch"]
+shape = SubResource("BoxShape3D_touch")
 
 [node name="Glow" type="OmniLight3D" parent="."]
 unique_name_in_owner = true

@@ -32,7 +32,7 @@ func interact(press: bool, grab: bool, _hands_free: bool) -> Use:
 
 ## Fléchette qui traîne hors de la cible (sol, mur) ou plantée dans un allié : avec un objet en main, le clic
 ## la ramasse au lieu de lancer. Dans la cible, le clic lance (c'est le jeu).
-func picks_up_with_item() -> bool:
+func takes_click_with_item() -> bool:
 	if game == null:
 		return false
 	match game.dart_where[index]:

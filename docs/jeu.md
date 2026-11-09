@@ -115,7 +115,7 @@
   les yeux, on voit son ventre et sa ceinture ; l'objet en main et la caisse portée se voient avec les mains qui les
   tiennent. Pas de bras à part accrochés à la caméra : ce qu'on voit de soi est exactement ce que voient les autres.
   Les emotes se jouent sur le corps (on les voit en entier dans la bulle d'état en haut à droite).
-- **Vie à bord** : salon dans le ventre (canapé où s'asseoir, télé animée qu'on allume et éteint avec son bouton, lampe qui se balance),
+- **Vie à bord** : salon dans le ventre (canapé où s'asseoir, télé qu'on allume et éteint avec son bouton, qui fait tourner le jeu **« Robo-Jet »** : notre petit robot à réacteur passe entre des stalactites et des poutres de mine, un clic sur l'écran = un coup de réacteur ; jouable debout ou depuis le canapé, un joueur à la fois (le premier qui clique), les autres regardent, record gardé pendant la partie, lampe qui se balance),
   toilettes dans la tête (mini-jeu « Poussée », cacas qu'on ramasse et qu'on lance, caca légendaire doré).
   Intérieur usé et encombré, jamais vide.
 - **Fléchettes** sur la cible du salon : on prend les fléchettes libres d'un coup (sur la cible ou là où elles sont

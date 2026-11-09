@@ -150,39 +150,12 @@ func _draw_ready(w: float, h: float) -> void:
 			# Accroupi : il se tasse et reste en bas un moment (déjà accroupi : il se relève).
 			var down: float = clampf(p / 0.25, 0.0, 1.0) * clampf((1.0 - p) / 0.15, 0.0, 1.0)
 			bend = 1.0 - down if walker.crouched else down
-		_draw_robot(Vector2(x + 10.0, ground - 2.0 - lift), bend, alpha)
+		RobotPictogram.draw(self, Vector2(x + 10.0, ground - 2.0 - lift), bend, alpha, ROBOT_SCALE)
 		if arrow == QteSequence.Arrow.UP and lift > 4.0:
 			# Petits traits de vitesse sous lui en l'air.
 			for k: int in 3:
 				var lx: float = x + 2.0 + 8.0 * k
 				draw_line(Vector2(lx, ground - lift + 6.0), Vector2(lx, ground - lift + 14.0), Color(BOTH_COLOR, alpha * 0.6), 2.0)
-
-
-## Petit robot de l'écran « Prêt » : corps à hublots, antenne, deux jambes ; `bend` (0 à 1) plie les genoux et
-## le fait descendre. `feet` = milieu des pieds.
-func _draw_robot(feet: Vector2, bend: float, alpha: float) -> void:
-	# Dessiné à l'échelle ROBOT_SCALE autour de ses pieds.
-	draw_set_transform(feet * (1.0 - ROBOT_SCALE), 0.0, Vector2.ONE * ROBOT_SCALE)
-	var body_color: Color = Color(BOTH_COLOR, alpha)
-	var ink: Color = Color(0.05, 0.03, 0.1, alpha)
-	var leg_height: float = lerpf(18.0, 7.0, bend)
-	var hip_y: float = feet.y - leg_height
-	for side: float in [-1.0, 1.0]:
-		var hip: Vector2 = Vector2(feet.x + side * 7.0, hip_y)
-		var foot: Vector2 = Vector2(feet.x + side * 9.0, feet.y)
-		var knee: Vector2 = (hip + foot) / 2.0 + Vector2(side * 7.0 * bend, 0.0)
-		draw_polyline([hip, knee, foot], body_color, 4.0)
-		draw_rect(Rect2(foot + Vector2(-5.0, -2.0), Vector2(10.0, 4.0)), body_color)
-	var body: Rect2 = Rect2(feet.x - 14.0, hip_y - 22.0, 28.0, 22.0)
-	draw_rect(body, body_color)
-	draw_rect(body, ink, false, 1.5)
-	for side: float in [-1.0, 1.0]:
-		var eye: Vector2 = Vector2(feet.x + side * 6.5, hip_y - 13.0)
-		draw_circle(eye, 4.2, ink)
-		draw_circle(eye, 2.4, Color(MINE, alpha))
-	draw_line(Vector2(feet.x, hip_y - 22.0), Vector2(feet.x + 3.0, hip_y - 29.0), body_color, 2.0)
-	draw_circle(Vector2(feet.x + 3.0, hip_y - 30.0), 2.2, Color(BAD, alpha))
-	draw_set_transform(Vector2.ZERO)
 
 
 ## Étape joystick : un joystick sur son socle, à pousser par les deux pilotes ensemble.
