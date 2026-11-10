@@ -204,7 +204,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 > Une tâche finie tient en **une ligne** : le détail (comment, pourquoi) va dans `docs/decisions.md`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : 3.14 [en cours — Marchma0]
+**En cours** : rien pour l'instant.
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) : aucun.
 
@@ -243,7 +243,8 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 3.11 Fléchette plantée dans un allié
 - [x] 3.12 Télé : jeu « Robo-Jet »
 - [x] 3.13 Finitions de pilotage (2026-11-10) : pas plus jamais perdus, vue stable au saut, caisse portée sans à-coups, QTE à étapes « Ensemble ! »
-- [ ] 3.14 Robot praticable [en cours — Marchma0] : collisions sur tout le robot (bras, toit), le nain suit la partie du robot sur laquelle il est debout (bras levé = on monte sur la tête), le grappin rattrape un allié et le pose sous le robot
+- [x] 3.14 Robot praticable (2026-11-10) : collisions sur tout le robot, le nain suit ce qu'il a sous les pieds et se fait projeter si ça accélère d'un coup, le grappin rattrape un allié et le pose sous le robot
+- [ ] 3.15 Échelle à l'arrière (validée par Marchma0) : un tronçon du sol au dessus du sac à dos, un du rebord au toit ; grimpe en réutilisant `Rope` (sans corde visible, sans balancement, côté extérieur)
 
 ### Phase 4 — Le camp de base (lobby)
 - [x] 4.1 Camp minier dans un canyon, terminal de mission, retour au camp (M12, M12.1)
