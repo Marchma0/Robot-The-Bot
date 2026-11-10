@@ -204,7 +204,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 > Une tâche finie tient en **une ligne** : le détail (comment, pourquoi) va dans `docs/decisions.md`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : rien pour l'instant.
+**En cours** : `massyl12/lobby-garage` (4.7 Garage ultra éclairé, 2.4 & 3.8 & 4.5 Skins nains/robot & bras, 4.4 Mini-jeux de garage : guitare QTE, punch-o-mètre, basket, forge, bras de fer).
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) : aucun.
 
@@ -223,7 +223,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 2.1 Nain contrôlable dans un cockpit qui bouge, première personne (M1)
 - [x] 2.2 Squelette, animations, `AnimationTree`, état synchronisé (M4)
 - [x] 2.3 Emotes, corps visible, bulle d'état, s'accroupir (M6.5)
-- [ ] 2.4 Skins des nains : pièces interchangeables (barbe, casque, couleurs…), choix synchronisé et sauvegardé — vendus en 4.5
+- [ ] 2.4 `[en cours — massyl12]` Skins des nains : pièces interchangeables (barbe, casque, couleurs…), choix synchronisé et sauvegardé — vendus en 4.5
 - [ ] 2.5 Améliorations des nains : liste à définir avec le porteur du projet (pistes dans `docs/ideas.md`) — vendues en 4.6
 - [x] 2.6 Inventaire de 5 cases, caisses portées à deux mains
 - [x] 2.7 Vue de son vrai corps, animations de port, angle de vue de 90°
@@ -237,7 +237,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 3.5 Foreuse (M8)
 - [x] 3.6 Grappin, postes assis des deux bras (M9, M9.5)
 - [x] 3.7 Sac à dos (M10)
-- [ ] 3.8 Skins du robot : peinture, décorations, choix synchronisé et sauvegardé — vendus en 4.5
+- [ ] 3.8 `[en cours — massyl12]` Skins du robot : peinture, décorations, choix synchronisé et sauvegardé — vendus en 4.5
 - [x] 3.9 Fléchettes dans le robot
 - [x] 3.10 Finitions du salon : ardoise, télé, jeu de dames, roue d'emotes
 - [x] 3.11 Fléchette plantée dans un allié
@@ -250,10 +250,10 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 4.1 Camp minier dans un canyon, terminal de mission, retour au camp (M12, M12.1)
 - [x] 4.2 Mini-jeu : bras de fer (M12.1)
 - [ ] 4.3 Monnaie et sauvegarde de la partie (économie reportée par le porteur du projet le 2026-11-08) : fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte, sauvegarde **chez l'hôte** (validé) ; argent par nain ou commun : à décider
-- [ ] 4.4 Plus de mini-jeux de garage : course de chariots de mécano, lancer de nain dans un pneu, wagonnets sur les rails, bras de fer déplacé sur l'établi (autres pistes dans `docs/ideas.md`)
-- [ ] 4.5 Marchands de skins : un pour les nains (2.4), un pour le robot (3.8)
+- [ ] 4.4 `[en cours — massyl12]` Plus de mini-jeux de garage : course de chariots de mécano, lancer de nain dans un pneu, wagonnets sur les rails, bras de fer déplacé sur l'établi (autres pistes dans `docs/ideas.md`)
+- [ ] 4.5 `[en cours — massyl12]` Marchands de skins : un pour les nains (2.4), un pour le robot (3.8)
 - [ ] 4.6 Marchand d'améliorations des nains (2.5)
-- [ ] 4.7 **Garage sous la montagne** (nouvelle DA, validée le 2026-11-09) : remplace le camp du canyon ; roche froide, lumière chaude (lampes, forge), grande ouverture sur l'extérieur ; robot sur un pont élévateur sous une grue, passerelle pour monter à bord ; terminal de mission et bras de fer déplacés dedans
+- [ ] 4.7 `[en cours — massyl12]` **Garage sous la montagne** (nouvelle DA, validée le 2026-11-09) : remplace le camp du canyon ; roche froide, lumière chaude (lampes, forge), grande ouverture sur l'extérieur ; robot sur un pont élévateur sous une grue, passerelle pour monter à bord ; terminal de mission et bras de fer déplacés dedans
 - [ ] 4.8 **Monte-charge géant** : départ et retour de mission (le robot descend ou monte avec lui), sert de transition pendant que l'hôte crée le niveau
 - [ ] 4.9 Le garage grandit au fil des missions : trophées au mur, nouveaux outils, plaques des clients (lié à 4.3 pour la sauvegarde)
 
