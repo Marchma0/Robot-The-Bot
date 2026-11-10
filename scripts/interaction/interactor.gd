@@ -158,6 +158,10 @@ func is_holding_spring_stick() -> bool:
 ## Mouvement de souris en pixels (x droite, y haut) pendant qu'on tient un levier.
 func drive_mouse(motion: Vector2) -> void:
 	var spring: bool = is_holding_spring_stick()
+	if spring and not _stick_armed:
+		# Déjà parti en butée (« clac ») : il revient au centre tout seul, même si la souris bouge encore
+		# (sinon il restait coincé en butée et le pas suivant ne partait jamais).
+		return
 	_drive(motion * (mouse_stick_sensitivity if spring else mouse_lever_sensitivity))
 	_pushed = _pushed or motion.length() > 0.0
 

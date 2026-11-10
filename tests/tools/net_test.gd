@@ -393,8 +393,8 @@ func _maneuver_steps(qte: QteSequence) -> void:
 		_log("ÉCHEC  ↓ par les deux pilotes : pas de QTE")
 		return
 	while qte.active:
-		var pads: Array[PushButton] = qte.pads_left if qte.current_leg == 0 else qte.pads_right
-		pads[qte.current_arrow].pressed.emit(1)
+		for pad: PushButton in qte.expected_pads():   # deux boutons pour une étape « ensemble »
+			pad.pressed.emit(1)
 		await get_tree().create_timer(0.3).timeout
 	await get_tree().create_timer(STEP_WAIT).timeout
 	if not walker.crouched:

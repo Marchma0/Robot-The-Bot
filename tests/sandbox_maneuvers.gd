@@ -13,6 +13,7 @@ extends Node3D
 @onready var _cam_outside: Camera3D = $CamOutside
 
 var _stick_wanted: Array[Vector2] = [Vector2.ZERO, Vector2.ZERO]
+var _together_seen: int = 0
 
 
 func _ready() -> void:
@@ -29,7 +30,7 @@ func _ready() -> void:
 	await _shot("1_attends_l_autre", _cam_inside)
 	_pad(1, QteSequence.Arrow.DOWN)
 	await _wait(0.1)
-	TestCheck.expect(_qte.active and not _qte.sequence.has(QteSequence.BOTH * 4), "↓ ensemble : QTE de l'accroupi lancé")
+	TestCheck.expect(_qte.active and not _qte.sequence.has(QteSequence.BOTH * 16), "↓ ensemble : QTE de l'accroupi lancé")
 	await _play_arrows()
 	await _wait(_walker.crouch_time + 0.3)
 	TestCheck.expect(_walker.crouched, "QTE réussi : le robot est accroupi")
@@ -37,6 +38,25 @@ func _ready() -> void:
 	TestCheck.expect(drop > 0.7, "accroupi : le corps est descendu (%.2f m)" % drop)
 	await _shot("2_accroupi", _cam_outside)
 	await _shot("2b_ecran_accroupi", _cam_inside)
+	# Étapes « ensemble » (chacun sa flèche, à 0,4 s près).
+	var arrows: int = QteSequence.Arrow.UP + 4 * QteSequence.Arrow.DOWN
+	_qte.start([Vector2i(QteSequence.TOGETHER, arrows), Vector2i(0, QteSequence.Arrow.LEFT)])
+	var mistakes: int = _qte.mistake_count
+	_pad(0, QteSequence.Arrow.UP)
+	await _wait(0.1)
+	TestCheck.expect(_qte.together_pressed == 1 and _qte.step_index == 0, "ensemble : un seul a appuyé, l'étape attend l'autre")
+	await _shot("6_ensemble_un_seul", _cam_inside)
+	await _wait(0.5)
+	TestCheck.expect(_qte.mistake_count == mistakes + 1 and _qte.together_pressed == 0, "ensemble : l'autre trop lent, c'est une erreur")
+	_pad(0, QteSequence.Arrow.UP)
+	_pad(1, QteSequence.Arrow.UP)
+	TestCheck.expect(_qte.mistake_count == mistakes + 2, "ensemble : mauvaise flèche de l'autre, c'est une erreur")
+	_pad(1, QteSequence.Arrow.DOWN)
+	await _wait(0.1)
+	_pad(0, QteSequence.Arrow.UP)
+	TestCheck.expect(_qte.step_index == 1, "ensemble : les deux à temps, l'étape est validée")
+	_qte.cancel()
+	await _wait(0.6)
 
 	# Pas de saut accroupi.
 	await _both(QteSequence.Arrow.UP)
@@ -76,6 +96,7 @@ func _ready() -> void:
 		"il a sauté d'environ %.1f m vers l'avant (%.2f m)" % [_walker.jump_distance, moved.dot(forward)])
 	await _shot("5_arrive", _cam_outside)
 
+	TestCheck.expect(_together_seen >= 4, "saut et accroupi : des étapes « ensemble » (%d vues)" % _together_seen)
 	# QTE abandonné : annulé, la jauge d'erreur monte.
 	var gauge: float = _walker.error_gauge
 	await _both(QteSequence.Arrow.DOWN)
@@ -106,10 +127,17 @@ func _both(arrow: int) -> void:
 	await _wait(0.1)
 
 
-## Joue les flèches du QTE en cours (la bonne, toutes les 0,3 s).
+## Joue les flèches du QTE en cours (la bonne, toutes les 0,3 s ; les deux à 0,1 s d'écart pour une étape
+## « ensemble »). Compte les étapes « ensemble » rencontrées.
 func _play_arrows() -> void:
 	while _qte.active and _qte.current_leg != QteSequence.BOTH:
-		_pad(_qte.current_leg, _qte.current_arrow)
+		var together: bool = _qte.current_leg == QteSequence.TOGETHER
+		if together:
+			_together_seen += 1
+		for pad: PushButton in _qte.expected_pads():
+			pad.pressed.emit(1)
+			if together and _qte.active:
+				await _wait(0.1)
 		if not _qte.active:
 			return   # dernier appui : on n'attend pas (le saut part tout de suite)
 		await _wait(0.3)

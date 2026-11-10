@@ -11,6 +11,9 @@ var _phase_index: int = 0
 var _shots: Array[float] = [3.0, 3.2, 7.5, 12.0, 15.5, 19.5, 26.0]
 var _shot_index: int = 0
 var _stumbles: int = 0
+## Pas comptés pendant la phase « poussé juste après l'autre » (début, fin).
+var _quick_window: Vector2 = Vector2.ZERO
+var _quick_steps: int = 0
 
 @export var quit_when_done: bool = true
 
@@ -27,6 +30,7 @@ func _ready() -> void:
 	_start = _mecha.global_position
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://build/views"))
 	_walker.stumbled.connect(func() -> void: _stumbles += 1)
+	_walker.stepped.connect(_on_stepped)
 	var t: float = 1.0
 	_phases.append(["départ", 0.0])
 	_phases.append(["8 pas alternés rapides vers l'avant", t])
@@ -38,6 +42,12 @@ func _ready() -> void:
 	for i: int in 4:
 		_script.append([i % 2, Vector2(0.0, 1.0), t])
 		t += 1.0
+	# Bug du joystick qui « se bloque » : poussé juste après l'autre, pendant que son pied est en l'air.
+	_phases.append(["droite poussé 0,03 s après gauche", t])
+	_quick_window = Vector2(t, t + 1.4)
+	_script.append([0, Vector2(0.0, 1.0), t])
+	_script.append([1, Vector2(0.0, 1.0), t + 0.03])
+	t += 1.5
 	_phases.append(["6 pas en diagonale avant-droite", t])
 	for i: int in 6:
 		_script.append([i % 2, Vector2(0.7, 0.7), t])
@@ -80,6 +90,7 @@ func _physics_process(delta: float) -> void:
 			var moved: float = Vector2(_mecha.global_position.x - _start.x, _mecha.global_position.z - _start.z).length()
 			TestCheck.expect(moved > 3.0, "le robot a avancé (%.1f m)" % moved)
 			TestCheck.expect(_stumbles >= 1, "le désaccord fait trébucher")
+			TestCheck.expect(_quick_steps == 2, "poussé juste après l'autre : le pas attend et part (%d pas sur 2)" % _quick_steps)
 		if _phase_index >= _phases.size() and (quit_when_done or TestCheck.is_auto()):
 			TestCheck.finish(get_tree())
 	var center: Vector3 = _mecha.global_position + Vector3.UP * 1.6
@@ -89,6 +100,11 @@ func _physics_process(delta: float) -> void:
 	if _shot_index < _shots.size() and _time >= _shots[_shot_index]:
 		_shot_index += 1
 		_capture(_shot_index)
+
+
+func _on_stepped(_leg: int) -> void:
+	if _time >= _quick_window.x and _time < _quick_window.y:
+		_quick_steps += 1
 
 
 func _report(name: String) -> void:

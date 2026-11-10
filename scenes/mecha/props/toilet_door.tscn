@@ -28,8 +28,7 @@ font_size = 48
 outline_size = 8
 modulate = Color(0.95, 0.88, 0.7, 1)
 
-[node name="Body" type="AnimatableBody3D" parent="."]
-sync_to_physics = false
+[node name="Body" type="StaticBody3D" parent="."]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.43)

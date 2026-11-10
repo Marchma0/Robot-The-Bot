@@ -31,8 +31,7 @@ properties/5/replication_mode = 2
 
 [node name="Model" parent="." instance=ExtResource("1_model")]
 
-[node name="Body" type="AnimatableBody3D" parent="."]
-sync_to_physics = false
+[node name="Body" type="StaticBody3D" parent="."]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0)

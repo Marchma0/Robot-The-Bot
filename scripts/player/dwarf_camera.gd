@@ -19,7 +19,7 @@ const EYE_FORWARD_HOLDING: float = -0.08
 ## Vitesse à laquelle les yeux avancent ou reculent quand on prend / range un objet (m/s).
 const EYE_SHIFT_SPEED: float = 0.6
 ## Inclinaison vers le bas (rad) à partir de laquelle les yeux sont tout à fait avancés.
-const LOOK_DOWN_FULL: float = deg_to_rad(80.0)
+const LOOK_DOWN_FULL: float = Dwarf.MAX_PITCH_DOWN
 ## Hauteur des yeux debout / accroupi (m).
 const EYE_HEIGHT: float = 0.95
 const CROUCH_EYE_HEIGHT: float = 0.7

@@ -4,7 +4,9 @@ extends Node
 ## - une flèche (jambe gauche / droite + flèche), à tour de rôle : la bonne flèche du bon joueur la valide,
 ##   toute autre flèche fait reculer la séquence un peu ;
 ## - une étape joystick (`BOTH`) : les deux pilotes poussent leur joystick dans la même direction (à
-##   `stick_tolerance_degrees` près). La direction choisie est gardée (`stick_direction`) : sert au saut.
+##   `stick_tolerance_degrees` près). La direction choisie est gardée (`stick_direction`) : sert au saut ;
+## - une étape « ensemble » (`TOGETHER`) : chaque pilote a sa flèche, les deux appuis doivent arriver à
+##   `together_window` s près. Mauvaise flèche, ou l'autre trop lent : c'est une erreur.
 ## Sert au relèvement du robot (M7.2), au saut et à l'accroupi (MechaManeuvers).
 ## Un QTE lancé avec `fail_after` échoue (signal `failed`) si personne ne progresse pendant ce temps.
 ##
@@ -21,6 +23,8 @@ enum Arrow { UP, DOWN, LEFT, RIGHT }
 
 ## « Jambe » d'une étape joystick à faire par les deux pilotes (Vector2i(BOTH, 0) dans `start`).
 const BOTH: int = 2
+## « Jambe » d'une étape « ensemble » : Vector2i(TOGETHER, flèche gauche + 4 * flèche droite) dans `start`.
+const TOGETHER: int = 3
 ## Seuil de poussée d'un joystick pour l'étape joystick (comme un pas, voir MechaWalker).
 const STICK_TRIGGER: float = 0.6
 
@@ -38,6 +42,8 @@ const STICK_TRIGGER: float = 0.6
 @export var drain_steps_per_second: float = 0.45
 ## Délai avant que la jauge commence à se vider, au lancement du QTE (s).
 @export var start_grace: float = 1.0
+## Étape « ensemble » : écart max entre les appuis des deux pilotes (s).
+@export var together_window: float = 0.4
 
 ## Séquence en cours. Autorité : hôte (synchronisé).
 var active: bool = false
@@ -47,9 +53,12 @@ var current_leg: int = -1
 var current_arrow: int = -1
 ## Remplissage de la jauge, en étapes (step_index au plus, baisse en continu). Autorité : hôte.
 var progress_steps: float = 0.0
-## Toute la séquence, une case par étape : jambe * 4 + flèche (BOTH * 4 = étape joystick).
-## Autorité : hôte (synchronisé, pour l'écran).
+## Toute la séquence, une case par étape : jambe * 16 + flèche (+ 4 * flèche droite pour TOGETHER), voir
+## `step_leg_of` / `step_arrow_of`. Autorité : hôte (synchronisé, pour l'écran).
 var sequence: PackedInt32Array = PackedInt32Array()
+## Étape « ensemble » : qui a déjà appuyé sur sa flèche (bit 0 = gauche, bit 1 = droite).
+## Autorité : hôte (synchronisé, pour l'écran : « attends l'autre » / « vite ! »).
+var together_pressed: int = 0
 ## Nombre d'erreurs depuis le début de la partie (l'écran clignote en rouge quand il change). Autorité : hôte.
 var mistake_count: int = 0
 ## Hôte : direction choisie à l'étape joystick (radians : 0 = vers l'avant, positif = vers la droite).
@@ -60,6 +69,8 @@ var _grace: float = 0.0
 ## Hôte : temps sans progrès, et délai avant l'échec (0 = jamais).
 var _stall: float = 0.0
 var _fail_after: float = 0.0
+## Hôte : temps depuis le premier appui d'une étape « ensemble ».
+var _together_time: float = 0.0
 
 
 func _ready() -> void:
@@ -76,6 +87,10 @@ func _physics_process(delta: float) -> void:
 		_check_sticks()
 		if not active:
 			return
+	if current_leg == TOGETHER and together_pressed != 0:
+		_together_time += delta
+		if _together_time > together_window:
+			_mistake(-1)   # l'autre n'a pas suivi à temps
 	_stall += delta
 	if _fail_after > 0.0 and _stall > _fail_after:
 		_fail()
@@ -95,11 +110,29 @@ func get_progress() -> float:
 	return progress_steps / float(step_count) if step_count > 0 else 0.0
 
 
-## `turns` tours qui alternent les joueurs, 1 ou 2 flèches par tour, tirés au hasard.
-static func random_steps(turns: int) -> Array[Vector2i]:
+## Jambe d'une case de `sequence` (0, 1, BOTH ou TOGETHER).
+static func step_leg_of(packed: int) -> int:
+	return packed >> 4
+
+
+## Flèche d'une case de `sequence` ; pour une étape TOGETHER, `side` choisit la flèche du pilote (0 ou 1).
+static func step_arrow_of(packed: int, side: int = 0) -> int:
+	return (packed >> (2 * side)) & 3
+
+
+## `turns` tours qui alternent les joueurs, 1 ou 2 flèches par tour, tirés au hasard, et `together` étapes
+## « ensemble » glissées entre deux tours (jamais en premier : on se met d'abord dans le rythme).
+static func random_steps(turns: int, together: int = 0) -> Array[Vector2i]:
 	var steps: Array[Vector2i] = []
 	var first: int = randi() % 2
+	var slots: Array[int] = []
+	for turn: int in range(1, turns):
+		slots.append(turn)
+	slots.shuffle()
+	var together_before: Array[int] = slots.slice(0, together)
 	for turn: int in turns:
+		if together_before.has(turn):
+			steps.append(Vector2i(TOGETHER, randi() % 4 + 4 * (randi() % 4)))
 		var leg: int = (first + turn) % 2
 		for i: int in 1 + randi() % 2:
 			steps.append(Vector2i(leg, randi() % 4))
@@ -119,7 +152,7 @@ func start(steps: Array[Vector2i], fail_after: float = 0.0) -> void:
 	_steps = steps
 	var packed: PackedInt32Array = PackedInt32Array()
 	for step: Vector2i in steps:
-		packed.append(step.x * 4 + (0 if step.x == BOTH else step.y))
+		packed.append(step.x * 16 + (0 if step.x == BOTH else step.y))
 	sequence = packed
 	step_index = 0
 	progress_steps = 0.0
@@ -135,15 +168,51 @@ func cancel() -> void:
 	active = false
 	current_leg = -1
 	current_arrow = -1
+	together_pressed = 0
+
+
+## Boutons à presser pour l'étape en cours (deux pour une étape « ensemble », aucun pour l'étape joystick).
+## Sert aux scènes de test, qui jouent les pilotes.
+func expected_pads() -> Array[PushButton]:
+	var pads: Array[PushButton] = []
+	if not active or current_leg == BOTH:
+		return pads
+	if current_leg == TOGETHER:
+		pads.append(pads_left[step_arrow_of(sequence[step_index], 0)])
+		pads.append(pads_right[step_arrow_of(sequence[step_index], 1)])
+	else:
+		pads.append((pads_left if current_leg == 0 else pads_right)[current_arrow])
+	return pads
 
 
 func _on_pad(_peer_id: int, leg: int, arrow: int) -> void:
 	if not multiplayer.is_server() or not active or current_leg == BOTH:
 		return   # pendant l'étape joystick, les flèches ne comptent pas
 	var expected: Vector2i = _steps[step_index]
+	if expected.x == TOGETHER:
+		_on_together_pad(leg, arrow, expected.y)
+		return
 	if leg == expected.x and arrow == expected.y:
 		_advance()
 		return
+	_mistake(leg)
+
+
+## Étape « ensemble » : chacun sa flèche ; validée quand les deux ont appuyé à `together_window` s près.
+func _on_together_pad(leg: int, arrow: int, arrows: int) -> void:
+	var bit: int = 1 << leg
+	if arrow != (arrows >> (2 * leg)) & 3 or together_pressed & bit:
+		_mistake(leg)   # mauvaise flèche, ou appuyé deux fois
+		return
+	if together_pressed == 0:
+		_together_time = 0.0
+	together_pressed |= bit
+	if together_pressed == 3:
+		_advance()
+
+
+## Erreur (`leg` = pilote fautif, -1 = les deux) : la séquence recule.
+func _mistake(leg: int) -> void:
 	step_index = maxi(0, step_index - penalty_steps)
 	progress_steps = minf(progress_steps, float(step_index))
 	mistake_count += 1
@@ -186,4 +255,5 @@ func _fail() -> void:
 
 func _update_current() -> void:
 	current_leg = _steps[step_index].x
-	current_arrow = _steps[step_index].y if current_leg != BOTH else -1
+	current_arrow = _steps[step_index].y if current_leg < BOTH else -1
+	together_pressed = 0

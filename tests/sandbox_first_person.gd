@@ -38,7 +38,11 @@ func _ready() -> void:
 	await _shot("0_devant")
 	await _look_shot("1_regard_bas", -1.2)
 	await _look_shot("1_regard_bas_moitie", -0.7)
-	await _look_shot("1_regard_pieds", -1.45)
+	# Tout en bas : le regard s'arrête avant d'entrer dans le torse (on voyait à travers son corps).
+	_dwarf._look(Vector2(0.0, -3.0))
+	var lowest: float = _dwarf.get_node("%Head").rotation.x
+	TestCheck.expect(lowest >= -Dwarf.MAX_PITCH_DOWN - 0.001, "regard vers le bas limité (%.0f°)" % rad_to_deg(lowest))
+	await _look_shot("1_regard_pieds", lowest)
 	Input.action_press("crouch")
 	await _look_shot("1_accroupi_regard_bas", -1.2, 0.6)
 	Input.action_release("crouch")
@@ -74,8 +78,13 @@ func _ready() -> void:
 	TestCheck.expect(_dwarf.anim_carrying and not _dwarf.anim_hold_item, "caisse : animation « porter à deux mains »")
 	await _shot("3_caisse")
 	await _look_shot("3_caisse_regard_bas", -0.8)
+	# Le modèle de la caisse est accroché au nain : il avance exactement avec lui (avant, il était replacé
+	# à chaque image et avançait par à-coups).
+	var crate_model: Node3D = crate.get_model()
+	TestCheck.expect(crate_model.get_parent() == _dwarf, "caisse portée : son modèle est accroché au nain")
 	crate.queue_free()
 	await _wait(0.4)
+	TestCheck.expect(not is_instance_valid(crate_model), "caisse supprimée pendant qu'on la porte : son modèle part avec elle")
 
 	for i: int in Emotes.count():
 		_dwarf._play_emote(i)

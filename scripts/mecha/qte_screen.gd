@@ -166,10 +166,15 @@ func _draw_stick(center: Vector2, radius: float, color: Color) -> void:
 
 
 func _draw_sequence(w: float) -> void:
-	var mine_now: bool = qte.current_leg == leg or qte.current_leg == QteSequence.BOTH
+	var shared: bool = qte.current_leg >= QteSequence.BOTH   # joystick ou « ensemble » : les deux pilotes
+	var mine_now: bool = qte.current_leg == leg or shared
 	if _flash_bad <= 0.0:
-		if qte.current_leg == QteSequence.BOTH:
-			var beat_both: float = 0.75 + 0.25 * sin(_time * 10.0)
+		var beat_both: float = 0.75 + 0.25 * sin(_time * 10.0)
+		if qte.current_leg == QteSequence.TOGETHER and qte.together_pressed & (1 << leg):
+			_draw_text(tr("Attends l'autre…"), Vector2(w / 2.0, 34.0), 20, Color(OTHER, 0.85))
+		elif qte.current_leg == QteSequence.TOGETHER and qte.together_pressed != 0:
+			_draw_text(tr("Appuie vite !"), Vector2(w / 2.0, 34.0), 26, Color(BOTH_COLOR, beat_both))
+		elif shared:
 			_draw_text(tr("Ensemble !"), Vector2(w / 2.0, 34.0), 26, Color(BOTH_COLOR, beat_both))
 		elif mine_now:
 			var beat: float = 0.75 + 0.25 * sin(_time * 10.0)
@@ -178,7 +183,7 @@ func _draw_sequence(w: float) -> void:
 			_draw_text(tr("À l'autre…"), Vector2(w / 2.0, 34.0), 20, Color(OTHER, 0.8))
 	# piste et cible
 	draw_line(Vector2(TARGET_X, LANE_Y), Vector2(w, LANE_Y), Color(1.0, 1.0, 1.0, 0.08), 26.0)
-	var ring_color: Color = BOTH_COLOR if qte.current_leg == QteSequence.BOTH else (MINE if mine_now else OTHER)
+	var ring_color: Color = BOTH_COLOR if shared else (MINE if mine_now else OTHER)
 	var ring_pulse: float = 1.0 + (0.08 * sin(_time * 10.0) if mine_now else 0.0)
 	draw_arc(Vector2(TARGET_X, LANE_Y), 30.0 * ring_pulse, 0.0, TAU, 32, Color(ring_color, 0.9), 3.0)
 	draw_arc(Vector2(TARGET_X, LANE_Y), 36.0 * ring_pulse, 0.0, TAU, 32, Color(ring_color, 0.25), 4.0)
@@ -187,10 +192,11 @@ func _draw_sequence(w: float) -> void:
 		var x: float = TARGET_X + (float(i) - _scroll) * SPACING
 		if x < -40.0 or x > w + 40.0:
 			continue
-		var step_leg: int = qte.sequence[i] >> 2
-		var arrow: int = qte.sequence[i] & 3
+		var step_leg: int = QteSequence.step_leg_of(qte.sequence[i])
+		var arrow: int = QteSequence.step_arrow_of(qte.sequence[i])
 		var both: bool = step_leg == QteSequence.BOTH
-		var mine: bool = step_leg == leg or both
+		var together: bool = step_leg == QteSequence.TOGETHER
+		var mine: bool = step_leg == leg or both or together
 		var color: Color = BOTH_COLOR if both else (MINE if mine else OTHER)
 		var radius: float = 24.0 if mine else 16.0
 		var alpha: float = 1.0
@@ -202,7 +208,9 @@ func _draw_sequence(w: float) -> void:
 			radius *= 1.15 + (0.1 * sin(_time * 10.0) if mine else 0.0)
 		else:
 			alpha = clampf(1.0 - (x - TARGET_X) / (w * 1.1), 0.35, 1.0)
-		if alpha > 0.0 and both:
+		if alpha > 0.0 and together:
+			_draw_together(Vector2(x, LANE_Y), radius, qte.sequence[i], i - qte.step_index, alpha)
+		elif alpha > 0.0 and both:
 			_draw_stick(Vector2(x, LANE_Y), radius, Color(color, alpha))
 		elif alpha > 0.0:
 			_draw_arrow(Vector2(x, LANE_Y), radius, ARROW_ANGLES[arrow], Color(color, alpha))
@@ -211,6 +219,23 @@ func _draw_sequence(w: float) -> void:
 	draw_rect(bar, Color(1.0, 1.0, 1.0, 0.12))
 	draw_rect(Rect2(bar.position, Vector2(bar.size.x * _shown_progress, bar.size.y)), MINE.lerp(GOOD, _shown_progress))
 	draw_rect(bar, Color(1.0, 1.0, 1.0, 0.4), false, 1.5)
+
+
+## Étape « ensemble » : ma flèche (grande, en haut) et celle de l'autre (petite, en bas) dans un anneau doré.
+## Une flèche déjà appuyée passe au vert.
+## `order` : 0 = étape en cours, négatif = déjà faite, positif = à venir.
+func _draw_together(center: Vector2, radius: float, packed: int, order: int, alpha: float) -> void:
+	var current: bool = order == 0
+	var done: bool = order < 0   # déjà validée (elle s'efface)
+	draw_arc(center, radius * 1.45, 0.0, TAU, 32, Color(GOOD if done else BOTH_COLOR, alpha * 0.9), 3.0)
+	for side: int in 2:
+		var is_mine: bool = side == leg
+		var pressed: bool = current and qte.together_pressed & (1 << side)
+		var color: Color = GOOD if pressed or done else (MINE if is_mine else OTHER)
+		var offset: Vector2 = Vector2(0.0, -radius * 0.45) if is_mine else Vector2(0.0, radius * 0.75)
+		var size_factor: float = 0.7 if is_mine else 0.45
+		_draw_arrow(center + offset, radius * size_factor, ARROW_ANGLES[QteSequence.step_arrow_of(packed, side)],
+			Color(color, alpha))
 
 
 func _draw_arrow(center: Vector2, radius: float, angle: float, color: Color) -> void:

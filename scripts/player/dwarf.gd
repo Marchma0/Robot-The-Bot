@@ -12,7 +12,10 @@ extends CharacterBody3D
 ## (`PlayerHud`), créée seulement pour lui.
 
 const PLAYER_HUD_SCENE: PackedScene = preload("res://scenes/ui/player_hud.tscn")
+## Regard vers le haut / vers le bas. Vers le bas, on s'arrête avant que la caméra entre dans le torse
+## (au-delà, on voyait à travers son propre corps).
 const MAX_PITCH: float = deg_to_rad(85.0)
+const MAX_PITCH_DOWN: float = deg_to_rad(68.0)
 ## Assis sur un simple siège : rotation max du buste de chaque côté.
 const MAX_SEAT_YAW: float = deg_to_rad(75.0)
 ## En dessous de cette hauteur locale, le nain est tombé du cockpit : on le replace.
@@ -410,8 +413,9 @@ func get_hold_transform() -> Transform3D:
 
 ## Où se trouve un objet lourd porté à deux mains (caisse), en global : devant le nain, à hauteur de ventre,
 ## droit (il ne suit que la rotation du corps, pas l'inclinaison du regard). Origine = dessous de l'objet.
+## Le modèle d'une caisse portée est accroché au nain à cette place (voir CargoCrate).
 func get_carry_transform() -> Transform3D:
-	return get_global_transform_interpolated() * Transform3D(Basis.IDENTITY, CARRY_OFFSET)
+	return global_transform * Transform3D(Basis.IDENTITY, CARRY_OFFSET)
 
 
 ## Envoyé par l'hôte quand un caca lancé touche ce nain : écran taché + animation "hit".
@@ -696,4 +700,4 @@ func _look(delta: Vector2) -> void:
 		_apply_world_place()
 	else:
 		rotation.y += delta.x
-	_head.rotation.x = clampf(_head.rotation.x + delta.y, -MAX_PITCH, MAX_PITCH)
+	_head.rotation.x = clampf(_head.rotation.x + delta.y, -MAX_PITCH_DOWN, MAX_PITCH)
