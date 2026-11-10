@@ -22,6 +22,11 @@ const MAX_SEAT_YAW: float = deg_to_rad(75.0)
 const FALL_LIMIT: float = -10.0
 ## Temps sans sol (s) avant de jouer l'animation de saut / chute.
 const AIRBORNE_DELAY: float = 0.15
+## Dehors : distance du petit test vers le bas qui trouve sur quoi le nain est debout (voir _update_ride).
+const RIDE_PROBE: float = 0.15
+## Lissage de la vitesse du support (0..1, plus petit = plus lisse) et étapes sans décrochage en montant dessus.
+const RIDE_VELOCITY_SMOOTHING: float = 0.3
+const RIDE_SETTLE_TICKS: int = 6
 ## Longueur max du pseudo affiché au-dessus de la tête.
 const MAX_NAME_LENGTH: int = 18
 ## Hauteur de la capsule de collision debout / accroupi (m). Accroupi, les jambes rentrent dans le corps.
@@ -52,8 +57,19 @@ const FLAG_CARRYING: int = 256
 @export var mouse_sensitivity: float = 0.0025
 ## Vitesse de rotation au stick droit (rad/s).
 @export var stick_look_speed: float = 3.0
+
 ## Vitesse accroupi (m/s).
 @export var crouch_speed: float = 2.0
+
+@export_group("Projeté par le robot")
+## Dehors, debout sur une partie du robot : au-delà de cette accélération (m/s²) de ce qu'il a sous les pieds,
+## le nain décroche et part avec sa vitesse (bras donné d'un coup sec, saut du robot…). En dessous, il suit.
+@export var fling_acceleration: float = 60.0
+## Vitesse du support multipliée par ça quand il nous jette, plus un petit coup vers le haut (m/s).
+@export var fling_boost: float = 1.4
+@export var fling_lift: float = 2.0
+## En vol après avoir été jeté : contrôle en l'air réduit (m/s²), pour garder l'élan jusqu'à l'atterrissage.
+@export var flung_air_acceleration: float = 1.5
 
 var peer_id: int = 1
 var slot: int = 0
@@ -153,6 +169,21 @@ var _was_holding: bool = false
 var _was_outside: bool = false
 var _world_position: Vector3 = Vector3.ZERO
 var _world_yaw: float = 0.0
+## Dehors, debout sur quelque chose (bras du robot, toit, sol…) : ce corps et la place du nain dans son repère.
+## Le nain le suit quand il bouge (bras qui se lève…) ; sans ça il restait sur place dans le monde et tombait.
+var _ride_body: Node3D = null
+var _ride_place: Transform3D = Transform3D.IDENTITY
+## Vrai si ce corps fait partie d'un robot : la place du nain est alors envoyée dans le repère du robot.
+var _riding_mecha: bool = false
+## Place du support aux deux étapes d'avant (vitesse mesurée sur 2 étapes : chez un client, le bras n'est mis
+## à jour qu'une étape sur deux), vitesse lissée du point sous les pieds, et étapes sans test de décrochage
+## (on vient de monter dessus : sa vitesse n'est pas encore connue).
+var _ride_history: Array[Transform3D] = []
+var _ride_velocity: Vector3 = Vector3.ZERO
+var _ride_settle: int = 0
+## Jeté par le robot : élan gardé jusqu'à l'atterrissage ; `_just_flung` = à cette étape-ci.
+var _flung: bool = false
+var _just_flung: bool = false
 ## Emote : temps restant (s) avant la fin d'un geste.
 var _emote_time: float = 0.0
 ## Dernières touches à afficher (voir PlayerHud.show_hints).
@@ -318,19 +349,23 @@ func _physics_process(delta: float) -> void:
 		anim_floating = travelling or not is_on_floor()
 	else:
 		anim_floating = false
-		if is_on_floor():
+		# Jeté par le robot à cette étape : on décolle, même si on touchait encore le sol.
+		var grounded: bool = is_on_floor() and not _just_flung
+		_just_flung = false
+		if grounded:
 			vertical = Vector3.ZERO
 			if Input.is_action_just_pressed("jump") and not anim_crouching:
 				vertical = up_direction * jump_velocity
 		else:
 			vertical -= up_direction * _gravity * delta
-		var accel: float = ground_acceleration if is_on_floor() else air_acceleration
+		var accel: float = ground_acceleration if grounded else (flung_air_acceleration if _flung else air_acceleration)
 		horizontal = horizontal.move_toward(wish, accel * delta)
 
 	velocity = horizontal + vertical
 	move_and_slide()
 	if _was_outside:
 		_world_position = global_position
+		_update_ride()
 
 	if position.y < FALL_LIMIT:
 		position = _spawn_position
@@ -348,7 +383,8 @@ func _physics_process(delta: float) -> void:
 	anim_seated = false
 	anim_pooping = false
 	anim_climbing = false
-	_smoother.world_space = _was_outside
+	# Dehors sur une partie du robot : place envoyée dans le repère du robot (les autres le voient bien dessus).
+	_smoother.world_space = _was_outside and not (_riding_mecha and _ride_body != null)
 
 
 ## Le nain du joueur `id`, ou null (pas encore apparu, parti, ou 0 = personne).
@@ -416,6 +452,16 @@ func get_hold_transform() -> Transform3D:
 ## Le modèle d'une caisse portée est accroché au nain à cette place (voir CargoCrate).
 func get_carry_transform() -> Transform3D:
 	return global_transform * Transform3D(Basis.IDENTITY, CARRY_OFFSET)
+
+
+## Joueur local : place son nain en `point` (global), immobile, sans glissé à l'écran. Dedans comme dehors
+## (dehors, sa place mémorisée dans le monde suit). Sert au grappin qui le dépose, et aux tests.
+func place_at(point: Vector3) -> void:
+	global_position = point
+	_world_position = point
+	_ride_body = null
+	velocity = Vector3.ZERO
+	reset_physics_interpolation()
 
 
 ## Envoyé par l'hôte quand un caca lancé touche ce nain : écran taché + animation "hit".
@@ -589,11 +635,86 @@ func _update_outside() -> void:
 			# On vient de sortir : on mémorise sa place et son orientation dans le monde.
 			_world_position = global_position
 			_world_yaw = global_basis.get_euler().y
+			_ride_body = null
+		elif _ride_body != null and is_instance_valid(_ride_body) and _ride_body.is_inside_tree():
+			_follow_ride()
 		_apply_world_place()
 	elif _was_outside:
 		# De retour dedans : debout par rapport au mécha.
 		rotation = Vector3(0.0, rotation.y, 0.0)
+		_ride_body = null
 	_was_outside = outside
+
+
+## Dehors, après le déplacement : retient sur quoi le nain est debout et sa place dans son repère.
+## (Immobile, Godot ne signale aucun contact : on teste un petit déplacement vers le bas.)
+func _update_ride() -> void:
+	var body: Node3D = null
+	if is_on_floor():
+		_flung = false
+		body = _floor_body()
+	if body != _ride_body:
+		_ride_body = body
+		_riding_mecha = body != null and _is_part_of_mecha(body)
+		_ride_history.clear()
+		_ride_settle = RIDE_SETTLE_TICKS
+	if _ride_body != null:
+		_ride_place = _ride_body.global_transform.affine_inverse() * global_transform
+		_ride_history.push_front(_ride_body.global_transform)
+		if _ride_history.size() > 2:
+			_ride_history.pop_back()
+
+
+## Ce sur quoi le nain est debout : le sol touché pendant le déplacement, sinon un petit test vers le bas,
+## sinon (posé en équilibre sur un coin) le même support qu'avant.
+func _floor_body() -> Node3D:
+	for i: int in get_slide_collision_count():
+		var contact: KinematicCollision3D = get_slide_collision(i)
+		if contact.get_normal().angle_to(up_direction) <= floor_max_angle + 0.01:
+			return contact.get_collider() as Node3D
+	var hit: KinematicCollision3D = KinematicCollision3D.new()
+	if test_move(global_transform, -up_direction * RIDE_PROBE, hit):
+		return hit.get_collider() as Node3D
+	return _ride_body if _ride_body != null and is_instance_valid(_ride_body) else null
+
+
+## Dehors, debout sur un support qui a pu bouger (bras du robot…) : on le suit en restant debout. S'il accélère
+## d'un coup (bras donné sèchement, saut du robot…), on décroche et on part avec sa vitesse (voir `_fling`).
+func _follow_ride() -> void:
+	var place: Transform3D = _ride_body.global_transform * _ride_place
+	var delta: float = get_physics_process_delta_time()
+	if _ride_history.size() == 2:
+		# Vitesse du point sous les pieds sur les 2 dernières étapes, lissée ; puis son accélération.
+		var before: Vector3 = (_ride_history[1] * _ride_place).origin
+		var point_velocity: Vector3 = (place.origin - before) / (2.0 * delta)
+		var smoothed: Vector3 = _ride_velocity.lerp(point_velocity, RIDE_VELOCITY_SMOOTHING)
+		var acceleration: float = (smoothed - _ride_velocity).length() / delta
+		_ride_velocity = smoothed
+		if _ride_settle > 0:
+			_ride_settle -= 1
+		elif acceleration > fling_acceleration:
+			_fling(_ride_velocity)
+			return
+	_world_position = place.origin
+	_world_yaw = atan2(place.basis.z.x, place.basis.z.z)
+
+
+## Le support nous jette : on décroche avec sa vitesse (amplifiée) et un petit coup vers le haut.
+func _fling(support_velocity: Vector3) -> void:
+	_ride_body = null
+	_ride_history.clear()
+	_ride_velocity = Vector3.ZERO
+	_flung = true
+	_just_flung = true
+	velocity = support_velocity * fling_boost + Vector3.UP * fling_lift
+
+
+## Vrai si `node` fait partie d'un robot (bras, coque, jambes…).
+func _is_part_of_mecha(node: Node) -> bool:
+	for volume: Node in get_tree().get_nodes_in_group(&"mecha_interiors"):
+		if volume.get_parent().is_ancestor_of(node):
+			return true
+	return false
 
 
 ## Dehors : place le nain à sa position mémorisée dans le monde, debout, tourné de `_world_yaw`.
@@ -698,6 +819,8 @@ func _look(delta: Vector2) -> void:
 		# Dehors, l'orientation du nain est mémorisée dans le monde (le mécha ne le tourne plus).
 		_world_yaw += delta.x
 		_apply_world_place()
+		if _ride_body != null and is_instance_valid(_ride_body):
+			_ride_place = _ride_body.global_transform.affine_inverse() * global_transform
 	else:
 		rotation.y += delta.x
 	_head.rotation.x = clampf(_head.rotation.x + delta.y, -MAX_PITCH_DOWN, MAX_PITCH)
