@@ -87,9 +87,8 @@ script = ExtResource("1_script")
 
 [node name="Model" parent="." instance=ExtResource("2_board")]
 
-[node name="BoardBody" type="AnimatableBody3D" parent="."]
+[node name="BoardBody" type="StaticBody3D" parent="."]
 unique_name_in_owner = true
-sync_to_physics = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="BoardBody"]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, -0.02)

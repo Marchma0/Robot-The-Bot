@@ -24,6 +24,7 @@
 [ext_resource type="PackedScene" path="res://scenes/mecha/props/darts_board.tscn" id="23_darts"]
 [ext_resource type="Script" path="res://scripts/network/net_spawner.gd" id="90_netspawner"]
 [ext_resource type="Script" path="res://scripts/mecha/mecha_maneuvers.gd" id="24_maneuvers"]
+[ext_resource type="Script" path="res://scripts/mecha/mecha_collider_sync.gd" id="25_collider_sync"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_mecha"]
 properties/0/path = NodePath("NetSmoother:net_state")
@@ -137,8 +138,7 @@ properties/7/replication_mode = 2
 
 [node name="Mecha" instance=ExtResource("1_glb")]
 
-[node name="Hull" type="AnimatableBody3D" parent="."]
-sync_to_physics = false
+[node name="Hull" type="StaticBody3D" parent="."]
 
 [node name="BellyFloor" type="CollisionShape3D" parent="Hull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.475, 2.5, 0)
@@ -404,6 +404,10 @@ replication_interval = 0.033
 process_physics_priority = -10
 script = ExtResource("13_smoother")
 target = NodePath("..")
+
+[node name="ColliderSync" type="Node" parent="." node_paths=PackedStringArray("mecha")]
+script = ExtResource("25_collider_sync")
+mecha = NodePath("..")
 
 [node name="Walker" type="Node" parent="." node_paths=PackedStringArray("body", "stick_left", "stick_right", "recovery_qte")]
 process_physics_priority = -10
