@@ -1,0 +1,79 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/punch_machine.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/models/props/punch_machine.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/controls/push_button.tscn" id="3_button"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_base"]
+size = Vector3(1.1, 2.5, 1.3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cursor"]
+shading_mode = 0
+albedo_color = Color(1, 0.92, 0.25, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_cursor"]
+material = SubResource("StandardMaterial3D_cursor")
+size = Vector3(0.32, 0.1, 0.08)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_punch"]
+properties/0/path = NodePath(".:charging")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:strike_count")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:last_score")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:last_player")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:best_score")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:best_name")
+properties/5/spawn = true
+properties/5/replication_mode = 2
+
+[node name="PunchMachine" type="StaticBody3D"]
+script = ExtResource("1_script")
+
+[node name="Model" parent="." instance=ExtResource("2_model")]
+
+[node name="BaseShape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("BoxShape3D_base")
+
+[node name="GaugeCursor" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0.17)
+mesh = SubResource("BoxMesh_cursor")
+
+[node name="HitButton" parent="." instance=ExtResource("3_button")]
+unique_name_in_owner = true
+transform = Transform3D(1.8, 0, 0, 0, 0, 1.8, 0, -1.8, 0, 0, 0.95, -0.45)
+display_name = "Punch-O-Mètre — frapper"
+cap_color = Color(0.9, 0.2, 0.15, 1)
+show_debug = false
+
+[node name="BellLight" type="OmniLight3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -0.1)
+light_color = Color(1, 0.35, 0.18, 1)
+light_energy = 0.6
+omni_range = 3.5
+
+[node name="Sign" type="Label3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.95, 0)
+pixel_size = 0.0038
+billboard = 1
+modulate = Color(1, 0.92, 0.78, 1)
+outline_modulate = Color(0.2, 0.08, 0.04, 1)
+font_size = 42
+outline_size = 12
+text = "PUNCH-O-MÈTRE"
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_punch")
+replication_interval = 0.05

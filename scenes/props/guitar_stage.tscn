@@ -1,0 +1,152 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/guitar_stage.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/models/props/guitar_stage.glb" id="2_stage"]
+[ext_resource type="PackedScene" path="res://assets/models/props/electric_guitar.glb" id="3_guitar"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/controls/push_button.tscn" id="4_button"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_stage"]
+size = Vector3(3.2, 0.25, 2.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_amp"]
+size = Vector3(0.75, 1.35, 0.55)
+
+[sub_resource type="QuadMesh" id="QuadMesh_screen"]
+size = Vector2(0.56, 0.36)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_spark"]
+shading_mode = 0
+albedo_color = Color(1, 0.78, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_spark"]
+material = SubResource("StandardMaterial3D_spark")
+size = Vector3(0.12, 0.12, 0.12)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_guitar"]
+properties/0/path = NodePath(".:playing")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:rocker_peer")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:rocker_name")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath(".:step_index")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+properties/4/path = NodePath(".:current_arrow")
+properties/4/spawn = true
+properties/4/replication_mode = 2
+properties/5/path = NodePath(".:score")
+properties/5/spawn = true
+properties/5/replication_mode = 2
+properties/6/path = NodePath(".:combo")
+properties/6/spawn = true
+properties/6/replication_mode = 2
+properties/7/path = NodePath(".:best_score")
+properties/7/spawn = true
+properties/7/replication_mode = 2
+properties/8/path = NodePath(".:best_name")
+properties/8/spawn = true
+properties/8/replication_mode = 2
+
+[node name="GuitarStage" type="StaticBody3D"]
+script = ExtResource("1_script")
+
+[node name="StageModel" parent="." instance=ExtResource("2_stage")]
+
+[node name="StageShape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0)
+shape = SubResource("BoxShape3D_stage")
+
+[node name="AmpShapeL" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.05, 0.92, 0.55)
+shape = SubResource("BoxShape3D_amp")
+
+[node name="AmpShapeR" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.05, 0.92, 0.55)
+shape = SubResource("BoxShape3D_amp")
+
+[node name="GuitarProp" parent="." instance=ExtResource("3_guitar")]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0.58, 0.35)
+
+[node name="Screen" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(-1, 0, 0, 0, 0.906308, 0.422618, 0, 0.422618, -0.906308, 0, 1.08, -0.66)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_screen")
+
+[node name="ScreenViewport" type="SubViewport" parent="."]
+unique_name_in_owner = true
+size = Vector2i(480, 320)
+render_target_update_mode = 4
+
+[node name="StartButton" parent="." instance=ExtResource("4_button")]
+unique_name_in_owner = true
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0.72, 0.28, -0.88)
+display_name = "Guitare QTE — lancer le solo"
+cap_color = Color(0.2, 0.8, 0.3, 1)
+show_debug = false
+
+[node name="PadUp" parent="." instance=ExtResource("4_button")]
+unique_name_in_owner = true
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0.28, -0.74)
+display_name = "Guitare QTE — accord haut"
+cap_color = Color(0.25, 0.85, 0.4, 1)
+arrow = 0
+show_debug = false
+
+[node name="PadDown" parent="." instance=ExtResource("4_button")]
+unique_name_in_owner = true
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0.28, -1.04)
+display_name = "Guitare QTE — accord bas"
+cap_color = Color(0.3, 0.65, 0.95, 1)
+arrow = 1
+show_debug = false
+
+[node name="PadLeft" parent="." instance=ExtResource("4_button")]
+unique_name_in_owner = true
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0.26, 0.28, -0.89)
+display_name = "Guitare QTE — accord gauche"
+cap_color = Color(0.95, 0.75, 0.2, 1)
+arrow = 2
+show_debug = false
+
+[node name="PadRight" parent="." instance=ExtResource("4_button")]
+unique_name_in_owner = true
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -0.26, 0.28, -0.89)
+display_name = "Guitare QTE — accord droite"
+cap_color = Color(0.95, 0.35, 0.28, 1)
+arrow = 3
+show_debug = false
+
+[node name="StageLight" type="OmniLight3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+light_color = Color(1, 0.85, 0.65, 1)
+light_energy = 1.2
+omni_range = 4.5
+
+[node name="Sparks" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0.45)
+visible = false
+
+[node name="SparkL" type="MeshInstance3D" parent="Sparks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 0.1, 0)
+mesh = SubResource("BoxMesh_spark")
+
+[node name="SparkR" type="MeshInstance3D" parent="Sparks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 0.1, 0)
+mesh = SubResource("BoxMesh_spark")
+
+[node name="AmpAudio" type="AudioStreamPlayer3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0.4)
+max_distance = 18.0
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_guitar")
+replication_interval = 0.05

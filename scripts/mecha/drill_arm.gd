@@ -121,7 +121,7 @@ func reset_arm() -> void:
 
 
 func _side_sign() -> float:
-	return SIDE_SIGN
+	return side_sign_override if side_sign_override != 0.0 else SIDE_SIGN
 
 
 func _max_extension() -> float:

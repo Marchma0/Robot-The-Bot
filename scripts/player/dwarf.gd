@@ -82,6 +82,18 @@ var player_name: String = "":
 		player_name = value
 		if is_node_ready():
 			_appearance.set_display_name(get_display_name())
+## Skin du nain choisi au vestiaire (0 .. DwarfLook.SKIN_COUNT - 1). Répliqué.
+var skin_index: int = 0:
+	set(value):
+		skin_index = clampi(value, 0, DwarfLook.SKIN_COUNT - 1)
+		if is_node_ready():
+			_refresh_appearance()
+## Couleur de tenue choisie au vestiaire (-1 = couleur de son emplacement `slot`). Répliqué.
+var color_index: int = -1:
+	set(value):
+		color_index = value
+		if is_node_ready():
+			_refresh_appearance()
 
 # --- État d'animation : écrit par le propriétaire, répliqué par le MultiplayerSynchronizer,
 # --- lu par DwarfAnimator sur chaque peer.
@@ -216,7 +228,7 @@ func _ready() -> void:
 	platform_floor_layers = 0
 	platform_wall_layers = 0
 	platform_on_leave = PLATFORM_ON_LEAVE_DO_NOTHING
-	_appearance.apply(slot, get_display_name())
+	_appearance.apply(slot, get_display_name(), skin_index, color_index)
 	# Chaque nain a sa propre capsule (elle rétrécit quand il s'accroupit).
 	_body_shape.shape = _body_shape.shape.duplicate()
 	_apply_crouch_shape()
@@ -430,7 +442,22 @@ func get_display_name() -> String:
 
 ## Donne la couleur du joueur à un modèle de nain (sert au portrait de la bulle d'état).
 func tint_model(model: Node3D) -> void:
-	_appearance.tint_model(model, slot)
+	_appearance.tint_model(model, slot, skin_index, color_index)
+
+
+## Hôte → tous les peers : applique le skin et la couleur choisis au vestiaire du garage.
+@rpc("any_peer", "call_local", "reliable")
+func set_wardrobe_look(p_skin: int, p_color: int) -> void:
+	if multiplayer.get_remote_sender_id() != 1:
+		return
+	skin_index = p_skin
+	color_index = p_color
+
+
+func _refresh_appearance() -> void:
+	_appearance.apply(slot, get_display_name(), skin_index, color_index)
+	if _hud != null and _hud.state_bubble != null:
+		_hud.state_bubble.setup(self)
 
 
 ## Point de vue (les yeux) tel qu'il est affiché : position lissée par le lissage physique,
@@ -465,6 +492,9 @@ func get_carry_transform() -> Transform3D:
 func dropped_by_claw(point: Vector3) -> void:
 	if multiplayer.get_remote_sender_id() != 1 or not is_multiplayer_authority():
 		return
+	var claw: GrabberArm = GrabberArm.holding(get_tree(), peer_id)
+	if claw != null:
+		claw.held_peer_id = 0
 	_was_outside = true
 	place_at(point)
 

@@ -27,7 +27,59 @@ func _ready() -> void:
 	await _shot("1_apparition")
 	_cam = Camera3D.new()
 	add_child(_cam)
-	await _shot_from("2_vue_ensemble", Vector3(16.0, 14.0, -22.0), Vector3(0.0, 2.0, 4.0))
+	await _shot_from("2_vue_ensemble", Vector3(13.5, 7.5, -13.0), Vector3(0.0, 2.5, 1.0))
+
+	# Atelier du robot : changement de skin et de configuration des bras
+	var workshop: MechaWorkshop = level.get_node("MechaWorkshop")
+	var customizer: MechaCustomizer = mecha.get_node("Customizer")
+	workshop.get_node("SkinNext").pressed.emit(1)
+	workshop.get_node("ArmNext").pressed.emit(1)
+	await _wait(0.2)
+	TestCheck.expect(customizer.skin_index == 1 and customizer.arm_mode == 1, "atelier du robot : skin Baron Cuivre et bras inversés")
+	await _shot_from("3a_atelier_robot", Vector3(6.5, 3.8, -9.8), Vector3(1.5, 4.2, -1.5))
+	workshop.get_node("SkinPrev").pressed.emit(1)
+	workshop.get_node("ArmPrev").pressed.emit(1)
+	await _wait(0.1)
+
+	# Vestiaire des nains : changement de tenue et de couleur
+	var wardrobe: DwarfWardrobe = level.get_node("DwarfWardrobe")
+	_place_dwarf(dwarf, wardrobe.to_global(Vector3(0.0, 0.0, -1.1)), wardrobe.global_position)
+	wardrobe.get_node("NextSkin").pressed.emit(1)
+	wardrobe.get_node("CycleColor").pressed.emit(1)
+	await _wait(0.2)
+	TestCheck.expect(dwarf.skin_index == 1 and wardrobe.last_skin == 1, "vestiaire : nain en tenue Garagiste Soudeur")
+	await _shot_from("3b_vestiaire_nains", wardrobe.to_global(Vector3(0.8, 1.4, -1.9)), wardrobe.to_global(Vector3(0.0, 1.0, 0.0)))
+
+	# Scène Guitare QTE : lancement du solo et accord réussi
+	var guitar: GuitarStage = level.get_node("Minigames/GuitarStage")
+	guitar.get_node("StartButton").pressed.emit(1)
+	await _wait(0.15)
+	TestCheck.expect(guitar.playing, "guitare QTE : solo lancé")
+	var expected_pad: PushButton = [guitar.get_node("PadUp"), guitar.get_node("PadDown"), guitar.get_node("PadLeft"), guitar.get_node("PadRight")][guitar.current_arrow]
+	expected_pad.pressed.emit(1)
+	await _wait(0.15)
+	TestCheck.expect(guitar.score > 0 and guitar.combo == 1, "guitare QTE : accord réussi augmente le score et le combo")
+	await _shot_from("3c_guitare_qte", guitar.to_global(Vector3(1.2, 1.8, -2.4)), guitar.to_global(Vector3(0.0, 0.9, 0.2)))
+	guitar.get_node("StartButton").pressed.emit(1)
+
+	# Punch-O-Mètre, Ferraille-Hoops et Forge Naine
+	var punch: PunchMachine = level.get_node("Minigames/PunchMachine")
+	punch.get_node("HitButton").pressed.emit(1)
+	await _wait(0.2)
+	punch.get_node("HitButton").pressed.emit(1)
+	await _wait(0.1)
+	TestCheck.expect(punch.last_score > 0, "punch-o-mètre : coup enregistré")
+
+	var hoops: GarageHoops = level.get_node("Minigames/GarageHoops")
+	hoops.get_node("ShootButton").pressed.emit(1)
+	await _wait(0.1)
+	TestCheck.expect(hoops.total_score >= 2, "ferraille-hoops : panier marqué")
+
+	var anvil: AnvilGame = level.get_node("Minigames/AnvilGame")
+	for _s: int in AnvilGame.STRIKES_PER_INGOT:
+		anvil.get_node("StrikeButton").pressed.emit(1)
+	await _wait(0.1)
+	TestCheck.expect(anvil.forged_ingots == 1, "forge naine : lingot forgé en 3 coups")
 
 	# Bras de fer : le nain s'assoit à gauche, un adversaire simulé à droite (peer 99)
 	var arm: ArmwrestleGame = level.get_node("Minigames/ArmWrestling")

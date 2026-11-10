@@ -26,6 +26,7 @@
 [ext_resource type="Script" path="res://scripts/mecha/mecha_maneuvers.gd" id="24_maneuvers"]
 [ext_resource type="Script" path="res://scripts/mecha/mecha_collider_sync.gd" id="25_collider_sync"]
 [ext_resource type="Script" path="res://scripts/mecha/interior_shadows.gd" id="26_interior_shadows"]
+[ext_resource type="Script" path="res://scripts/mecha/mecha_customizer.gd" id="27_customizer"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_mecha"]
 properties/0/path = NodePath("NetSmoother:net_state")
@@ -160,6 +161,14 @@ properties/7/replication_mode = 2
 properties/8/path = NodePath(".:together_pressed")
 properties/8/spawn = true
 properties/8/replication_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_customizer"]
+properties/0/path = NodePath(".:skin_index")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:arm_mode")
+properties/1/spawn = true
+properties/1/replication_mode = 2
 
 [node name="Mecha" instance=ExtResource("1_glb")]
 
@@ -554,3 +563,13 @@ leg = 1
 walker = NodePath("../../Walker")
 qte = NodePath("../../RecoveryQte")
 maneuvers = NodePath("../../Maneuvers")
+
+[node name="Customizer" type="Node3D" parent="." node_paths=PackedStringArray("mecha", "drill_arm", "grabber_arm", "skip_branches")]
+script = ExtResource("27_customizer")
+mecha = NodePath("..")
+drill_arm = NodePath("../DrillArm")
+grabber_arm = NodePath("../GrabberArm")
+skip_branches = [NodePath("../InteriorBelly"), NodePath("../InteriorHead"), NodePath("../Controls"), NodePath("../Players"), NodePath("../Props")]
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="Customizer"]
+replication_config = SubResource("SceneReplicationConfig_customizer")

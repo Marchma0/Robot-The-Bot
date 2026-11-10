@@ -27,13 +27,30 @@
 - **Mini-jeux de garage** : bras de fer sur l'établi, course de chariots de mécano (planches à roulettes),
   lancer de nain dans un pneu, wagonnets sur les rails.
 - **Le garage grandit** au fil des missions : trophées accrochés au mur, nouveaux outils, plaques des clients satisfaits.
-- Aujourd'hui (en attendant le garage) : camp minier au fond d'un canyon, au soleil couchant ; les nains apparaissent dehors,
-  le robot est garé au centre.
+- **Aujourd'hui** : grand garage ultra-éclairé (`lobby_garage.glb`) avec pont élévateur central, portique de levage,
+  passerelle surélevée, baie vitrée panoramique, coin forge et établis ; les nains apparaissent dehors dans le garage,
+  le robot est garé au centre sur son pont.
 - **Terminal de mission** devant le robot : 2 flèches pour choisir la mission, un gros bouton vert pour lancer
   un compte à rebours de 20 s ; la mission part quand tous les nains sont à bord.
-- **Mini-jeux** jouables : bras de fer (machine à bras mécaniques). Les fléchettes se jouent dans le robot (voir « Vie à bord »). Les wagonnets sont du décor pour l'instant.
-- **À venir** : marchand de skins des nains, marchand de skins du robot, marchand d'améliorations des nains,
-  d'autres mini-jeux.
+- **Atelier du robot (`MechaWorkshop`)** à droite du terminal : permet de changer en direct le **skin du robot**
+  (*Mécano Original*, *Baron Cuivre* avec cheminées et couronne dorée, *Secours Blindé* avec rampe de gyrophares et pare-buffle)
+  ainsi que la **configuration des bras** (*Standard : Grappin G / Foreuse D*, *Inversé : Foreuse G / Grappin D*,
+  *Minage Titan : propulseurs de forage lourds + blindage*, *Électro-Aimant : bobines Tesla magnétiques*).
+- **Vestiaire des nains (`DwarfWardrobe`)** à gauche du terminal : miroir éclairé avec 3 boutons permettant à chaque nain
+  de choisir sa **tenue complète et son couvre-chef 3D** (*Mineur Classique*, *Garagiste Soudeur* avec masque de soudeur
+  et lunettes de laiton, *Baron Cuivre* avec haut-de-forme steampunk, couronne et barbe royale) et sa **couleur de combinaison**
+  (6 couleurs d'atelier). Le portrait animé de la bulle d'état reflète aussi la tenue choisie.
+- **Mini-jeux jouables dans le garage** :
+  - **Scène Guitare QTE (`GuitarStage`)** : estrade rock avec amplis à lampes, guitare électrique et retour de scène ;
+    un solo de 10 accords en QTE sur les 4 pédales fléchées devant l'écran joue de vrais power-chords saturés avec
+    étincelles, combo et record.
+  - **Punch-O-Mètre (`PunchMachine`)** : borne de coup de poing à réflexe (1er clic = lance la jauge rapide, 2e clic
+    au sommet = frappe le sac, score 0–999 et cloche lumineuse au-dessus de 800).
+  - **Ferraille-Hoops (`GarageHoops`)** : panier de basket d'atelier avec tirs en cloche (2 pts de près, 3 pts de loin,
+    compteur de série).
+  - **Forge Naine (`AnvilGame`)** : enclume rythmique près du foyer de la forge où 3 coups de marteau au pic de chaleur
+    forgent un lingot incandescent avec gerbe d'étincelles.
+  - **Bras de fer (`ArmWrestling`)** : duel à deux sur la machine à bras mécaniques.
 - **Sauvegarde** : tout est gardé chez l'hôte (une partie = une sauvegarde de l'hôte) ; un ami qui revient dans
   la partie retrouve son nain et ses achats. L'économie (argent, prix) sera conçue plus tard.
 

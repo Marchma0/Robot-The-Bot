@@ -137,6 +137,17 @@ func _run_host() -> void:
 	await _dart_in_client_step()
 	await _client_step("bras de fer : assis (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit")
 	await _client_step("bras de fer : levé (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_leave")
+	await _client_step("atelier du robot : skin suivant (client)", "Level/Lobby/MechaWorkshop/SkinNext", "request_press")
+	await _client_step("atelier du robot : bras suivants (client)", "Level/Lobby/MechaWorkshop/ArmNext", "request_press")
+	await _client_step("atelier du robot : bras remis à l'endroit (client)", "Level/Lobby/MechaWorkshop/ArmPrev", "request_press")
+	await _client_step("vestiaire : tenue suivante (client)", "Level/Lobby/DwarfWardrobe/NextSkin", "request_press")
+	await _client_step("vestiaire : couleur suivante (client)", "Level/Lobby/DwarfWardrobe/CycleColor", "request_press")
+	await _client_step("guitare QTE : solo lancé (client)", "Level/Lobby/Minigames/GuitarStage/StartButton", "request_press")
+	await _client_step("guitare QTE : solo arrêté (client)", "Level/Lobby/Minigames/GuitarStage/StartButton", "request_press")
+	await _client_step("punch-o-mètre : jauge armée (client)", "Level/Lobby/Minigames/PunchMachine/HitButton", "request_press")
+	await _client_step("punch-o-mètre : coup frappé (client)", "Level/Lobby/Minigames/PunchMachine/HitButton", "request_press")
+	await _client_step("ferraille-hoops : ballon tiré (client)", "Level/Lobby/Minigames/GarageHoops/ShootButton", "request_press")
+	await _client_step("forge naine : lingot martelé (client)", "Level/Lobby/Minigames/AnvilGame/StrikeButton", "request_press")
 
 	_director._travel(&"test_ground")
 	await get_tree().create_timer(STEP_WAIT * 2.0).timeout
@@ -349,7 +360,8 @@ func _client_action(path: String, action: String, args: Array) -> void:
 			# On se place à portée (le nain glisse avec le robot : repère local au mécha), puis on demande.
 			var dwarf: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
 			if dwarf != null and not (action == "request_leave" or action == "request_release"):
-				var spot: Vector3 = target.global_position + target.global_basis.z * 0.8
+				var spot: Vector3 = target.to_global(Vector3(0.0, -1.2, -1.6)) if target is DartsGame \
+					else target.global_position + target.global_basis.z * 0.8
 				(dwarf as Dwarf).place_at(spot)
 				await get_tree().create_timer(0.6).timeout
 			target.callv(&"rpc_id", [1, action] + args)

@@ -23,6 +23,8 @@ var arm_yaw: float = 0.0
 var arm_pitch: float = REST_PITCH
 ## Extension télescopique en mètres (0 .. `_max_extension()`). Autorité : hôte.
 var extension: float = 0.0
+## Si non nul, remplace le côté par défaut du bras (+1.0 = droite, -1.0 = gauche).
+var side_sign_override: float = 0.0
 
 @onready var _elbow_pivot: Node3D = %ElbowPivot
 @onready var _camera_anchor: Marker3D = %CameraAnchor

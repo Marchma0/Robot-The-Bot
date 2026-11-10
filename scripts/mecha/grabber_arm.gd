@@ -340,7 +340,7 @@ func _update_delivery(delta: float) -> void:
 	_deliver_timer += delta
 	var t: float = clampf(_deliver_timer / DELIVER_DURATION, 0.0, 1.0)
 	var s: float = t * t * (3.0 - 2.0 * t)
-	arm_yaw = lerpf(_deliver_start_yaw, DELIVER_YAW, s)
+	arm_yaw = lerpf(_deliver_start_yaw, DELIVER_YAW * (-_side_sign()), s)
 	arm_pitch = lerpf(_deliver_start_pitch, DELIVER_PITCH, s)
 	extension = lerpf(_deliver_start_ext, DELIVER_EXT, s)
 	claw_closed = true
@@ -376,7 +376,7 @@ func _drop_dwarf(dwarf: Dwarf) -> void:
 
 
 func _side_sign() -> float:
-	return SIDE_SIGN
+	return side_sign_override if side_sign_override != 0.0 else SIDE_SIGN
 
 
 func _max_extension() -> float:

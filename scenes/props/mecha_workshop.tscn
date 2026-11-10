@@ -1,0 +1,66 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/mecha_workshop.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/models/props/mecha_workshop.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/controls/push_button.tscn" id="3_button"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_body"]
+size = Vector3(1.5, 0.66, 0.74)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_screen"]
+size = Vector3(0.76, 0.56, 0.26)
+
+[sub_resource type="QuadMesh" id="QuadMesh_screen"]
+size = Vector2(0.62, 0.36)
+
+[node name="MechaWorkshop" type="StaticBody3D"]
+script = ExtResource("1_script")
+
+[node name="Model" parent="." instance=ExtResource("2_model")]
+
+[node name="BodyShape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.33, 0)
+shape = SubResource("BoxShape3D_body")
+
+[node name="ScreenShape" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.96, 0.1)
+shape = SubResource("BoxShape3D_screen")
+
+[node name="Screen" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(-1, 0, 0, 0, 0.951057, 0.309017, 0, 0.309017, -0.951057, 0, 0.9817, 0.0542)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_screen")
+
+[node name="ScreenViewport" type="SubViewport" parent="."]
+unique_name_in_owner = true
+size = Vector2i(560, 340)
+render_target_update_mode = 4
+
+[node name="SkinPrev" parent="." instance=ExtResource("3_button")]
+unique_name_in_owner = true
+transform = Transform3D(1.3, 0, 0, 0, 1.261, 0.3146, 0, -0.3146, 1.261, 0.46, 0.6359, -0.209)
+display_name = "Atelier — skin du robot précédent"
+cap_color = Color(0.2, 0.65, 0.85, 1)
+show_debug = false
+
+[node name="SkinNext" parent="." instance=ExtResource("3_button")]
+unique_name_in_owner = true
+transform = Transform3D(1.3, 0, 0, 0, 1.261, 0.3146, 0, -0.3146, 1.261, 0.18, 0.6359, -0.209)
+display_name = "Atelier — skin du robot suivant"
+cap_color = Color(0.2, 0.65, 0.85, 1)
+show_debug = false
+
+[node name="ArmPrev" parent="." instance=ExtResource("3_button")]
+unique_name_in_owner = true
+transform = Transform3D(1.3, 0, 0, 0, 1.261, 0.3146, 0, -0.3146, 1.261, -0.18, 0.6359, -0.209)
+display_name = "Atelier — bras du robot précédents"
+cap_color = Color(0.92, 0.58, 0.15, 1)
+show_debug = false
+
+[node name="ArmNext" parent="." instance=ExtResource("3_button")]
+unique_name_in_owner = true
+transform = Transform3D(1.3, 0, 0, 0, 1.261, 0.3146, 0, -0.3146, 1.261, -0.46, 0.6359, -0.209)
+display_name = "Atelier — bras du robot suivants"
+cap_color = Color(0.92, 0.58, 0.15, 1)
+show_debug = false
