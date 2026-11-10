@@ -29,6 +29,8 @@ var holder_slot: int = 0
 
 @onready var _model: Node3D = %Model
 @onready var _handle_shape: CollisionShape3D = $Handle/CollisionShape3D
+## Place du modèle dans la caisse (il y revient quand on la pose).
+@onready var _model_rest: Transform3D = _model.transform
 
 
 func _ready() -> void:
@@ -41,16 +43,22 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if multiplayer.is_server() and holder_peer_id != 0 and Dwarf.of_peer(holder_peer_id) == null:
-		_put_down(global_transform)   # son porteur est parti : posée là où elle était
-
-
-func _process(_delta: float) -> void:
 	if holder_peer_id == 0:
 		return
 	var dwarf: Dwarf = Dwarf.of_peer(holder_peer_id)
-	if dwarf != null:
-		global_transform = dwarf.get_carry_transform()
+	if dwarf == null:
+		if multiplayer.is_server():
+			_put_down(global_transform)   # son porteur est parti : posée là où elle était
+		return
+	# La caisse (sans collision ni image) suit son porteur ; son modèle, lui, est accroché au nain.
+	global_transform = dwarf.get_carry_transform()
+	if _model.get_parent() != dwarf:
+		_attach_model(dwarf)   # porteur apparu après la caisse (joueur qui arrive en cours de partie)
+
+
+func _exit_tree() -> void:
+	if _model.get_parent() != self:
+		_model.queue_free()   # caisse supprimée pendant qu'on la porte : son modèle part avec elle
 
 
 ## Inventaire (voir Inventory) : une case, objet lourd.
@@ -112,15 +120,44 @@ func _put_down(from: Transform3D, carrier: Dwarf = null) -> void:
 	var ground: Vector3 = hit["position"] if not hit.is_empty() else from.origin
 	var forward: Vector3 = Vector3(-from.basis.z.x, 0.0, -from.basis.z.z)
 	var yaw: float = atan2(-forward.x, -forward.z) if forward.length() > 0.01 else 0.0
-	holder_peer_id = 0
 	global_transform = Transform3D(Basis(up, yaw), ground)
+	holder_peer_id = 0
+	reset_physics_interpolation()
 
 
-## Portée : ni collision (elle gênerait son porteur), ni visée ; le lissage physique ne s'en mêle pas.
+## Portée : ni collision (elle gênerait son porteur), ni visée, et son modèle est accroché au nain, qui
+## l'emporte avec lui (même lissage que son corps : elle avance exactement avec lui).
 func _apply_carried() -> void:
 	var carried: bool = holder_peer_id != 0
 	collision_layer = 0 if carried else COLLISION_LAYERS
 	_handle_shape.disabled = carried
-	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF if carried \
-		else Node.PHYSICS_INTERPOLATION_MODE_INHERIT
-	reset_physics_interpolation()
+	var dwarf: Dwarf = Dwarf.of_peer(holder_peer_id) if carried else null
+	if dwarf != null:
+		_attach_model(dwarf)
+	elif not carried:
+		_detach_model()
+
+
+func _attach_model(dwarf: Dwarf) -> void:
+	if _model.get_parent() == dwarf:
+		return
+	_model.get_parent().remove_child(_model)
+	dwarf.add_child(_model)
+	_model.transform = Transform3D(Basis.IDENTITY, Dwarf.CARRY_OFFSET) * _model_rest
+	_model.reset_physics_interpolation()
+	if not dwarf.tree_exiting.is_connected(_detach_model):
+		dwarf.tree_exiting.connect(_detach_model, CONNECT_ONE_SHOT)
+
+
+## Le modèle revient dans la caisse (posée, ou porteur parti : sinon il disparaîtrait avec lui).
+func _detach_model() -> void:
+	if _model == null or _model.get_parent() == self:
+		return
+	var dwarf: Node = _model.get_parent()
+	if dwarf != null:
+		if dwarf.tree_exiting.is_connected(_detach_model):
+			dwarf.tree_exiting.disconnect(_detach_model)
+		dwarf.remove_child(_model)
+	add_child(_model)
+	_model.transform = _model_rest
+	_model.reset_physics_interpolation()
