@@ -1,17 +1,16 @@
-"""Consoles de pilotage en tôle : jambes (ventre, x2) et foreuse (tête). Un script, deux modèles.
+"""Console de pilotage en tôle des jambes (ventre, x2).
 
 Fiche
-- Taille : 1,00 m (jambes) ou 0,90 m (foreuse) de large, 0,60 m de profondeur, plateau incliné à 20°
+- Taille : 1,00 m de large, 0,60 m de profondeur, plateau incliné à 20°
   culminant à 0,69 m. Mêmes cotes que les anciennes consoles : les commandes (joystick, pavé, levier,
   bouton) et les petits éléments posés sur le plateau (socles, cadran, voyant) restent exactement en place.
 - Origine : au sol, au centre de l'emprise ; le côté pilote regarde vers +Y (le plateau descend vers lui).
   Placées tournées de 180° (le pilote regarde l'avant du mécha) :
     console_leg   : Blender (-1.0, 1.5, 2.6) et (1.0, 1.5, 2.6)  = Godot (∓1.0, 2.6, -1.5)
-    console_drill : Blender (1.1, 1.45, 5.6)                      = Godot (1.1, 5.6, -1.45)
-- Budget : 1500 triangles chacune.
+- Budget : 1500 triangles.
 - Pièces : socle en retrait pour les pieds, caisson à dessus en pente (Paint), montants d'angle (IronDark),
   panneau avant rivé avec grille, trappes latérales vissées, plateau incliné (Paint), barre d'appui en cuivre.
-- Collisions : déjà dans mecha.tscn (Hull/LegConsoleL, LegConsoleR, ArmConsoleR).
+- Collision : dans scenes/mecha/props/console_leg.tscn.
 
     blender -b --factory-startup --python blender/props/console.py
 """
@@ -92,7 +91,6 @@ def build(name, width):
 
 def main():
     build("console_leg", 1.00)
-    build("console_drill", 0.90)
 
 
 main()
