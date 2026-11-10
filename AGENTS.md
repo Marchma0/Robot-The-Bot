@@ -51,6 +51,7 @@ scripts/
   mecha/           # contrôle, IK, équilibre, stations
   player/
   interaction/     # système générique d'interaction (stations, panneaux)
+  audio/           # SoundFx : sons ponctuels en 3D (sons dans assets/audio/sfx/, licence à côté)
 docs/              # jeu.md, decisions.md, ideas.md, reseau.md (voir « Les documents du projet »)
 tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (tests/tools/)
 ```
@@ -119,6 +120,8 @@ tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (
 - **Nains** : squelette (armature) fait dans Blender, animations exportées dans le `.glb` (actions nommées : `idle`, `walk`, `jump`, `float`, `climb`, `grab`, `press`, `sit`, `crouch`, `crouch_walk`, `poop`, `throw`, `hit`, `hold_low`/`hold_mid`/`hold_high`, `carry`, `emote_*`…), jouées dans Godot via un `AnimationTree`.
 - **Robot** : les jambes et les bras sont animés **à partir de l'état simulé par l'hôte** (angles des articulations, extension de la foreuse…). Ce sont des animations procédurales ou des blend d'actions Blender, jamais des positions inventées côté client.
 - **Réseau** : on synchronise l'**état** (vitesse, au sol, tient un levier, assis, glisse…), jamais l'animation elle-même. Chaque peer joue l'animation correspondante localement.
+- **Sons** : pareil, jamais de son envoyé par le réseau : chaque peer joue le son (`SoundFx.play_at`) quand il voit l'état changer. Un son ajouté = un fichier CC0 (ou fait maison) dans `assets/audio/sfx/`, source et licence notées dans `docs/decisions.md`.
+- **Ombres** : le décor intérieur du robot est sur le calque de rendu 2 ; le soleil d'un nouveau niveau doit avoir `shadow_caster_mask = 4294967293` (sans le calque 2), sinon les performances s'effondrent.
 
 ## Usage des MCP
 - **MCP Godot** : utiliser pour lancer le projet, lire les erreurs/sorties du debugger, inspecter l'arborescence des scènes. Après toute modification de script, **lancer le jeu et vérifier la sortie** avant de dire que c'est fini.
@@ -200,61 +203,52 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 
 > Rangée par **phases** dans l'ordre où le jeu se construit ; on peut avancer deux phases en parallèle (une par développeur).
 > Avant de commencer une tâche : la marquer `[en cours — pseudo]` et pousser tout de suite. La cocher quand elle est fusionnée dans `main`.
+> Une tâche finie tient en **une ligne** : le détail (comment, pourquoi) va dans `docs/decisions.md`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
 **En cours** : rien pour l'instant.
 
-**Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) :
-- Caisse portée (2026-11-09, signalé par Marchma0) : en marchant avec une caisse dans les mains, le nain se cogne sans arrêt dans la caisse, ce qui donne des à-coups désagréables (la caisse portée gêne sans doute le déplacement du nain).
+**Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) : aucun.
 
 ### Phase 1 — Fondations (moteur, réseau, outils)
-- [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet (héberger / rejoindre en local), 4 nains (M0)
-- [x] 1.2 Synchro lissée : lissage des autres joueurs et du robot, `physics_interpolation`, moins de trafic, ordre de calcul fixe (M6.6)
-- [x] 1.3 Interface en icônes « touche → action », police Fredoka, plus de texte d'aide brut (M6.6)
-- [x] 1.8 Interface sobre (2026-11-09) : point de visée qui devient un anneau sur ce qu'on peut utiliser, objet visé illuminé sur ses bords, petite icône de l'action à côté (touche affichée seulement si ce n'est pas le clic), plus de pastilles en bas de l'écran, panneau des postes replié tout seul, rappels du lobby effacés après 6 s
-- [x] 1.4 **Synchro de toutes les interactions** (S1, 2026-11-09) : chaque joueur voit exactement la même chose, y compris celui qui arrive en cours de partie
-  - [x] Modèle réseau général (2026-11-08) : niveau créé par l'hôte (`LevelSpawner`), objets sous `NetSpawner`, cacas et caisses en `FREEZE_MODE_STATIC`, garde-fous (`net_test.sh`, F9, `NetGuard`), `docs/reseau.md`. Test auto vert sur toutes les interactions existantes
-  - [x] Confirmé en vraie partie (2026-11-09, validé par Marchma0)
-- [x] 1.5 Steam (M5, 2026-11-09) : GodotSteam (App ID 480), lobby, invitation ou code de lobby, export Windows `.exe` pour les testeurs — validé à distance par Marchma0
-- [x] 1.6 Pipeline 3D : un script Python par objet (`blender/props/`), palette partagée, planche de vues, refus des faces superposées, captures `interior_shots` (M6.7)
-- [x] 1.7 **Rationalisation du code** (2026-11-08) : rendre le code prêt pour le camp et les missions, sans rien changer en jeu (test réseau vert à chaque étape)
-  - [x] Ménage (2026-11-08) : une seule façon de retrouver le nain d'un joueur (`Dwarf.of_peer`) et son nom (« Joueur N » partout), petites bidouilles retirées, pieds du robot typés, scènes de test obsolètes supprimées, vérifications automatiques + `tests/tools/run_tests.sh`. Le script à la racine du robot attend les skins du robot (3.8)
-  - [x] Système d'interaction (2026-11-08) : chaque commande gère son utilisation (`Interactable.interact`), l'Interactor n'a plus de liste de types ; l'hôte refuse qu'un joueur tienne ou occupe deux choses à la fois (`Possession`) ; le test réseau vérifie vraiment que chaque demande a un effet
-  - [x] Nain découpé (2026-11-08) : apparence (`DwarfLook`, où iront les skins), caméra (`DwarfCamera`), corde (`DwarfClimb`) ; interface du joueur dans `scenes/ui/player_hud.tscn`, créée seulement pour le joueur local ; `dwarf.gd` passe de 780 à 590 lignes
-  - [x] Base commune des bras (2026-11-08) : `MechaArm` (visée depuis le poste, limites, caméra, remise à zéro), `DrillArm` et `GrabberArm` n'ont plus que leur outil
-  - [x] Traduction (2026-11-08) : textes visibles passés par `tr()`, tableau `assets/translations/texts.csv` (54 textes, fr + en), le jeu suit la langue du système (menu de langue : 6.2), vérification dans `run_tests.sh`
-  - [x] Dette de `mecha.blend` (2026-11-08, avancé avant 3.4 à la demande du porteur du projet) : le modèle du robot n'a plus que sa coque ; anciens bras et anciennes consoles retirés par `mecha_shell.py` (`MechaArmUtils.strip_*` supprimé) ; décor refait en 20 objets améliorés (`blender/props/`) placés dans `belly.tscn` / `head.tscn` et dans le rayon tracteur ; collisions des meubles sorties de la coque vers les scènes des objets
+- [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet, 4 nains (M0)
+- [x] 1.2 Synchro lissée des joueurs et du robot, `physics_interpolation` (M6.6)
+- [x] 1.3 Interface en icônes « touche → action », police Fredoka (M6.6)
+- [x] 1.4 Synchro de toutes les interactions, garde-fous `net_test.sh` / F9 / `NetGuard`, `docs/reseau.md` (S1)
+- [x] 1.5 Steam : GodotSteam, lobby, invitation, export Windows (M5)
+- [x] 1.6 Pipeline 3D : un script Python par objet, palette, planche de vues, captures `interior_shots` (M6.7)
+- [x] 1.7 Rationalisation du code : interactions génériques, nain découpé, base des bras, traduction, dette de `mecha.blend`
+- [x] 1.8 Interface sobre : viseur, contour de l'objet visé, icône de l'action
+- [x] 1.9 Performances (2026-11-10) : ombres allégées (+60 % d'images par seconde sur Iris Xe), rendu Vulkan
 
 ### Phase 2 — Les nains
-- [x] 2.1 Nain contrôlable dans un cockpit qui bouge, vue à la première personne (M1)
-- [x] 2.2 Squelette et animations (`idle`, `walk`, `jump`, `grab`, `press`, `sit`…), `AnimationTree`, état synchronisé (M4)
-- [x] 2.3 Emotes (roue de 8), corps visible en première personne, bulle d'état avec portrait, s'accroupir (M6.5)
+- [x] 2.1 Nain contrôlable dans un cockpit qui bouge, première personne (M1)
+- [x] 2.2 Squelette, animations, `AnimationTree`, état synchronisé (M4)
+- [x] 2.3 Emotes, corps visible, bulle d'état, s'accroupir (M6.5)
 - [ ] 2.4 Skins des nains : pièces interchangeables (barbe, casque, couleurs…), choix synchronisé et sauvegardé — vendus en 4.5
 - [ ] 2.5 Améliorations des nains : liste à définir avec le porteur du projet (pistes dans `docs/ideas.md`) — vendues en 4.6
-- [x] 2.6 Inventaire (2026-11-09) : barre de 5 cases (caca, fléchettes…), l'objet de la case choisie est en main, rangé tout seul en prenant une commande ; caisses portées à deux mains (objet lourd) ; panneau des touches des postes descendu sous la ligne « Échap »
-- [x] 2.7 Vue du corps et animations de port (2026-11-09) : à la première personne on voit son vrai corps en baissant les yeux (plus de bras de vue détachés), animations « tenir à une main » et « porter à deux mains », emotes applaudir et salut nain retirées, angle de vue de 90°
+- [x] 2.6 Inventaire de 5 cases, caisses portées à deux mains
+- [x] 2.7 Vue de son vrai corps, animations de port, angle de vue de 90°
 - [ ] 2.8 **Nains garagistes** (nouvelle DA, validée le 2026-11-09) : nouveau modèle (combinaison de travail, ceinture à outils, casquette ou masque de soudeur, cambouis) sur **le même squelette** (mêmes os, mêmes noms : toutes les animations restent) ; à faire avant les skins (2.4), qui en découleront
 
 ### Phase 3 — Le robot
-- [x] 3.1 Modèle low poly (ventre + tête), postes, système d'interaction (boutons, leviers, joysticks toujours actifs) (M2, M3)
+- [x] 3.1 Modèle low poly, postes, boutons / leviers / joysticks (M2, M3)
 - [x] 3.2 Circulation : rayon tracteur, trappe, corde, nain dehors (M6)
-- [x] 3.3 Intérieur modulaire et vie à bord : coque en tôle, salon, canapé, télé, toilettes et mini-jeu « Poussée », cacas, caca doré (M6.5, M6.7)
-- [x] 3.4 **Marche** (M7, 2026-11-09) : marche en rythme, jauge d'erreur et chute, QTE de relèvement, saut et accroupi
-  - [x] Squelette, IK 2 os, marche en rythme, voyant « à toi », élan du robot, ressenti des joysticks (M7.1)
-  - [x] Jauge d'erreur, effondrement à genoux, QTE de relèvement à tour de rôle, système de QTE générique (M7.2)
-  - [x] **Saut et accroupi** (M7.5, 2026-11-09) : sur l'écran « Prêt » des consoles, ↑ par les deux à moins d'1 s = QTE du saut (1re étape : les deux joysticks poussés dans la même direction, à 30° près, puis flèches à tour de rôle ; le robot saute dans cette direction) ; ↓ par les deux = QTE de l'accroupi, ↓ à nouveau pour se relever ; QTE qui traîne = annulé et jauge d'erreur. Remplace les panneaux muraux (M7.4, abandonnés le 2026-11-09)
-- [x] 3.5 Foreuse : bras qui s'étend jusqu'à 3 m, mèche, minage des rochers, caisse de minerai (M8)
-- [x] 3.6 Grappin : pince articulée, caméra sur le bras, lancer au bout d'un câble ; postes assis des deux bras, image brouillée, bras bornés hors de la coque (M9, M9.5)
-- [x] 3.7 Sac à dos : rangement automatique animé, contenu synchronisé (M10)
+- [x] 3.3 Intérieur modulaire et vie à bord : salon, toilettes et mini-jeu « Poussée », cacas (M6.5, M6.7)
+- [x] 3.4 Marche en rythme, jauge d'erreur, chute et relèvement, saut et accroupi par QTE à deux (M7)
+- [x] 3.5 Foreuse (M8)
+- [x] 3.6 Grappin, postes assis des deux bras (M9, M9.5)
+- [x] 3.7 Sac à dos (M10)
 - [ ] 3.8 Skins du robot : peinture, décorations, choix synchronisé et sauvegardé — vendus en 4.5
-- [x] 3.9 Fléchettes dans le robot (2026-11-08) : le jeu quitte le camp pour la cible du salon (ramasser, lancer, « dans le mille », score après 3 lancers, fléchette plantée dans un allié qui doit la lui retirer)
-- [x] 3.10 Finitions du salon et vue des nains (2026-11-08) : collision des jambes du robot, score des fléchettes écrit à la craie sur l'ardoise, bouton marche/arrêt de la télé, jeu de dames jouable (vraies règles, depuis le canapé aussi, pendule d'échecs), vue à la première personne façon Lethal Company / Deep Rock (bras de vue pendant les gestes et les emotes), roue d'emotes avec images
-- [x] 3.11 Fléchette dans un allié (2026-11-08) : vue brouillée seulement si elle se plante au visage, sinon flash rouge de douleur (elle se plante dans le casque ou le corps), sans texte
-- [x] 3.12 **Télé : jeu « Robo-Jet »** (2026-11-09) : la télé allumée lance un petit jeu (notre robot à réacteur passe entre stalactites et poutres de mine, un clic sur l'écran = un coup de réacteur), jouable debout ou depuis le canapé, un joueur à la fois, les autres regardent, meilleur score
+- [x] 3.9 Fléchettes dans le robot
+- [x] 3.10 Finitions du salon : ardoise, télé, jeu de dames, roue d'emotes
+- [x] 3.11 Fléchette plantée dans un allié
+- [x] 3.12 Télé : jeu « Robo-Jet »
+- [x] 3.13 Finitions de pilotage (2026-11-10) : pas plus jamais perdus, vue stable au saut, caisse portée sans à-coups, QTE à étapes « Ensemble ! », premiers sons
 
 ### Phase 4 — Le camp de base (lobby)
-- [x] 4.1 Camp minier dans un canyon, robot au centre, terminal de mission (flèches + bouton), retour au camp (M12, M12.1)
-- [x] 4.2 Mini-jeux : bras de fer (M12.1) ; les fléchettes sont passées dans le robot (3.9)
+- [x] 4.1 Camp minier dans un canyon, terminal de mission, retour au camp (M12, M12.1)
+- [x] 4.2 Mini-jeu : bras de fer (M12.1)
 - [ ] 4.3 Monnaie et sauvegarde de la partie (économie reportée par le porteur du projet le 2026-11-08) : fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte, sauvegarde **chez l'hôte** (validé) ; argent par nain ou commun : à décider
 - [ ] 4.4 Plus de mini-jeux de garage : course de chariots de mécano, lancer de nain dans un pneu, wagonnets sur les rails, bras de fer déplacé sur l'établi (autres pistes dans `docs/ideas.md`)
 - [ ] 4.5 Marchands de skins : un pour les nains (2.4), un pour le robot (3.8)
@@ -264,7 +258,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 4.9 Le garage grandit au fil des missions : trophées au mur, nouveaux outils, plaques des clients (lié à 4.3 pour la sauvegarde)
 
 ### Phase 5 — Les missions
-- [x] 5.1 Cadre : `MissionDirector`, niveau créé par l'hôte, mission de test (rochers, caisses) (M12, S1)
+- [x] 5.1 Cadre : `MissionDirector`, niveau créé par l'hôte, mission de test (M12, S1)
 - [ ] 5.2 Mission prototype A → B : régler le ressenti, la difficulté et la durée sur un vrai parcours (M11)
 - [ ] 5.3 Cadre commun d'une mission : objectifs, réussie / ratée, récompenses, retour au camp (lié à 4.3) ; chaque mission le remplit à sa façon
 - [ ] 5.4 Histoire : le fil rouge des 10 missions, et la mécanique phare de chacune (à valider avec le porteur du projet) ; point de départ validé : le robot acheté à la casse (5.7)
@@ -273,7 +267,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 5.5 Les 10 missions, une par une (une ligne par mission ici une fois 5.4 validé) : environnement + mécanique propre + histoire
 
 ### Phase 6 — Finitions
-- [ ] 6.1 Son et musique
+- [ ] 6.1 Son et musique (premiers sons du robot et des commandes faits le 2026-11-10 : `SoundFx`, `MechaSounds`)
 - [ ] 6.2 Menus et options (touches, son, graphismes)
 - [ ] 6.3 Passe graphique : effets et couleurs créés dans le code (étincelles, éclats, câble…) passés en scènes et dans la palette
 - [ ] 6.4 Version à distribuer sur Steam (français et anglais)
