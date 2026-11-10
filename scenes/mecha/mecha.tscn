@@ -444,10 +444,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.55, 2.1)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.95, 3.4, -0.3)
 seat = NodePath("../Controls/Drill_Seat")
 
-[node name="GrabberArm" parent="." node_paths=PackedStringArray("seat", "backpack") instance=ExtResource("22_grabber_arm")]
+[node name="GrabberArm" parent="." node_paths=PackedStringArray("seat", "backpack", "drop_point") instance=ExtResource("22_grabber_arm")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.95, 3.4, -0.3)
 seat = NodePath("../Controls/Grabber_Seat")
 backpack = NodePath("../Backpack")
+drop_point = NodePath("../TractorBeam")
 
 [node name="Props" type="Node3D" parent="."]
 

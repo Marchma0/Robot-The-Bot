@@ -117,6 +117,7 @@ func _run_host() -> void:
 	arm.grab_node(_world.get_node("Mecha/Props").get_child(0) as Node3D, "poop")
 	await get_tree().create_timer(STEP_WAIT * 3.0).timeout
 	await _check("caca attrapé par le grappin et rangé dans le sac")
+	await _grab_ally_steps()
 	await _inventory_steps()
 
 	_director._travel(&"lobby")
@@ -218,8 +219,7 @@ func _dart_in_client_step() -> void:
 		_log("ÉCHEC  fléchette de face : pas plantée au visage")
 	await _check("fléchette plantée au visage du client")
 	darts._put_on_board(1)
-	host.global_position = client.global_position + client.global_basis.x * 0.8
-	host.set(&"_world_position", host.global_position)   # dehors, le nain garde sa place dans le monde
+	(host as Dwarf).place_at(client.global_position + client.global_basis.x * 0.8)
 	await get_tree().create_timer(0.6).timeout
 	darts.request_pull.rpc_id(1, 0)
 	await get_tree().create_timer(STEP_WAIT).timeout
@@ -310,14 +310,16 @@ func _client_action(path: String, action: String, args: Array) -> void:
 		target.callv(&"rpc_id", [1, action.trim_prefix("stay:")] + args)
 		return
 	match action:
+		"place_at":
+			# Le nain du client va se poser ici (dehors, au sol).
+			(_world.get_node("Mecha/Players/%d" % multiplayer.get_unique_id()) as Dwarf).place_at(args[0])
 		"hand_slot":
 			(target as Dwarf).hand_slot = args[0]   # touche 1 à 5 : le nain du client, répliqué
 		"goto":
 			# Se placer à portée sans rien demander.
 			var walker: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
 			var near: Vector3 = target.global_position + target.global_basis.z * 0.8
-			walker.global_position = near
-			walker.set(&"_world_position", near)
+			(walker as Dwarf).place_at(near)
 		"drive":
 			# Assis : on envoie les commandes du poste pendant une seconde, comme le nain assis.
 			for i: int in range(30):
@@ -328,15 +330,14 @@ func _client_action(path: String, action: String, args: Array) -> void:
 			# Devant la télé (au sol du ventre), puis un clic sur l'écran, comme le joueur.
 			var player: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
 			var front: Vector3 = target.global_position + target.global_basis.z * 1.3 - target.global_basis.y * 1.2
-			player.global_position = front
-			player.set(&"_world_position", front)
+			(player as Dwarf).place_at(front)
 			await get_tree().create_timer(0.6).timeout
 			(target as RoboJetTouch).game.tap()
 		"darts_take", "throw":
 			# Devant la cible du salon (au sol du ventre), puis : prendre, ou lancer vers la cible.
 			var thrower: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
 			var stand: Vector3 = target.to_global(Vector3(0.0, -1.2, -1.6))
-			thrower.global_position = stand
+			(thrower as Dwarf).place_at(stand)
 			await get_tree().create_timer(0.6).timeout
 			if action == "darts_take":
 				target.request_take.rpc_id(1)
@@ -349,8 +350,7 @@ func _client_action(path: String, action: String, args: Array) -> void:
 			var dwarf: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
 			if dwarf != null and not (action == "request_leave" or action == "request_release"):
 				var spot: Vector3 = target.global_position + target.global_basis.z * 0.8
-				dwarf.global_position = spot
-				dwarf.set(&"_world_position", spot)   # dehors, le nain garde sa place dans le monde
+				(dwarf as Dwarf).place_at(spot)
 				await get_tree().create_timer(0.6).timeout
 			target.callv(&"rpc_id", [1, action] + args)
 
@@ -436,3 +436,32 @@ func _on_timeout() -> void:
 
 func _log(text: String) -> void:
 	print("[net_test %s] %s" % [_role, text])
+
+
+## Grappin (3.14) : le nain du client est dehors, la pince de l'hôte le saisit (il pend dessous, chez tout le
+## monde), puis le pose au sol sous le rayon tracteur. C'est le client qui déplace son nain (il en a l'autorité).
+func _grab_ally_steps() -> void:
+	var mecha: Node3D = _world.get_node("Mecha") as Node3D
+	var arm: GrabberArm = mecha.get_node("GrabberArm") as GrabberArm
+	var client_dwarf: Dwarf = Dwarf.of_peer(_client_id)
+	var outside: Vector3 = mecha.global_transform * Vector3(-6.0, 0.2, -4.0)
+	_client_action.rpc_id(_client_id, "Mecha", "place_at", [outside])
+	await get_tree().create_timer(STEP_WAIT).timeout
+	if not arm.grab_node(client_dwarf, GrabberArm.KIND_DWARF):
+		_failures += 1
+		_log("ÉCHEC  grappin : la pince ne saisit pas le nain du client (dehors)")
+		return
+	await get_tree().create_timer(0.3).timeout
+	var hold: Vector3 = arm.get_hold_point().global_position
+	if client_dwarf.global_position.distance_to(hold) > 2.0:
+		_failures += 1
+		_log("ÉCHEC  grappin : le nain du client ne pend pas sous la pince (%.1f m)" % client_dwarf.global_position.distance_to(hold))
+	else:
+		_log("OK     grappin : le nain du client pend sous la pince")
+	await get_tree().create_timer(GrabberArm.DELIVER_DURATION + STEP_WAIT).timeout
+	var beam: Vector3 = mecha.get_node("TractorBeam").global_position
+	var flat: float = Vector2(client_dwarf.global_position.x - beam.x, client_dwarf.global_position.z - beam.z).length()
+	if arm.held_peer_id != 0 or flat > 1.0:
+		_failures += 1
+		_log("ÉCHEC  grappin : le nain du client n'est pas posé sous le rayon tracteur (%.1f m)" % flat)
+	await _check("grappin : le nain du client est posé sous le robot")

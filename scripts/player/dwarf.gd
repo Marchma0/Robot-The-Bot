@@ -27,6 +27,8 @@ const RIDE_PROBE: float = 0.15
 ## Lissage de la vitesse du support (0..1, plus petit = plus lisse) et étapes sans décrochage en montant dessus.
 const RIDE_VELOCITY_SMOOTHING: float = 0.3
 const RIDE_SETTLE_TICKS: int = 6
+## Saisi par la pince du grappin : distance entre la pince et l'origine du nain (il pend dessous, m).
+const HANG_DROP: float = 1.25
 ## Longueur max du pseudo affiché au-dessus de la tête.
 const MAX_NAME_LENGTH: int = 18
 ## Hauteur de la capsule de collision debout / accroupi (m). Accroupi, les jambes rentrent dans le corps.
@@ -300,6 +302,10 @@ func _physics_process(delta: float) -> void:
 	_update_emotes(delta, stick, busy)
 	if _hud.emote_wheel.is_open():
 		stick = Vector2.ZERO   # le stick droit sert à choisir dans la roue
+	var claw: GrabberArm = GrabberArm.holding(get_tree(), peer_id)
+	if claw != null:
+		_hang_from(claw, -stick * stick_look_speed * delta)
+		return
 	if seat != null:
 		_stay_seated(seat, Vector2(stick.x, -stick.y) * stick_look_speed * delta)
 		return
@@ -452,6 +458,15 @@ func get_hold_transform() -> Transform3D:
 ## Le modèle d'une caisse portée est accroché au nain à cette place (voir CargoCrate).
 func get_carry_transform() -> Transform3D:
 	return global_transform * Transform3D(Basis.IDENTITY, CARRY_OFFSET)
+
+
+## Hôte → joueur du nain : la pince du grappin le lâche, posé en `point` (au sol sous le robot).
+@rpc("any_peer", "call_local", "reliable")
+func dropped_by_claw(point: Vector3) -> void:
+	if multiplayer.get_remote_sender_id() != 1 or not is_multiplayer_authority():
+		return
+	_was_outside = true
+	place_at(point)
 
 
 ## Joueur local : place son nain en `point` (global), immobile, sans glissé à l'écran. Dedans comme dehors
@@ -629,7 +644,7 @@ func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 ## Dehors (hors du volume intérieur du mécha), le nain ne suit plus le mécha : il reste
 ## enfant du mécha (pour le réseau) mais annule chaque frame le déplacement de celui-ci.
 func _update_outside() -> void:
-	var outside: bool = not _is_inside_mecha()
+	var outside: bool = not is_inside_mecha()
 	if outside:
 		if not _was_outside:
 			# On vient de sortir : on mémorise sa place et son orientation dans le monde.
@@ -709,6 +724,26 @@ func _fling(support_velocity: Vector3) -> void:
 	velocity = support_velocity * fling_boost + Vector3.UP * fling_lift
 
 
+## Saisi par la pince d'un grappin : il pend dessous, les pieds dans le vide, et ne peut que regarder autour.
+## Sa place est envoyée dans le monde, comme dehors.
+func _hang_from(claw: GrabberArm, look: Vector2) -> void:
+	_was_outside = true
+	_ride_body = null
+	_flung = false
+	_world_yaw += look.x
+	_head.rotation.x = clampf(_head.rotation.x + look.y, -MAX_PITCH_DOWN, MAX_PITCH)
+	var point: Vector3 = claw.get_hold_point().global_position + Vector3.DOWN * HANG_DROP
+	global_transform = Transform3D(Basis(Vector3.UP, _world_yaw), point)
+	_world_position = point
+	velocity = Vector3.ZERO
+	anim_floating = true
+	anim_airborne = false
+	anim_speed = 0.0
+	anim_climbing = false
+	anim_seated = false
+	_smoother.world_space = true
+
+
 ## Vrai si `node` fait partie d'un robot (bras, coque, jambes…).
 func _is_part_of_mecha(node: Node) -> bool:
 	for volume: Node in get_tree().get_nodes_in_group(&"mecha_interiors"):
@@ -722,7 +757,7 @@ func _apply_world_place() -> void:
 	global_transform = Transform3D(Basis(Vector3.UP, _world_yaw), _world_position)
 
 
-func _is_inside_mecha() -> bool:
+func is_inside_mecha() -> bool:
 	var volumes: Array[Node] = get_tree().get_nodes_in_group(&"mecha_interiors")
 	if volumes.is_empty():
 		return true   # scène sans mécha (bac à sable)

@@ -80,6 +80,22 @@ func _ready() -> void:
 	TestCheck.expect(moved > 2.0, "le robot a marché (%.1f m)" % moved)
 	TestCheck.expect(roof_drift < 0.3, "le nain est resté à sa place sur le toit (écart %.2f m)" % roof_drift)
 	await _shot("3_sur_le_toit", _dwarf.global_position)
+
+	# Grappin : la pince saisit le nain dehors, il pend dessous, puis il est posé sous le rayon tracteur.
+	_dwarf.place_at(_mecha.global_transform * Vector3(-6.0, 0.2, -4.0))
+	await _wait(0.6)
+	TestCheck.expect(_arm.grab_node(_dwarf, GrabberArm.KIND_DWARF), "la pince saisit l'allié")
+	await _wait(0.2)
+	var hold: Vector3 = _arm.get_hold_point().global_position
+	TestCheck.expect(_arm.held_peer_id == 1 and _dwarf.global_position.distance_to(hold) < 1.6,
+		"l'allié pend sous la pince (%.2f m)" % _dwarf.global_position.distance_to(hold))
+	await _shot("4_dans_la_pince", _dwarf.global_position)
+	await _wait(GrabberArm.DELIVER_DURATION + 0.6)
+	var beam: Vector3 = _mecha.get_node("TractorBeam").global_position
+	var flat: float = Vector2(_dwarf.global_position.x - beam.x, _dwarf.global_position.z - beam.z).length()
+	TestCheck.expect(_arm.held_peer_id == 0 and flat < 0.8 and _dwarf.global_position.y < 1.0,
+		"l'allié est posé au sol sous le rayon tracteur (%.2f m du rayon, hauteur %.2f m)" % [flat, _dwarf.global_position.y])
+	await _shot("5_pose_sous_le_robot", _dwarf.global_position)
 	TestCheck.finish(get_tree())
 
 
