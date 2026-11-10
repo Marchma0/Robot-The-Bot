@@ -10,15 +10,22 @@ extends MechaArm
 ##   Elle attrape le premier objet rangeable qu'elle croise, rebondit sur le décor, puis s'enroule.
 ## Dès qu'un objet est saisi, la pince le ramène à l'épaule gauche puis
 ## le transfère automatiquement dans le sac à dos (`Backpack.store_node`, M10).
+## Un allié dehors se saisit aussi (au bras ou au lancer) : la pince le ramène et le pose au sol sous
+## `drop_point` (le rayon tracteur), au lieu du sac.
 ##
 ## Réseau : l'hôte est seul autoritaire sur `arm_yaw`, `arm_pitch`, `extension`, `claw_closed`,
-## `shot_state` et `shot_distance` (répliqués par MultiplayerSynchronizer). Chaque peer anime le bras,
-## les mâchoires et le câble localement.
+## `shot_state`, `shot_distance` et `held_peer_id` (répliqués par MultiplayerSynchronizer). Chaque peer anime le
+## bras, les mâchoires et le câble localement. Un nain saisi se place lui-même dans la pince (son joueur garde
+## l'autorité sur lui, voir Dwarf), et l'hôte lui dit où il est posé à la fin (`Dwarf.dropped_by_claw`).
 
 signal item_grabbed(item: Node3D, item_kind: String)
 
 ## Pince lancée : au repos, partie, en train de revenir.
 enum Shot { IDLE, OUT, BACK }
+
+const GROUP: StringName = &"grabber_arms"
+## Type « objet » d'un allié saisi (il n'entre pas dans le sac : il est posé sous le robot).
+const KIND_DWARF: String = "dwarf"
 
 ## Bras gauche : l'intérieur (la coque) est un lacet négatif.
 const SIDE_SIGN: float = -1.0
@@ -50,6 +57,11 @@ const CABLE_ROOT_Z: float = -0.32
 const CABLE_SAG: float = 0.035
 
 @export var backpack: Backpack
+## Où l'on pose un allié saisi : au sol, sous ce nœud (le rayon tracteur sous le ventre).
+@export var drop_point: Node3D
+
+## Joueur dont le nain est dans la pince (0 = personne). Autorité : hôte.
+var held_peer_id: int = 0
 
 ## Vrai quand les mâchoires de la pince sont fermées. Autorité : hôte.
 var claw_closed: bool = false
@@ -89,7 +101,23 @@ func _init() -> void:
 
 func _ready() -> void:
 	super()
+	add_to_group(GROUP)
 	_build_cable()
+
+
+## Le grappin qui tient le nain du joueur `peer_id`, ou null.
+static func holding(tree: SceneTree, peer_id: int) -> GrabberArm:
+	if peer_id == 0:
+		return null
+	for node: Node in tree.get_nodes_in_group(GROUP):
+		if (node as GrabberArm).held_peer_id == peer_id:
+			return node as GrabberArm
+	return null
+
+
+## Point de la pince où pend ce qu'elle tient (un nain saisi s'y accroche lui-même).
+func get_hold_point() -> Node3D:
+	return _hold_point
 
 
 func _physics_process(delta: float) -> void:
@@ -159,7 +187,7 @@ func grab_node(item: Node3D, item_kind: String = "crate") -> bool:
 		return false
 	if item == null or not is_instance_valid(item) or _deliver_timer >= 0.0 or shot_state != Shot.IDLE:
 		return false
-	if backpack != null and backpack.is_full():
+	if backpack != null and backpack.is_full() and item_kind != KIND_DWARF:
 		return false
 	_hold_item(item, item_kind)
 	_begin_delivery()
@@ -178,6 +206,9 @@ func _find_grabbable(center: Vector3, radius: float) -> Array:
 	for node: Node in get_tree().get_nodes_in_group(&"storable_items"):
 		if not candidates.has(node):
 			candidates.append(node)
+	for node: Node in get_tree().get_nodes_in_group(&"dwarves"):
+		if not candidates.has(node):
+			candidates.append(node)
 	for node: Node in candidates:
 		var body: Node3D = node as Node3D
 		if body == null or not is_instance_valid(body) or body == _held_item:
@@ -185,7 +216,7 @@ func _find_grabbable(center: Vector3, radius: float) -> Array:
 		var kind: String = _kind_of(body)
 		if kind.is_empty():
 			continue
-		var item_center: Vector3 = body.global_position + Vector3(0.0, 0.30, 0.0)
+		var item_center: Vector3 = body.global_position + Vector3(0.0, 0.9 if kind == KIND_DWARF else 0.30, 0.0)
 		var d: float = item_center.distance_to(center)
 		if d < best_dist:
 			best_dist = d
@@ -198,6 +229,13 @@ func _find_grabbable(center: Vector3, radius: float) -> Array:
 
 ## Type d'objet pour le sac à dos, ou "" si la pince ne peut pas le prendre.
 func _kind_of(body: Node3D) -> String:
+	if body is Dwarf:
+		# Un allié dehors, libre (pas sur la corde, pas déjà dans une pince).
+		var dwarf: Dwarf = body as Dwarf
+		if dwarf.is_inside_mecha() or Possession.is_peer_busy(get_tree(), dwarf.peer_id) \
+				or GrabberArm.holding(get_tree(), dwarf.peer_id) != null:
+			return ""
+		return KIND_DWARF
 	if body is CargoCrate:
 		var crate: CargoCrate = body as CargoCrate
 		return "" if crate.holder_peer_id != 0 else crate.item_kind   # portée par un nain
@@ -215,7 +253,9 @@ func _hold_item(item: Node3D, item_kind: String) -> void:
 	_held_item = item
 	_held_kind = item_kind
 	claw_closed = true
-	if item is RigidBody3D:
+	if item is Dwarf:
+		held_peer_id = (item as Dwarf).peer_id   # il s'accroche lui-même à la pince (voir Dwarf)
+	elif item is RigidBody3D:
 		(item as RigidBody3D).freeze = true
 	item_grabbed.emit(item, item_kind)
 
@@ -291,7 +331,7 @@ func _mecha_bodies() -> Array[RID]:
 
 
 func _carry_held_item() -> void:
-	if _held_item != null and is_instance_valid(_held_item):
+	if _held_item != null and is_instance_valid(_held_item) and not _held_item is Dwarf:
 		_held_item.global_position = _hold_point.global_position
 		_held_item.global_rotation = _hold_point.global_rotation
 
@@ -312,10 +352,27 @@ func _update_delivery(delta: float) -> void:
 		_held_item = null
 		_deliver_timer = -1.0
 		claw_closed = false
-		if item_to_store != null and is_instance_valid(item_to_store):
+		if kind_to_store == KIND_DWARF:
+			_drop_dwarf(item_to_store as Dwarf)
+		elif item_to_store != null and is_instance_valid(item_to_store):
 			var target_bp: Backpack = backpack if backpack != null else _find_backpack()
 			if target_bp != null:
 				target_bp.store_node(item_to_store, kind_to_store)
+
+
+## Hôte : l'allié saisi est posé au sol sous `drop_point` ; c'est son joueur qui le déplace (il a l'autorité).
+func _drop_dwarf(dwarf: Dwarf) -> void:
+	held_peer_id = 0
+	if dwarf == null or not is_instance_valid(dwarf):
+		return
+	var point: Vector3 = dwarf.global_position
+	if drop_point != null:
+		var from: Vector3 = drop_point.global_position
+		var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 12.0, 1)
+		query.exclude = _mecha_bodies()
+		var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+		point = (hit["position"] as Vector3) + Vector3.UP * 0.1 if not hit.is_empty() else from
+	dwarf.dropped_by_claw.rpc_id(dwarf.peer_id, point)
 
 
 func _side_sign() -> float:
@@ -387,3 +444,4 @@ func reset_arm() -> void:
 	shot_distance = 0.0
 	_deliver_timer = -1.0
 	_held_item = null
+	held_peer_id = 0

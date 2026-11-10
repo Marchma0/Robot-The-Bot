@@ -71,6 +71,27 @@ size = Vector3(4.6, 2.7, 0.1)
 [sub_resource type="BoxShape3D" id="Shape_HeadCeiling"]
 size = Vector3(4.6, 0.1, 4)
 
+[sub_resource type="BoxShape3D" id="Shape_ShellBodySide"]
+size = Vector3(0.1, 3.2, 4.2)
+
+[sub_resource type="BoxShape3D" id="Shape_ShellBodyFace"]
+size = Vector3(4.8, 3.2, 0.1)
+
+[sub_resource type="BoxShape3D" id="Shape_ShellCollarSide"]
+size = Vector3(0.3, 0.4, 4.8)
+
+[sub_resource type="BoxShape3D" id="Shape_ShellCollarFace"]
+size = Vector3(5.4, 0.4, 0.3)
+
+[sub_resource type="BoxShape3D" id="Shape_ShellHeadSide"]
+size = Vector3(0.1, 2.9, 4.59)
+
+[sub_resource type="BoxShape3D" id="Shape_ShellHeadFace"]
+size = Vector3(5.19, 2.9, 0.1)
+
+[sub_resource type="BoxShape3D" id="Shape_ShellRoof"]
+size = Vector3(5.19, 0.1, 4.59)
+
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_walker"]
 properties/0/path = NodePath("FootL/NetSmoother:net_state")
 properties/0/spawn = true
@@ -195,6 +216,60 @@ shape = SubResource("Shape_HeadWallFront")
 [node name="HeadCeiling" type="CollisionShape3D" parent="Hull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.35, 0)
 shape = SubResource("Shape_HeadCeiling")
+
+[node name="Shell" type="StaticBody3D" parent="."]
+
+[node name="BodyL" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.35, 3.9, 0)
+shape = SubResource("Shape_ShellBodySide")
+
+[node name="BodyR" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 3.9, 0)
+shape = SubResource("Shape_ShellBodySide")
+
+[node name="BodyFront" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.9, -2.05)
+shape = SubResource("Shape_ShellBodyFace")
+
+[node name="BodyBack" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.9, 2.05)
+shape = SubResource("Shape_ShellBodyFace")
+
+[node name="CollarL" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.55, 5.5, 0)
+shape = SubResource("Shape_ShellCollarSide")
+
+[node name="CollarR" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.55, 5.5, 0)
+shape = SubResource("Shape_ShellCollarSide")
+
+[node name="CollarFront" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, -2.25)
+shape = SubResource("Shape_ShellCollarFace")
+
+[node name="CollarBack" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 2.25)
+shape = SubResource("Shape_ShellCollarFace")
+
+[node name="HeadL" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.545, 7.15, 0)
+shape = SubResource("Shape_ShellHeadSide")
+
+[node name="HeadR" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.545, 7.15, 0)
+shape = SubResource("Shape_ShellHeadSide")
+
+[node name="HeadFront" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.15, -2.245)
+shape = SubResource("Shape_ShellHeadFace")
+
+[node name="HeadBack" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.15, 2.245)
+shape = SubResource("Shape_ShellHeadFace")
+
+[node name="Roof" type="CollisionShape3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.55, 0)
+shape = SubResource("Shape_ShellRoof")
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 
@@ -369,10 +444,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.55, 2.1)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.95, 3.4, -0.3)
 seat = NodePath("../Controls/Drill_Seat")
 
-[node name="GrabberArm" parent="." node_paths=PackedStringArray("seat", "backpack") instance=ExtResource("22_grabber_arm")]
+[node name="GrabberArm" parent="." node_paths=PackedStringArray("seat", "backpack", "drop_point") instance=ExtResource("22_grabber_arm")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.95, 3.4, -0.3)
 seat = NodePath("../Controls/Grabber_Seat")
 backpack = NodePath("../Backpack")
+drop_point = NodePath("../TractorBeam")
 
 [node name="Props" type="Node3D" parent="."]
 
