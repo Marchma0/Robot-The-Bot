@@ -48,7 +48,7 @@ const MAX_MOMENTUM_LEAD: float = 0.9
 @export var pivot_step_degrees: float = 25.0
 ## Écart max de direction entre deux pas successifs avant de trébucher (degrés).
 @export var mismatch_degrees: float = 60.0
-## Un pas demandé pendant que l'autre pied est en l'air attend au plus ce temps (s).
+## Un pas demandé reste en attente tant qu'un pied est en l'air, puis au plus ce temps (s).
 @export var buffer_time: float = 0.35
 
 @export_group("Élan du corps")
@@ -298,12 +298,18 @@ func _read_stick(leg: int, stick: Lever) -> void:
 func _try_pending(leg: int) -> void:
 	if is_nan(_pending[leg]):
 		return
-	if _time - _pending_time[leg] > buffer_time or _stumble > 0.0:
+	if _stumble > 0.0:
 		_pending[leg] = NAN
 		return
 	var other: int = 1 - leg
 	if _feet[leg].swing or _feet[other].swing:
-		return   # deux pieds en l'air : interdit, on attend
+		# Deux pieds en l'air : interdit, on attend. Le délai ne court qu'une fois les pieds posés (un pas dure
+		# plus longtemps que `buffer_time` : poussé juste après l'autre joueur, le pas était perdu).
+		_pending_time[leg] = _time
+		return
+	if _time - _pending_time[leg] > buffer_time:
+		_pending[leg] = NAN
+		return
 	var angle: float = _pending[leg]
 	_pending[leg] = NAN
 	# Décalage avec le pas précédent de l'autre jambe : la jauge d'erreur monte selon l'écart.
