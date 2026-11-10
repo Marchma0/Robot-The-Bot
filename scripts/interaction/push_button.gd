@@ -99,7 +99,6 @@ func request_press() -> void:
 @rpc("authority", "call_local", "reliable")
 func _play_press() -> void:
 	_press_timer = PRESS_DURATION
-	SoundFx.play_at(self, SoundFx.BUTTON_CLICK, -8.0)
 
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:

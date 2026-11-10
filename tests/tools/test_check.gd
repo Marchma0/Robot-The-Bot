@@ -28,16 +28,7 @@ static func finish(tree: SceneTree) -> void:
 		print("[test] FIN OK")
 	else:
 		print("[test] FIN ÉCHEC (%d vérification(s) ratée(s))" % _failures)
-	# Un son encore en cours à la fermeture reste ouvert dans le serveur audio (« ressources encore utilisées ») :
-	# on arrête les sons, puis on laisse le serveur audio les refermer avant de quitter.
-	var sounds: Array[Node] = tree.root.find_children("*", "AudioStreamPlayer3D", true, false)
-	for player: Node in sounds:
-		(player as AudioStreamPlayer3D).stop()
-	var code: int = 1 if _failures > 0 else 0
-	if sounds.is_empty():
-		tree.quit(code)
-	else:
-		tree.create_timer(0.2, true, false, true).timeout.connect(tree.quit.bind(code))
+	tree.quit(1 if _failures > 0 else 0)
 
 
 ## À attendre avant une capture : l'image suivante dessinée (sans fenêtre, rien n'est dessiné : l'image suivante tout court).

@@ -14,7 +14,6 @@ var _stumbles: int = 0
 ## Pas comptés pendant la phase « poussé juste après l'autre » (début, fin).
 var _quick_window: Vector2 = Vector2.ZERO
 var _quick_steps: int = 0
-var _sounds: SoundCounter
 
 @export var quit_when_done: bool = true
 
@@ -32,7 +31,6 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://build/views"))
 	_walker.stumbled.connect(func() -> void: _stumbles += 1)
 	_walker.stepped.connect(_on_stepped)
-	_sounds = SoundCounter.new(get_tree())
 	var t: float = 1.0
 	_phases.append(["départ", 0.0])
 	_phases.append(["8 pas alternés rapides vers l'avant", t])
@@ -93,8 +91,6 @@ func _physics_process(delta: float) -> void:
 			TestCheck.expect(moved > 3.0, "le robot a avancé (%.1f m)" % moved)
 			TestCheck.expect(_stumbles >= 1, "le désaccord fait trébucher")
 			TestCheck.expect(_quick_steps == 2, "poussé juste après l'autre : le pas attend et part (%d pas sur 2)" % _quick_steps)
-			TestCheck.expect(_sounds.count("robot_step") >= 10, "sons : les pas du robot s'entendent (%d)" % _sounds.count("robot_step"))
-			TestCheck.expect(_sounds.count("stick_clack") >= 10, "sons : « clac » des joysticks (%d)" % _sounds.count("stick_clack"))
 		if _phase_index >= _phases.size() and (quit_when_done or TestCheck.is_auto()):
 			TestCheck.finish(get_tree())
 	var center: Vector3 = _mecha.global_position + Vector3.UP * 1.6

@@ -41,8 +41,6 @@ var _local_value: Vector2 = Vector2.ZERO
 var _shown: Vector2 = Vector2.ZERO
 ## « Clac » : temps restant du petit rebond du pommeau en butée (s).
 var _kick_time: float = 0.0
-## Joystick à ressort : prêt pour le prochain « clac » sonore (revenu près du centre).
-var _clack_armed: bool = true
 
 @onready var _pivot: Node3D = %Pivot
 @onready var _rod: MeshInstance3D = %Rod
@@ -76,8 +74,6 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	# Le porteur voit sa propre valeur tout de suite ; les autres voient celle de l'hôte.
 	var wanted: Vector2 = _local_value if is_held_locally() else value
-	if self_centering:
-		_update_clack(wanted)
 	_shown = _shown.lerp(wanted, 1.0 - exp(-KNOB_FOLLOW * delta))
 	var shown: Vector2 = _shown
 	if _kick_time > 0.0:
@@ -157,17 +153,6 @@ func submit_value(wanted: Vector2) -> void:
 
 func _get_highlight_meshes() -> Array[GeometryInstance3D]:
 	return [_rod, _knob]
-
-
-## « Clac » du joystick à ressort qui part en butée (mêmes seuils qu'un pas, voir MechaWalker). Chaque peer
-## l'entend à partir de la valeur qu'il voit (la sienne s'il le tient, celle de l'hôte sinon).
-func _update_clack(shown_value: Vector2) -> void:
-	var amount: float = shown_value.length()
-	if amount < MechaWalker.RELEASE:
-		_clack_armed = true
-	elif amount > MechaWalker.TRIGGER and _clack_armed:
-		_clack_armed = false
-		SoundFx.play_at(_pivot, SoundFx.STICK_CLACK, -6.0)
 
 
 func _constrain(raw: Vector2) -> Vector2:

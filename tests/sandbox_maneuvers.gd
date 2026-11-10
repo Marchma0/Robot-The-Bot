@@ -14,11 +14,9 @@ extends Node3D
 
 var _stick_wanted: Array[Vector2] = [Vector2.ZERO, Vector2.ZERO]
 var _together_seen: int = 0
-var _sounds: SoundCounter
 
 
 func _ready() -> void:
-	_sounds = SoundCounter.new(get_tree())
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://build/views"))
 	await _wait(1.5)
 	var standing_y: float = _mecha.global_position.y
@@ -99,8 +97,6 @@ func _ready() -> void:
 	await _shot("5_arrive", _cam_outside)
 
 	TestCheck.expect(_together_seen >= 4, "saut et accroupi : des étapes « ensemble » (%d vues)" % _together_seen)
-	TestCheck.expect(_sounds.count("robot_land") == 1, "sons : un gros choc à la réception du saut (%d)" % _sounds.count("robot_land"))
-	TestCheck.expect(_sounds.count("qte_tick") >= 10 and _sounds.count("qte_success") >= 2 and _sounds.count("qte_error") >= 2, "sons : bips, réussites et erreurs des QTE")
 	# QTE abandonné : annulé, la jauge d'erreur monte.
 	var gauge: float = _walker.error_gauge
 	await _both(QteSequence.Arrow.DOWN)

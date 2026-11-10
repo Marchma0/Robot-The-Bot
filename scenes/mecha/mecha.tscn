@@ -26,7 +26,6 @@
 [ext_resource type="Script" path="res://scripts/mecha/mecha_maneuvers.gd" id="24_maneuvers"]
 [ext_resource type="Script" path="res://scripts/mecha/mecha_collider_sync.gd" id="25_collider_sync"]
 [ext_resource type="Script" path="res://scripts/mecha/interior_shadows.gd" id="26_interior_shadows"]
-[ext_resource type="Script" path="res://scripts/mecha/mecha_sounds.gd" id="27_sounds"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_mecha"]
 properties/0/path = NodePath("NetSmoother:net_state")
@@ -409,13 +408,6 @@ replication_interval = 0.033
 process_physics_priority = -10
 script = ExtResource("13_smoother")
 target = NodePath("..")
-
-[node name="Sounds" type="Node" parent="." node_paths=PackedStringArray("walker", "qte", "consoles", "body")]
-script = ExtResource("27_sounds")
-walker = NodePath("../Walker")
-qte = NodePath("../RecoveryQte")
-consoles = [NodePath("../Controls/DashboardL"), NodePath("../Controls/DashboardR")]
-body = NodePath("..")
 
 [node name="InteriorShadows" type="Node" parent="." node_paths=PackedStringArray("mecha", "skip")]
 script = ExtResource("26_interior_shadows")

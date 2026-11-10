@@ -51,7 +51,6 @@ scripts/
   mecha/           # contrôle, IK, équilibre, stations
   player/
   interaction/     # système générique d'interaction (stations, panneaux)
-  audio/           # SoundFx : sons ponctuels en 3D (sons dans assets/audio/sfx/, licence à côté)
 docs/              # jeu.md, decisions.md, ideas.md, reseau.md (voir « Les documents du projet »)
 tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (tests/tools/)
 ```
@@ -120,7 +119,6 @@ tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (
 - **Nains** : squelette (armature) fait dans Blender, animations exportées dans le `.glb` (actions nommées : `idle`, `walk`, `jump`, `float`, `climb`, `grab`, `press`, `sit`, `crouch`, `crouch_walk`, `poop`, `throw`, `hit`, `hold_low`/`hold_mid`/`hold_high`, `carry`, `emote_*`…), jouées dans Godot via un `AnimationTree`.
 - **Robot** : les jambes et les bras sont animés **à partir de l'état simulé par l'hôte** (angles des articulations, extension de la foreuse…). Ce sont des animations procédurales ou des blend d'actions Blender, jamais des positions inventées côté client.
 - **Réseau** : on synchronise l'**état** (vitesse, au sol, tient un levier, assis, glisse…), jamais l'animation elle-même. Chaque peer joue l'animation correspondante localement.
-- **Sons** : pareil, jamais de son envoyé par le réseau : chaque peer joue le son (`SoundFx.play_at`) quand il voit l'état changer. Un son ajouté = un fichier CC0 (ou fait maison) dans `assets/audio/sfx/`, source et licence notées dans `docs/decisions.md`.
 - **Ombres** : le décor intérieur du robot est sur le calque de rendu 2 ; le soleil d'un nouveau niveau doit avoir `shadow_caster_mask = 4294967293` (sans le calque 2), sinon les performances s'effondrent.
 
 ## Usage des MCP
@@ -244,7 +242,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 3.10 Finitions du salon : ardoise, télé, jeu de dames, roue d'emotes
 - [x] 3.11 Fléchette plantée dans un allié
 - [x] 3.12 Télé : jeu « Robo-Jet »
-- [x] 3.13 Finitions de pilotage (2026-11-10) : pas plus jamais perdus, vue stable au saut, caisse portée sans à-coups, QTE à étapes « Ensemble ! », premiers sons
+- [x] 3.13 Finitions de pilotage (2026-11-10) : pas plus jamais perdus, vue stable au saut, caisse portée sans à-coups, QTE à étapes « Ensemble ! »
 
 ### Phase 4 — Le camp de base (lobby)
 - [x] 4.1 Camp minier dans un canyon, terminal de mission, retour au camp (M12, M12.1)
@@ -267,7 +265,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 5.5 Les 10 missions, une par une (une ligne par mission ici une fois 5.4 validé) : environnement + mécanique propre + histoire
 
 ### Phase 6 — Finitions
-- [ ] 6.1 Son et musique (premiers sons du robot et des commandes faits le 2026-11-10 : `SoundFx`, `MechaSounds`)
+- [ ] 6.1 Son et musique
 - [ ] 6.2 Menus et options (touches, son, graphismes)
 - [ ] 6.3 Passe graphique : effets et couleurs créés dans le code (étincelles, éclats, câble…) passés en scènes et dans la palette
 - [ ] 6.4 Version à distribuer sur Steam (français et anglais)
