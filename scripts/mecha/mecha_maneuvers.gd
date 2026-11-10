@@ -18,9 +18,11 @@ enum Kind { NONE, JUMP, CROUCH }
 @export var qte: QteSequence
 ## Écart max entre les appuis des deux pilotes (s).
 @export var pair_window: float = 1.0
-## Tours de flèches après l'étape joystick (saut), et pour l'accroupi.
-@export var jump_turns: int = 2
-@export var crouch_turns: int = 2
+## Tours de flèches après l'étape joystick (saut), et pour l'accroupi, dont `together_steps` étapes où les
+## deux pilotes appuient en même temps (voir QteSequence.TOGETHER).
+@export var jump_turns: int = 4
+@export var crouch_turns: int = 4
+@export var together_steps: int = 2
 ## Un QTE qui ne progresse plus pendant ce temps (s) échoue ; la jauge d'erreur monte de `fail_error`.
 @export var fail_after: float = 3.0
 @export var fail_error: float = 0.35
@@ -80,12 +82,12 @@ func _launch(arrow: int) -> void:
 		if walker.crouched:
 			return   # pas de saut accroupi : il faut d'abord se relever
 		var steps: Array[Vector2i] = [Vector2i(QteSequence.BOTH, 0)]
-		steps.append_array(QteSequence.random_steps(jump_turns))
+		steps.append_array(QteSequence.random_steps(jump_turns, together_steps))
 		_running = Kind.JUMP
 		qte.start(steps, fail_after)
 	else:
 		_running = Kind.CROUCH
-		qte.start(QteSequence.random_steps(crouch_turns), fail_after)
+		qte.start(QteSequence.random_steps(crouch_turns, together_steps), fail_after)
 
 
 func _on_qte_completed() -> void:
