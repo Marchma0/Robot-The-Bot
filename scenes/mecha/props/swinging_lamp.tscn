@@ -60,9 +60,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.67, 0)
 cast_shadow = 0
 mesh = SubResource("SphereMesh_bulb")
 
-[node name="Light" type="OmniLight3D" parent="Pendulum"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.72, 0)
+[node name="Light" type="SpotLight3D" parent="Pendulum"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, -0.72, 0)
 light_color = Color(1, 0.8, 0.55, 1)
-light_energy = 0.9
+light_energy = 1.4
 shadow_enabled = true
-omni_range = 3.0
+spot_range = 3.5
+spot_angle = 70.0
+spot_angle_attenuation = 0.6
