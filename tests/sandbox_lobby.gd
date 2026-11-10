@@ -69,11 +69,15 @@ func _ready() -> void:
 	punch.get_node("HitButton").pressed.emit(1)
 	await _wait(0.1)
 	TestCheck.expect(punch.last_score > 0, "punch-o-mètre : coup enregistré")
+	await _shot_from("3d_punch", punch.to_global(Vector3(1.3, 1.7, -2.3)), punch.to_global(Vector3(0.0, 1.2, 0.0)))
 
 	var hoops: GarageHoops = level.get_node("Minigames/GarageHoops")
 	hoops.get_node("ShootButton").pressed.emit(1)
+	await _wait(0.18)
+	hoops.get_node("ShootButton").pressed.emit(1)
 	await _wait(0.1)
-	TestCheck.expect(hoops.total_score >= 2, "ferraille-hoops : panier marqué")
+	TestCheck.expect(hoops.shots_taken >= 1, "ferraille-hoops : tir décoché")
+	await _shot_from("3e_hoops", hoops.to_global(Vector3(-1.5, 1.8, -3.2)), hoops.to_global(Vector3(0.0, 1.6, 0.0)))
 
 	var anvil: AnvilGame = level.get_node("Minigames/AnvilGame")
 	for _s: int in AnvilGame.STRIKES_PER_INGOT:

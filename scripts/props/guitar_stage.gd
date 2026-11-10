@@ -1,19 +1,20 @@
 class_name GuitarStage
 extends StaticBody3D
 ## Scène « Rock Garage » : mini-jeu de guitare électrique en QTE (roadmap 4.4).
-## Un nain appuie sur le bouton de départ (ou sur la guitare) pour lancer un solo de 10 accords :
-## l'écran de scène affiche la note attendue (▲ ▼ ◄ ►) et la pédale correspondante s'allume.
-## Le guitariste peut appuyer sur les 4 pédales fléchées devant le retour de scène (ou utiliser ses
-## touches de direction s'il est le soliste en cours) avant la fin du temps de chaque mesure.
-## Chaque accord réussi joue un power-chord de guitare saturée sur les amplis à lampes, fait jaillir
-## des étincelles et monte le combo ainsi que le record du garage.
+## Un nain appuie sur le bouton vert pour lancer un solo de 10 accords endiablés :
+## - Les notes s'accélèrent au fur et à mesure du morceau !
+## - Jouable en solo ou en DUO coop : un allié peut écraser les pédales sur scène pour sauver le solo (bonus Duo !).
+## - Les fausses notes font chauffer et fumer les amplis à lampes.
+## - À 3 erreurs : L'AMPLI EXPLOSE dans un grand fracas et catapulte les rockers hors de la scène !
+## - Si le solo arrive au bout : feu d'artifice d'étincelles et titre de « LÉGENDE DU ROCK ».
 ##
-## Réseau : l'hôte est seul autoritaire sur `playing`, `rocker_peer`, `rocker_name`, `step_index`,
-## `current_arrow`, `score`, `combo`, `best_score` et `best_name` (répliqués par MultiplayerSynchronizer).
-## Les accords joués déclenchent un RPC `authority, call_local` pour le son de guitare et les étincelles.
+## Réseau : l'hôte est autoritaire sur la progression, le score, les fautes et le statut.
+## Les accords, la fumée, les sons rock et l'explosion passent par RPC `authority, call_local` et `Dwarf.knock_peer`.
 
 const SONG_STEPS: int = 10
-const NOTE_TIME: float = 2.6
+const NOTE_TIME_START: float = 2.4
+const NOTE_TIME_END: float = 1.15
+const MAX_MISTAKES: int = 3
 const SCREEN_SIZE: Vector2i = Vector2i(480, 320)
 const SAMPLE_RATE: float = 22050.0
 const FONT: FontVariation = preload("res://assets/fonts/fredoka.tres")
@@ -25,7 +26,6 @@ const ARROW_COLORS: Array[Color] = [
 	Color(1.0, 0.78, 0.22),
 	Color(1.0, 0.38, 0.32),
 ]
-## Fréquences fondamentales (Hz) d'un riff rock pentatonique (Mi, Sol, La, Si, Ré, Mi aigu).
 const RIFF_FREQS: Array[float] = [164.81, 196.00, 220.00, 246.94, 293.66, 329.63, 293.66, 246.94, 220.00, 329.63]
 
 ## Vrai quand un solo de guitare est en cours. Autorité : hôte.
@@ -41,6 +41,7 @@ var current_arrow: int = 0
 var note_timer: float = 0.0
 var score: int = 0
 var combo: int = 0
+var mistakes: int = 0
 var best_score: int = 0
 var best_name: String = ""
 
@@ -83,10 +84,14 @@ func _physics_process(delta: float) -> void:
 		return
 	note_timer -= delta
 	if note_timer <= 0.0:
-		# Note manquée : combo remis à zéro, on passe à la mesure suivante.
+		# Temps écoulé pour cette note : faute !
 		combo = 0
-		_play_chord_fx.rpc(92.5, false)
-		_advance_note()
+		mistakes += 1
+		_play_mistake_fx.rpc(mistakes)
+		if mistakes >= MAX_MISTAKES:
+			_explode_amp()
+		else:
+			_advance_note()
 
 
 func _process(delta: float) -> void:
@@ -106,9 +111,9 @@ func _process(delta: float) -> void:
 
 	# La guitare flotte et vibre au centre de la scène pendant un solo, sinon elle repose sur son stand.
 	if playing:
-		var t: float = float(Time.get_ticks_msec()) * 0.006
-		_guitar_prop.position = Vector3(0.0, 0.82 + sin(t * 2.0) * 0.05, 0.05)
-		_guitar_prop.rotation = Vector3(0.15, sin(t) * 0.35, -0.35 + sin(t * 3.0) * 0.08)
+		var t: float = float(Time.get_ticks_msec()) * 0.008
+		_guitar_prop.position = Vector3(0.0, 0.82 + sin(t * 2.0) * 0.06, 0.05)
+		_guitar_prop.rotation = Vector3(0.15, sin(t) * 0.45, -0.35 + sin(t * 3.0) * 0.12)
 	else:
 		_guitar_prop.position = Vector3(0.55, 0.58, 0.35)
 		_guitar_prop.rotation = Vector3(-0.2, 0.4, -0.18)
@@ -117,7 +122,7 @@ func _process(delta: float) -> void:
 
 
 func _stage_pulse(_delta: float) -> void:
-	_stage_light.light_energy = 3.2
+	_stage_light.light_energy = 3.6
 	_stage_light.light_color = ARROW_COLORS[clampi(current_arrow, 0, ARROW_COLORS.size() - 1)]
 
 
@@ -132,33 +137,75 @@ func _on_start_pressed(peer_id: int) -> void:
 	rocker_name = Dwarf.name_of_peer(peer_id)
 	score = 0
 	combo = 0
+	mistakes = 0
 	step_index = 0
 	current_arrow = (peer_id + step_index) % 4
-	note_timer = NOTE_TIME
+	note_timer = _current_note_duration()
 	_play_chord_fx.rpc(RIFF_FREQS[0], true)
 
 
-func _on_pad_pressed(_peer_id: int, arrow_idx: int) -> void:
+func _on_pad_pressed(peer_id: int, arrow_idx: int) -> void:
 	if not multiplayer.is_server() or not playing:
 		return
 	if arrow_idx == current_arrow:
 		combo += 1
-		score += 100 + combo * 25
+		var is_duo: bool = peer_id != rocker_peer and peer_id != 0
+		var bonus: int = 150 if is_duo else 0
+		score += 100 + combo * 30 + bonus
 		var freq: float = RIFF_FREQS[posmod(step_index, RIFF_FREQS.size())]
 		_play_chord_fx.rpc(freq, true)
+		if is_duo:
+			var helper: String = Dwarf.name_of_peer(peer_id)
+			_play_duo_fx.rpc(helper)
 		_advance_note()
 	else:
 		combo = 0
-		_play_chord_fx.rpc(98.0, false)
+		mistakes += 1
+		_play_mistake_fx.rpc(mistakes)
+		if mistakes >= MAX_MISTAKES:
+			_explode_amp()
 
 
 func _advance_note() -> void:
 	step_index += 1
 	if step_index >= SONG_STEPS:
-		_stop_song(true)
+		_win_song()
 		return
 	current_arrow = posmod(current_arrow + 1 + (step_index % 2), 4)
-	note_timer = NOTE_TIME
+	note_timer = _current_note_duration()
+
+
+func _current_note_duration() -> float:
+	var progress: float = float(step_index) / float(SONG_STEPS - 1)
+	return lerpf(NOTE_TIME_START, NOTE_TIME_END, progress)
+
+
+func _win_song() -> void:
+	if score > best_score:
+		best_score = score
+		best_name = rocker_name
+	_play_win_fx.rpc()
+	playing = false
+	note_timer = 0.0
+
+
+func _explode_amp() -> void:
+	playing = false
+	note_timer = 0.0
+	_play_explosion_fx.rpc()
+
+	# Expulse tous les nains qui traînent sur l'estrade !
+	var stage_center: Vector3 = global_position
+	for node: Node in get_tree().get_nodes_in_group(&"dwarves"):
+		var dwarf: Dwarf = node as Dwarf
+		if dwarf == null:
+			continue
+		var dist: float = dwarf.global_position.distance_to(stage_center)
+		if dist <= 3.4:
+			var away: Vector3 = (dwarf.global_position - stage_center)
+			away.y = 0.0
+			var push_dir: Vector3 = away.normalized() if away.length() > 0.1 else -global_basis.z
+			Dwarf.knock_peer(dwarf.peer_id, push_dir * 3.5 + Vector3.UP * 3.0)
 
 
 func _stop_song(record_score: bool) -> void:
@@ -172,9 +219,46 @@ func _stop_song(record_score: bool) -> void:
 @rpc("authority", "call_local", "reliable")
 func _play_chord_fx(freq: float, hit: bool) -> void:
 	_chord_freq = freq
-	_chord_time = 0.38 if hit else 0.22
+	_chord_time = 0.42 if hit else 0.22
 	if hit:
 		_spark_timer = 0.35
+
+
+@rpc("authority", "call_local", "reliable")
+func _play_duo_fx(helper_name: String) -> void:
+	SfxSynth.play(self, &"fanfare", Vector3(0.0, 1.8, 0.0), -2.0, 1.2)
+	PopText.spawn(self, Vector3(0.0, 2.2, -0.6), "%s : %s !" % [tr("DUO ROCK"), helper_name], Color(0.3, 1.0, 0.6), 1.3)
+	FxBurst.spawn(self, Vector3(0.0, 1.5, -0.6), [Color(0.2, 0.9, 0.5), Color.WHITE], 20, 3.5)
+
+
+@rpc("authority", "call_local", "reliable")
+func _play_mistake_fx(cur_mistakes: int) -> void:
+	_chord_freq = 92.5
+	_chord_time = 0.28
+	SfxSynth.play(self, &"buzzer", Vector3(0.0, 1.2, 0.5), 1.0, 1.3)
+	var warn_color: Color = Color(1.0, 0.6, 0.2) if cur_mistakes == 1 else Color(1.0, 0.25, 0.15)
+	var txt: String = "%s (%d/%d)" % [tr("FAUSSE NOTE !"), cur_mistakes, MAX_MISTAKES]
+	PopText.spawn(self, Vector3(0.0, 2.1, -0.6), txt, warn_color, 1.2)
+	# Fumée qui commence à s'échapper des baffles
+	FxBurst.spawn(self, Vector3(-1.05, 1.2, 0.55), [Color(0.2, 0.2, 0.2), Color(0.4, 0.4, 0.4)], 10, 1.5, 0.12, 0.5, 1.5)
+	FxBurst.spawn(self, Vector3(1.05, 1.2, 0.55), [Color(0.2, 0.2, 0.2), Color(0.4, 0.4, 0.4)], 10, 1.5, 0.12, 0.5, 1.5)
+
+
+@rpc("authority", "call_local", "reliable")
+func _play_explosion_fx() -> void:
+	SfxSynth.play(self, &"boom", Vector3(0.0, 1.2, 0.55), 4.0)
+	_stage_light.light_energy = 8.0
+	_stage_light.light_color = Color(1.0, 0.3, 0.1)
+	PopText.spawn(self, Vector3(0.0, 2.5, 0.0), tr("AMPLI EXPLOSÉ !"), Color(1.0, 0.15, 0.1), 1.8)
+	FxBurst.spawn(self, Vector3(-1.05, 1.2, 0.55), [Color(1.0, 0.4, 0.1), Color(0.2, 0.2, 0.2), Color.WHITE], 32, 5.0)
+	FxBurst.spawn(self, Vector3(1.05, 1.2, 0.55), [Color(1.0, 0.4, 0.1), Color(0.2, 0.2, 0.2), Color.WHITE], 32, 5.0)
+
+
+@rpc("authority", "call_local", "reliable")
+func _play_win_fx() -> void:
+	SfxSynth.play(self, &"fanfare", Vector3(0.0, 2.0, 0.0), 3.0)
+	PopText.spawn(self, Vector3(0.0, 2.8, -0.4), tr("LÉGENDE DU ROCK !"), Color(1.0, 0.85, 0.2), 1.8)
+	FxBurst.spawn(self, Vector3(0.0, 2.2, 0.0), [Color(1.0, 0.85, 0.2), Color(1.0, 0.4, 0.1), Color.WHITE], 40, 5.5)
 
 
 func _setup_audio() -> void:
@@ -197,10 +281,9 @@ func _fill_audio(delta: float) -> void:
 			_playback.push_frame(Vector2.ZERO)
 			continue
 		_chord_phase += _chord_freq / SAMPLE_RATE
-		# Accord de quinte (fondamentale + quinte 1.5x + octave 2x) avec légère saturation rock.
 		var raw: float = sin(_chord_phase * TAU) * 0.55 + sin(_chord_phase * 1.5 * TAU) * 0.35 + sin(_chord_phase * 2.0 * TAU) * 0.20
-		var env: float = clampf(_chord_time / 0.38, 0.0, 1.0)
-		var sample: float = tanh(raw * 2.6) * 0.22 * env
+		var env: float = clampf(_chord_time / 0.42, 0.0, 1.0)
+		var sample: float = tanh(raw * 2.8) * 0.25 * env
 		_playback.push_frame(Vector2(sample, sample))
 
 
@@ -239,7 +322,8 @@ func _update_screen() -> void:
 		_title_lbl.text = "%s — %d / %d" % [rocker_name if rocker_name != "" else tr("SOLO"), step_index + 1, SONG_STEPS]
 		_arrow_lbl.text = ARROW_GLYPHS[idx]
 		_arrow_lbl.modulate = ARROW_COLORS[idx]
-		_info_lbl.text = "%s : %d   (x%d)" % [tr("Score"), score, maxi(combo, 1)]
+		var f_str: String = "🔥" if mistakes == 2 else ("⚠️" if mistakes == 1 else "")
+		_info_lbl.text = "%s : %d   (x%d) %s" % [tr("Score"), score, maxi(combo, 1), f_str]
 	else:
 		_title_lbl.text = tr("SCÈNE GUITARE QTE")
 		_arrow_lbl.text = "◄ ▲ ▼ ►"

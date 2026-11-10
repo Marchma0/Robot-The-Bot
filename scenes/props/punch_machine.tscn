@@ -46,14 +46,15 @@ shape = SubResource("BoxShape3D_base")
 
 [node name="GaugeCursor" type="MeshInstance3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0.17)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28, 0)
 mesh = SubResource("BoxMesh_cursor")
 
 [node name="HitButton" parent="." instance=ExtResource("3_button")]
 unique_name_in_owner = true
-transform = Transform3D(1.8, 0, 0, 0, 0, 1.8, 0, -1.8, 0, 0, 0.95, -0.45)
-display_name = "Punch-O-Mètre — frapper"
-cap_color = Color(0.9, 0.2, 0.15, 1)
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 1.46, -0.27)
+display_name = "Punch-O-Mètre — frapper le sac"
+reach = 3.5
+cap_color = Color(0.62, 0.14, 0.08, 1)
 show_debug = false
 
 [node name="BellLight" type="OmniLight3D" parent="."]

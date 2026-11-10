@@ -528,6 +528,33 @@ func receive_dart() -> void:
 	_hud.hurt_overlay.flash()
 
 
+## Envoyé par l'hôte quand un mini-jeu du garage envoie ce nain valser (gant du Punch-O-Mètre, ballon qui rebondit,
+## ampli qui explose) : petit vol plané à la vitesse `push` (repère du monde), animation "hit" et flash rouge.
+## Assis, à la corde, un levier en main ou dans la pince : seulement le flash et l'animation.
+@rpc("any_peer", "call_local", "reliable")
+func receive_knock(push: Vector3) -> void:
+	if multiplayer.get_remote_sender_id() != 1 or not is_multiplayer_authority():
+		return
+	anim_hit_count += 1
+	_hud.hurt_overlay.flash()
+	if _interactor.get_seat() != null or _interactor.get_rope() != null or _interactor.is_holding() \
+			or GrabberArm.holding(get_tree(), peer_id) != null:
+		return
+	_ride_body = null
+	_ride_history.clear()
+	_ride_velocity = Vector3.ZERO
+	_flung = _was_outside   # dehors, l'élan est gardé jusqu'à l'atterrissage (voir _update_ride)
+	_just_flung = true
+	velocity = push
+
+
+## Hôte : envoie valser le nain du joueur `id` (voir `receive_knock`). Rien si ce joueur n'a pas de nain.
+static func knock_peer(id: int, push: Vector3) -> void:
+	var dwarf: Dwarf = of_peer(id)
+	if dwarf != null:
+		dwarf.receive_knock.rpc_id(id, push)
+
+
 ## Os de la tête (suit les animations) : une fléchette qui touche ce nain s'y plante.
 func get_head_attach() -> Node3D:
 	return get_node("BodyModel/DwarfRig/Skeleton3D/HeadBone") as Node3D

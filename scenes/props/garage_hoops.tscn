@@ -41,6 +41,21 @@ properties/4/replication_mode = 2
 properties/5/path = NodePath(".:last_points")
 properties/5/spawn = true
 properties/5/replication_mode = 2
+properties/6/path = NodePath(".:charging")
+properties/6/spawn = true
+properties/6/replication_mode = 2
+properties/7/path = NodePath(".:session_timer")
+properties/7/spawn = true
+properties/7/replication_mode = 2
+properties/8/path = NodePath(".:session_score")
+properties/8/spawn = true
+properties/8/replication_mode = 2
+properties/9/path = NodePath(".:best_session_score")
+properties/9/spawn = true
+properties/9/replication_mode = 2
+properties/10/path = NodePath(".:best_session_name")
+properties/10/spawn = true
+properties/10/replication_mode = 2
 
 [node name="GarageHoops" type="StaticBody3D"]
 script = ExtResource("1_script")

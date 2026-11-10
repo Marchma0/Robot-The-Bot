@@ -42,12 +42,17 @@
   (6 couleurs d'atelier). Le portrait animé de la bulle d'état reflète aussi la tenue choisie.
 - **Mini-jeux jouables dans le garage** :
   - **Scène Guitare QTE (`GuitarStage`)** : estrade rock avec amplis à lampes, guitare électrique et retour de scène ;
-    un solo de 10 accords en QTE sur les 4 pédales fléchées devant l'écran joue de vrais power-chords saturés avec
-    étincelles, combo et record.
-  - **Punch-O-Mètre (`PunchMachine`)** : borne de coup de poing à réflexe (1er clic = lance la jauge rapide, 2e clic
-    au sommet = frappe le sac, score 0–999 et cloche lumineuse au-dessus de 800).
-  - **Ferraille-Hoops (`GarageHoops`)** : panier de basket d'atelier avec tirs en cloche (2 pts de près, 3 pts de loin,
-    compteur de série).
+    un solo de 10 accords où le tempo accélère progressivement ; jouable en solo ou en duo coop (un allié peut écraser
+    les pédales pour sauver le solo : « DUO ROCK ! »). Les fausses notes font fumer l'ampli, et à 3 fautes l'ampli explose
+    dans un grand flash avec expulsion de tous les nains sur scène ! Solo réussi = « LÉGENDE DU ROCK » et feux d'artifice.
+  - **Punch-O-Mètre (`PunchMachine`)** : borne de coup de poing à réflexe (1er clic = arme la jauge rapide qui accélère,
+    2e clic = frappe le sac). Score 0–999 avec popups cartoonesques (« Bisou… », « Chatouille ! », « Costaud ! », « BRUTAL ! »).
+    À >= 900 (« MONSTRUEUX ! »), le sac fait un tour complet, la cloche sonne et l'onde de choc souffle les nains proches !
+    Si le coup est trop mou (< 350) ou si le nain est trop lent, un gant de boxe à ressort jaillit et le repousse en arrière !
+  - **Ferraille-Hoops (`GarageHoops`)** : panier de basket d'atelier avec dosage du tir (1er clic = jauge, 2e clic = shoot)
+    et mode « 30s Chrono » automatique. Timing parfait = « SWISH ! », panier direct (2 ou 3 pts) avec confettis et ding.
+    Timing raté (trop fort ou trop mou) = « CLANG ! », le ballon en ferraille rebondit violemment sur l'arceau et part percuter
+    un nain dans la zone (« BONK ! » avec petit recul comique).
   - **Forge Naine (`AnvilGame`)** : enclume rythmique près du foyer de la forge où 3 coups de marteau au pic de chaleur
     forgent un lingot incandescent avec gerbe d'étincelles.
   - **Bras de fer (`ArmWrestling`)** : duel à deux sur la machine à bras mécaniques.

@@ -146,6 +146,7 @@ func _run_host() -> void:
 	await _client_step("guitare QTE : solo arrêté (client)", "Level/Lobby/Minigames/GuitarStage/StartButton", "request_press")
 	await _client_step("punch-o-mètre : jauge armée (client)", "Level/Lobby/Minigames/PunchMachine/HitButton", "request_press")
 	await _client_step("punch-o-mètre : coup frappé (client)", "Level/Lobby/Minigames/PunchMachine/HitButton", "request_press")
+	await _client_step("ferraille-hoops : jauge armée (client)", "Level/Lobby/Minigames/GarageHoops/ShootButton", "request_press")
 	await _client_step("ferraille-hoops : ballon tiré (client)", "Level/Lobby/Minigames/GarageHoops/ShootButton", "request_press")
 	await _client_step("forge naine : lingot martelé (client)", "Level/Lobby/Minigames/AnvilGame/StrikeButton", "request_press")
 
