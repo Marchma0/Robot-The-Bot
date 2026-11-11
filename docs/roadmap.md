@@ -62,7 +62,7 @@
   - [ ] 4.7.1 La zone vide : sol, parois, plafond, place du robot, sortie du robot, points d'apparition ; terminal et bras de fer posés provisoirement ; rien d'autre
   - [ ] 4.7.2 Les deux postes de personnalisation et le poste des missions posés à leur place (4.5, 4.10)
   - [ ] 4.7.3 Remplissage, une zone à la fois (à définir avec le porteur du projet au fur et à mesure), dans la direction artistique
-- [ ] 4.8 **Départ et retour par la sortie du robot** : le robot quitte la base par sa sortie (forme à décider : grande porte, tunnel, monte-charge géant…), ce qui sert de transition pendant que l'hôte crée le niveau ; retour par le même chemin
+- [ ] 4.8 **Départ et retour par la sortie du robot** : le robot quitte la base par sa sortie (forme à décider : grande porte, tunnel…), ce qui sert de transition pendant que l'hôte crée le niveau ; retour par le même chemin
 - [ ] 4.9 La base grandit au fil des missions : trophées au mur, nouveaux outils, plaques des clients (lié à 4.3 pour la sauvegarde)
 - [ ] 4.10 **Poste des missions** (validé le 2026-11-11, remplace le terminal à deux flèches) : écran avec la carte d'une région en relief, un pion par mission (icône du type, ou cadenas), fiche de la région à gauche, fiche de la mission à droite (objectifs, récompenses, durée, difficulté) ; un clic sur un pion lance le compte à rebours ; choix tenu par l'hôte et vu par tous ; détail dans `docs/jeu.md` (lié à 5.3 et 5.4)
 
