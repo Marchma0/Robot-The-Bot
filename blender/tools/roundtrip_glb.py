@@ -28,7 +28,13 @@ def measure(objects, actions=()) -> dict:
     # L’import glTF ajoute une petite sphère pour dessiner les os : ce n’est pas le modèle.
     bone_shapes = {pb.custom_shape for o in objects if o.type == "ARMATURE" for pb in o.pose.bones if pb.custom_shape}
     meshes = [o for o in objects if o.type == "MESH" and o not in bone_shapes]
-    # Maillage final (modificateurs appliqués, comme à l’export).
+    # Maillage final (modificateurs appliqués, comme à l’export), squelettes en pose de repos (l’import glTF
+    # laisse le squelette dans la pose d’une animation).
+    rigs = [o.data for o in objects if o.type == "ARMATURE"]
+    saved_poses = [r.pose_position for r in rigs]
+    for rig in rigs:
+        rig.pose_position = "REST"
+    bpy.context.view_layer.update()
     depsgraph = bpy.context.evaluated_depsgraph_get()
     lo = Vector((math.inf,) * 3)
     hi = Vector((-math.inf,) * 3)
@@ -43,6 +49,8 @@ def measure(objects, actions=()) -> dict:
             lo = Vector(map(min, lo, p))
             hi = Vector(map(max, hi, p))
         evaluated.to_mesh_clear()
+    for rig, pose in zip(rigs, saved_poses):
+        rig.pose_position = pose
     return {
         "triangles": triangles,
         "size": list(hi - lo) if meshes else [0.0, 0.0, 0.0],
