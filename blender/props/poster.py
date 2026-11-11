@@ -54,7 +54,7 @@ def main():
     # coin corné en bas à droite
     b.box((HW - 0.07, f, -HH + 0.03), (HW - 0.03, f + 0.004, -HH + 0.07), "Cream")
     b.finish()
-    kit.save_and_export("poster", budget_tris=600)
+    kit.save_and_export("poster", budget_tris=600, ground=False)
 
 
 main()

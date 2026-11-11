@@ -354,24 +354,28 @@ def find_z_fighting(obj, min_area: float = 2e-6):
     return issues
 
 
-def save_and_export(name: str, budget_tris: int, folder: str = "props") -> None:
-    """Sauvegarde blender/<folder>/<name>.blend, exporte assets/models/<folder>/<name>.glb.
-    Refuse l'export si l'échelle n'est pas appliquée, si le budget est dépassé ou si des faces clignotent."""
-    objects = [o for o in bpy.data.objects if o.type == "MESH" and not o.hide_render]
-    tris = count_tris(objects)
-    for obj in objects:
-        if any(abs(s - 1.0) > 1e-4 for s in obj.scale):
-            raise RuntimeError("%s : échelle non appliquée (%s)" % (obj.name, tuple(obj.scale)))
-    if tris > budget_tris:
-        raise RuntimeError("%s : %d triangles, budget %d dépassé" % (name, tris, budget_tris))
-    issues = [i for obj in objects for i in find_z_fighting(obj)]
-    if issues:
-        for ma, mb, at, area, *_rest in issues[:20]:
-            print("prop_kit : faces superposées %s / %s vers %s (%.1f cm²)" % (ma, mb, at, area * 1e4))
-        raise RuntimeError("%s : %d paires de faces superposées (z-fighting), décaler une des pièces de 1-2 mm"
-                           % (name, len(issues)))
+def save_and_export(name: str, budget_tris: int, folder: str = "props", ground: bool = True) -> None:
+    """Contrôle le modèle (check_asset : budget, transformations, au sol, géométrie, nommage, UV, faces superposées),
+    sauvegarde blender/<folder>/<name>.blend, exporte assets/models/<folder>/<name>.glb, puis vérifie le .glb en le
+    réimportant dans un Blender vide (roundtrip_glb). Un contrôle raté arrête tout, avant d'écrire quoi que ce soit.
+    `ground` : faux pour un objet qui n'est pas posé au sol (accroché au mur, au plafond, pièce d'un mécanisme).
+    Variable d'environnement ROBOT_CHECK_ONLY=1 : contrôle seulement, rien n'est écrit."""
+    import check_asset
+    import roundtrip_glb
+    objects = [o for o in bpy.data.objects if o.type in {"MESH", "ARMATURE"} and not o.hide_render]
+    report = check_asset.check(objects, name, budget_tris, ground)
+    if report.failed:
+        raise RuntimeError("%s : %d contrôle(s) raté(s), export annulé (détail ci-dessus)" % (name, report.failed))
+    if os.environ.get("ROBOT_CHECK_ONLY"):
+        print("prop_kit : %s contrôlé, rien n'est écrit (ROBOT_CHECK_ONLY)" % name)
+        return
+    expected = roundtrip_glb.expected_from_scene(objects)
     blend = os.path.join(ROOT, "blender", folder, name + ".blend")
     os.makedirs(os.path.dirname(blend), exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=blend)
-    export_glb(os.path.join(ROOT, "assets", "models", folder, name + ".glb"))
+    glb = os.path.join(ROOT, "assets", "models", folder, name + ".glb")
+    export_glb(glb)
+    if not roundtrip_glb.check_export(glb, expected):
+        raise RuntimeError("%s : le .glb réimporté ne correspond pas au modèle (détail ci-dessus)" % name)
+    tris = count_tris(objects)
     print("prop_kit : %s OK — %d triangles (budget %d)" % (name, tris, budget_tris))

@@ -46,7 +46,7 @@ def main():
         # fanion : triangle pointe en bas, 2 mm d'épaisseur, suspendu juste sous la ficelle
         b.frustum((x, Y), z - 0.18, z - 0.004, (0.002, 0.001), (0.07, 0.001), COLORS[i % len(COLORS)])
     b.finish()
-    kit.save_and_export("bunting", budget_tris=1000)
+    kit.save_and_export("bunting", budget_tris=1000, ground=False)
 
 
 main()

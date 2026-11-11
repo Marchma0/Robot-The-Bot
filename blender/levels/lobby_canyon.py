@@ -140,7 +140,7 @@ def main():
             col_box("Wall%s%d" % (tag, int(y + 40)), (x0, y, 0.0), (x0 + side * 8.0, y + 8.0, 20.0))
         y += 8.0
     col_box("WallBack", (-FLOOR_X, FLOOR_Y0 - 4.0, 0.0), (FLOOR_X, -25.0, 20.0))
-    kit.save_and_export("lobby_canyon", budget_tris=9000, folder="levels")
+    kit.save_and_export("lobby_canyon", budget_tris=9000, folder="levels", ground=False)
 
 
 main()

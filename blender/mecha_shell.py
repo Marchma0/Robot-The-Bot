@@ -623,8 +623,19 @@ def main():
     for obj in [o for o in bpy.data.objects if o.name.startswith("Shell_")]:
         for ma, mb, at, area, *_rest in kit.find_z_fighting(obj):
             print("mecha_shell : ATTENTION faces superposées %s / %s vers %s" % (ma, mb, at))
+    # Contrôles avant export (check_asset ; les faces superposées sont déjà traitées plus haut), puis aller-retour.
+    import check_asset
+    import roundtrip_glb
+    objects = [o for o in bpy.data.objects if o.type in {"MESH", "ARMATURE"} and not o.hide_render]
+    report = check_asset.check(objects, "mecha", ground=False, z_fighting=False)
+    if report.failed:
+        raise RuntimeError("mecha_shell : %d contrôle(s) raté(s), export annulé" % report.failed)
+    expected = roundtrip_glb.expected_from_scene(objects)
     bpy.ops.wm.save_mainfile()
-    kit.export_glb(os.path.join(kit.ROOT, "assets", "models", "mecha.glb"))
+    glb = os.path.join(kit.ROOT, "assets", "models", "mecha.glb")
+    kit.export_glb(glb)
+    if not roundtrip_glb.check_export(glb, expected):
+        raise RuntimeError("mecha_shell : le .glb réimporté ne correspond pas au modèle")
     print("mecha_shell : mecha.blend sauvegardé, mecha.glb exporté")
 
 

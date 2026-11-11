@@ -143,7 +143,7 @@ def main():
         b.cylinder((hx - 0.15, hinge_y, H), (hx + 0.15, hinge_y, H), 0.052, "IronDark", segments=10)
 
     b.finish()
-    kit.save_and_export("backpack", budget_tris=2500)
+    kit.save_and_export("backpack", budget_tris=2500, ground=False)
 
 
 main()

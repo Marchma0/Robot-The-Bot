@@ -44,7 +44,7 @@ def main():
     # boulon central qui serre les deux poings
     b.cylinder((0.0, -0.07, FIST_Z), (0.0, 0.07, FIST_Z), 0.022, "Copper", segments=8)
     b.finish()
-    kit.save_and_export("armwrestle_arms", budget_tris=700)
+    kit.save_and_export("armwrestle_arms", budget_tris=700, ground=False)
 
 
 main()

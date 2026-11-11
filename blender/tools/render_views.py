@@ -17,6 +17,7 @@ Utilisation
      --out CHEMIN        fichier PNG de sortie (défaut : build/views/<nom du .blend>.png)
      --target NOMS       objets ou collections à montrer, séparés par des virgules (défaut : tout ce qui est visible)
      --size PIXELS       taille d'une vue (défaut : 512)
+     --ref               repères d'échelle à côté du modèle : un nain (1,2 m) et une porte (2 m de haut)
 
 2) Depuis le MCP Blender (Blender ouvert) :
      exec(open(r"<projet>/blender/tools/render_views.py", encoding="utf-8").read(), {"__name__": "render_views"})
@@ -31,7 +32,7 @@ import tempfile
 
 import bpy
 import numpy as np
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 # (nom, direction depuis le centre vers la caméra)
 # Convention du projet : l'AVANT d'un modèle regarde vers +Y dans Blender (= -Z, l'avant, dans Godot après export glTF).
@@ -51,12 +52,20 @@ BACKGROUND = (0.16, 0.17, 0.19)
 GRID_COLOR = (0.32, 0.34, 0.38)
 
 
-def render_views(out: str = "", target=None, size: int = 512) -> str:
+REF_COLOR = (0.45, 0.62, 0.85)
+DWARF_HEIGHT = 1.2   # m (capsule de collision du nain)
+DOOR_SIZE = (0.9, 2.0)
+
+
+def render_views(out: str = "", target=None, size: int = 512, ref: bool = False) -> str:
     scene = bpy.context.scene
     objects = _collect_targets(target)
     if not objects:
         raise RuntimeError("render_views : aucun objet visible à montrer")
 
+    model_lo, model_hi = _world_bounds(objects)
+    references = _add_references(model_lo, model_hi) if ref else []
+    objects = objects + references
     lo, hi = _world_bounds(objects)
     center = (lo + hi) / 2
     dims = hi - lo
@@ -70,7 +79,7 @@ def render_views(out: str = "", target=None, size: int = 512) -> str:
     os.makedirs(os.path.dirname(out), exist_ok=True)
 
     saved = _save_settings(scene, objects)
-    created = []
+    created = list(references)
     tmp_dir = tempfile.mkdtemp(prefix="render_views_")
     tiles = []
     try:
@@ -111,8 +120,12 @@ def render_views(out: str = "", target=None, size: int = 512) -> str:
     print(
         "render_views : %s\n  vues : %s\n  dimensions (m) : largeur X %.2f, profondeur Y %.2f, hauteur Z %.2f\n"
         "  grille au sol : 1 case = 1 m, toutes les vues à la même échelle"
-        % (out, " | ".join(n for n, _ in VIEWS), dims.x, dims.y, dims.z)
+        % (out, " | ".join(n for n, _ in VIEWS), *(model_hi - model_lo))
     )
+    if ref:
+        height = (model_hi - model_lo).z
+        print("  repères (en bleu, à droite du modèle) : un nain de %.1f m, une porte de %.1f m ; "
+              "le modèle fait %.2f fois la hauteur d'un nain" % (DWARF_HEIGHT, DOOR_SIZE[1], height / DWARF_HEIGHT))
     return out
 
 
@@ -195,6 +208,46 @@ def _setup_render(scene, size, objects):
         obj.hide_render = obj.name not in names
 
 
+def _add_references(lo, hi):
+    """Silhouette d'un nain (1,2 m) et cadre de porte (0,9 x 2 m), posés au sol à droite du modèle (+X)."""
+    import bmesh
+
+    mat = bpy.data.materials.get("_rv_ref_mat") or bpy.data.materials.new("_rv_ref_mat")
+    mat.diffuse_color = (*REF_COLOR, 1.0)
+    x = hi.x + 0.6
+    y = (lo.y + hi.y) / 2
+    z = lo.z
+    pieces = {
+        "_rv_ref_nain": [
+            ("sphere", (x, y, z + 0.32), (0.22, 0.2, 0.32)),        # jambes et ventre
+            ("sphere", (x, y, z + 0.62), (0.3, 0.24, 0.24)),        # torse
+            ("sphere", (x, y, z + 0.98), (0.2, 0.2, 0.22)),         # tête (haut à 1,2 m)
+        ],
+        "_rv_ref_porte": [
+            ("box", (x + 0.8, y, z + DOOR_SIZE[1] / 2), (0.06, 0.1, DOOR_SIZE[1])),
+            ("box", (x + 0.8 + DOOR_SIZE[0], y, z + DOOR_SIZE[1] / 2), (0.06, 0.1, DOOR_SIZE[1])),
+            ("box", (x + 0.8 + DOOR_SIZE[0] / 2, y, z + DOOR_SIZE[1] - 0.03), (DOOR_SIZE[0] + 0.06, 0.1, 0.06)),
+        ],
+    }
+    created = []
+    for name, parts in pieces.items():
+        bm = bmesh.new()
+        for kind, center, dims in parts:
+            matrix = Matrix.Translation(center) @ Matrix.Diagonal((*dims, 1.0))
+            if kind == "box":
+                bmesh.ops.create_cube(bm, size=1.0, matrix=matrix)
+            else:
+                bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=8, radius=1.0, matrix=matrix)
+        mesh = bpy.data.meshes.new(name)
+        bm.to_mesh(mesh)
+        bm.free()
+        mesh.materials.append(mat)
+        obj = bpy.data.objects.new(name, mesh)
+        bpy.context.scene.collection.objects.link(obj)
+        created.append(obj)
+    return created
+
+
 def _add_ground_grid(z, center, radius):
     """Grille de 1 m posée sous le modèle (visible en vues de côté comme une ligne de sol)."""
     import bmesh
@@ -260,11 +313,14 @@ def _project_root():
 
 def _parse_args(argv):
     args = argv[argv.index("--") + 1:] if "--" in argv else []
-    opts = {"out": "", "target": None, "size": 512}
+    opts = {"out": "", "target": None, "size": 512, "ref": False}
     i = 0
     while i < len(args):
         key = args[i].lstrip("-")
-        if key in opts and i + 1 < len(args):
+        if key == "ref":
+            opts["ref"] = True
+            i += 1
+        elif key in opts and i + 1 < len(args):
             opts[key] = int(args[i + 1]) if key == "size" else args[i + 1]
             i += 2
         else:

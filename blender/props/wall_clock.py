@@ -49,7 +49,7 @@ def main():
     b.sphere((0, 0.02, 0.255), 0.012, "Copper", 6)
     b.box((0.03, 0.015, 0.2), (0.06, 0.025, 0.21), "IronDark")
     b.finish()
-    kit.save_and_export("wall_clock", budget_tris=900)
+    kit.save_and_export("wall_clock", budget_tris=900, ground=False)
 
 
 main()

@@ -54,7 +54,7 @@ def main():
     b.rivet_row((-0.32, 0.78, -0.34), (0.32, 0.78, -0.34), (0, 1, 0), spacing=0.16, size=0.026, mat_name="IronDark")
 
     b.finish()
-    kit.save_and_export("drill_slider", budget_tris=1000)
+    kit.save_and_export("drill_slider", budget_tris=1000, ground=False)
 
 
 main()

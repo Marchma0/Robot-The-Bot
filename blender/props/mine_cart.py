@@ -51,7 +51,7 @@ def main():
         x, y = rng.uniform(-0.2, 0.2), rng.uniform(-0.3, 0.3)
         b.rock((x, y, 1.0), (0.09, 0.09, 0.08), "Yellow", jitter=0.25, rng=rng, flat_bottom=False)
     b.finish()
-    kit.save_and_export("mine_cart", budget_tris=900)
+    kit.save_and_export("mine_cart", budget_tris=900, ground=False)
 
 
 main()

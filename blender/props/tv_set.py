@@ -61,7 +61,7 @@ def main():
     b.sphere((-0.2, 0.105, HH + 0.24), 0.012, "Copper", 6)
     b.sphere((0.17, 0.105, HH + 0.26), 0.012, "Copper", 6)
     b.finish()
-    kit.save_and_export("tv_set", budget_tris=1600)
+    kit.save_and_export("tv_set", budget_tris=1600, ground=False)
 
 
 main()

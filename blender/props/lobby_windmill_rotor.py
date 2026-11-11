@@ -45,7 +45,7 @@ def main():
         for p0, p1 in zip(pts, pts[1:]):
             b.cylinder(p0, p1, 0.02, "Iron", segments=4)
     b.finish()
-    kit.save_and_export("lobby_windmill_rotor", budget_tris=700)
+    kit.save_and_export("lobby_windmill_rotor", budget_tris=700, ground=False)
 
 
 main()

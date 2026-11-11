@@ -43,7 +43,7 @@ def main():
         p1 = (-math.cos(a) * 0.19, y + 0.006, -math.sin(a) * 0.19)
         b.cylinder(p0, p1, 0.002, "Copper", 4)
     b.finish()
-    kit.save_and_export("dartboard_wall", budget_tris=1600)
+    kit.save_and_export("dartboard_wall", budget_tris=1600, ground=False)
 
 
 main()

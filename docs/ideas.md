@@ -7,18 +7,10 @@
 ## Phase 1 — Fondations
 
 ### Modéliser en 3D avec l'IA (proposé le 2026-11-06)
-La planche de vues (`blender/tools/render_views.py`) est faite. Le reste :
-- **Budget + recette par pièces** (inspiré de `ozanzeng/blender-LPM-skill`) : objet découpé en 4 à 12 pièces simples
-  (boîte, prisme, tour, extrusion, plaque) ; règles de style low poly écrites (ombrage plat, silhouette avant les détails,
-  base à z = 0) ; une seule texture « palette » par objet, sans normal map.
-- **Contrôles automatiques PASS / FAIL avant export** (inspiré de `majidmanzarpour/blender-game-skills`, MIT) : budget,
-  transforms appliqués, objet au sol, UV, faces cassées, sommets isolés, nommage (`-col`, os `leg_L_*`) ; réimport du
-  `.glb` dans une scène vide (nombre d'os, animations, hauteur à 1 % près). Scripts `blender/tools/check_asset.py`, `roundtrip_glb.py`.
-- **Références à l'échelle** : croquis face + profil posés comme plans dans le `.blend`, repères (capsule du nain,
-  hauteur de porte), comparaison de silhouette chiffrée.
-- **Génération IA puis retravail** (`generate_3d` / `search_assets` du MCP Blender) : bien pour décors et petits objets,
-  pas pour le robot ni les nains (rig précis). Toujours retopologie, UV, collisions, test dans Godot.
-- **Geometry Nodes** pour les objets répétés avec variantes (rochers, caisses, tuyaux, blocs minables), figés en maillage avant export.
+Planche de vues, contrôles PASS / FAIL, réimport du `.glb`, repères d'échelle et règles pour la génération IA et Geometry Nodes
+sont faits (voir `docs/modeles_3d.md`). Reste :
+- **Croquis de référence** : dessins de face et de profil posés comme plans dans le `.blend`, et comparaison chiffrée de la
+  silhouette du modèle avec eux.
 
 Sources : github.com/ozanzeng/blender-LPM-skill, github.com/majidmanzarpour/blender-game-skills,
 github.com/colinurbs/claude-modeling-skills, arxiv.org/abs/2403.01248 (SceneCraft), arxiv.org/abs/2508.08228 (LL3M), BlenderGym (CVPR 2025).

@@ -75,7 +75,7 @@ def main():
         b.cylinder((hx_pos - 0.105, 0.0, 0.0), (hx_pos + 0.105, 0.0, 0.0), 0.030, "Copper", segments=8)
 
     b.finish()
-    kit.save_and_export("backpack_lid", budget_tris=1000)
+    kit.save_and_export("backpack_lid", budget_tris=1000, ground=False)
 
 
 main()
