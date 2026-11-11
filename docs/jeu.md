@@ -7,40 +7,67 @@
 ## La boucle du jeu (vision du porteur du projet, 2026-11-08)
 
 0. **L'intro** (une seule fois, au tout début d'une nouvelle partie) : les nains viennent d'acheter un vieux robot
-   à la casse et doivent le ramener jusqu'à leur garage. C'est aussi le tutoriel (voir « L'intro et le tutoriel »).
-1. **Le camp de base** : un garage sous une montagne, qui sert de lobby. On y trouve des mini-jeux,
-   des marchands de **skins** (pour son nain et pour le robot) et un **marchand d'améliorations** pour les nains.
-2. **Lancer une mission** quand tout le monde est prêt, au terminal devant le robot, parmi les **10 missions** du jeu,
+   à la casse et doivent le ramener jusqu'à leur base. C'est aussi le tutoriel (voir « L'intro et le tutoriel »).
+1. **Le camp de base** : une base souterraine, qui sert de lobby. On y trouve des mini-jeux,
+   deux **postes de personnalisation** (son nain, le robot) et un **marchand d'améliorations** pour les nains.
+2. **Lancer une mission** quand tout le monde est prêt, au **poste des missions**, parmi les **10 missions** du jeu,
    reliées par une **histoire**.
 3. **La mission** : on part avec le robot dans l'**environnement propre à cette mission**.
    Chaque mission a sa propre idée de gameplay : **pas toujours la même boucle** (aller d'un point A à un point B
    est le socle, pas la règle). On réutilise les commandes du robot de façon nouvelle, ou on en ajoute.
 4. **Retour au camp** avec ce qu'on a gagné, puis mission suivante.
 
-## Le camp de base (lobby) : le garage sous la montagne (validé le 2026-11-09)
-- **Un garage creusé sous une montagne** : roche froide, lumière chaude des lampes et d'une **forge**, et une grande
-  ouverture sur l'extérieur pour garder un coin de ciel. Il **remplace le camp minier du canyon** actuel
-  (au soleil couchant) quand il est construit.
-- Le robot est garé sur un **pont élévateur**, sous une grue ; on monte à bord par une passerelle.
-- **Départ et retour de mission par un monte-charge géant** : le robot est descendu ou monté avec lui, ce qui
-  sert aussi de transition pendant que le niveau se crée.
-- **Mini-jeux de garage** : bras de fer sur l'établi, course de chariots de mécano (planches à roulettes),
-  lancer de nain dans un pneu, wagonnets sur les rails.
-- **Le garage grandit** au fil des missions : trophées accrochés au mur, nouveaux outils, plaques des clients satisfaits.
-- Aujourd'hui (en attendant le garage) : camp minier au fond d'un canyon, au soleil couchant ; les nains apparaissent dehors,
-  le robot est garé au centre.
-- **Terminal de mission** devant le robot : 2 flèches pour choisir la mission, un gros bouton vert pour lancer
-  un compte à rebours de 20 s ; la mission part quand tous les nains sont à bord.
-- **Mini-jeux** jouables : bras de fer (machine à bras mécaniques). Les fléchettes se jouent dans le robot (voir « Vie à bord »). Les wagonnets sont du décor pour l'instant.
-- **À venir** : marchand de skins des nains, marchand de skins du robot, marchand d'améliorations des nains,
-  d'autres mini-jeux.
+## Le camp de base (lobby) : la base souterraine (validé le 2026-11-11)
+- **Une base creusée sous terre**, qui remplace le camp minier du canyon (et précise le « garage sous la montagne » du
+  2026-11-09). Le robot y est garé ; c'est là qu'on revient entre deux missions.
+- **Une sortie pour le robot** : il quitte la base par là pour partir en mission et revient par le même chemin. Sa forme
+  (grande porte, tunnel, monte-charge géant…) est à décider ; le trajet sert de transition pendant que le niveau se crée.
+- **Construite étape par étape** : d'abord la zone vide (sol, parois, plafond, place du robot, sortie), puis les postes,
+  puis le reste, une zone à la fois, dans la direction artistique du jeu (voir « Principes qui valent partout »).
+- **Deux postes de personnalisation** (un pour son nain, un pour le robot) et **un poste des missions** (voir plus bas).
+- **Mini-jeux** : bras de fer (jouable) ; à venir : course de chariots, lancer de nain dans un pneu, wagonnets.
+  Les fléchettes se jouent dans le robot (voir « Vie à bord »).
+- **Marchand d'améliorations** des nains (à venir).
+- **La base grandit** au fil des missions : trophées accrochés au mur, nouveaux outils, plaques des clients satisfaits.
 - **Sauvegarde** : tout est gardé chez l'hôte (une partie = une sauvegarde de l'hôte) ; un ami qui revient dans
   la partie retrouve son nain et ses achats. L'économie (argent, prix) sera conçue plus tard.
+- **Aujourd'hui** (en attendant la base) : camp minier au fond d'un canyon, au soleil couchant ; les nains apparaissent
+  dehors, le robot est garé au centre ; **terminal de mission** devant le robot (2 flèches pour choisir la mission, un
+  gros bouton vert pour lancer un compte à rebours de 20 s ; la mission part quand tous les nains sont à bord).
+
+### Les postes de personnalisation (validé le 2026-11-11, à faire)
+Deux postes dans la base : un pour **son nain**, un pour **le robot**. Ils remplacent les « marchands de skins ».
+On s'y installe et un écran s'ouvre, dans les grandes lignes d'une image donnée par le porteur du projet :
+- **À gauche, le modèle en 3D** (son nain ou le robot) posé sur un **socle**, qu'on fait tourner, et qui montre **tout
+  de suite** la pièce survolée ; dessous, des flèches pour passer d'une tenue enregistrée à l'autre.
+- **Au milieu, une colonne d'icônes**, une par **emplacement** (nain : barbe, moustache, casque, lunettes, tenue,
+  couleurs… ; robot : peinture, décorations, bras…). L'emplacement choisi est surligné.
+- **À droite, la liste des pièces** de cet emplacement : pour chacune une **vignette**, un **nom**, une petite **phrase
+  drôle** et son **prix** ; une pièce pas encore débloquée montre un **cadenas** et ce qu'il faut pour l'avoir.
+  Un clic l'essaie, un autre l'achète ou l'équipe.
+- **En haut**, l'argent ; **en bas à droite**, un bouton pour fermer.
+- Notre propre habillage (direction artistique du jeu, police Fredoka) : on reprend l'organisation, pas le dessin.
+- Réseau : le choix de chacun est tenu par l'hôte, vu par tous et sauvegardé.
+
+### Le poste des missions (validé le 2026-11-11, à faire)
+Il remplace le terminal à deux flèches. On s'y installe et un écran s'ouvre, dans les grandes lignes d'une image donnée
+par le porteur du projet :
+- **Au centre, la carte d'une région**, dessinée comme un **plateau découpé en relief** (contour clair, léger volume) sur
+  un fond quadrillé.
+- **Un pion par mission** posé sur la carte : l'**icône du type de mission** quand elle est jouable, un **cadenas** sinon ;
+  la prochaine mission de l'histoire est marquée.
+- **À gauche, la fiche de la région** : une image, son nom, ce qu'on y trouve (ressources abondantes ou rares) et un petit
+  texte d'ambiance.
+- **À droite, la fiche de la mission choisie** : son nom, ses **objectifs** (principal et secondaire), ses **récompenses**,
+  sa **durée** et sa **difficulté** en petites icônes.
+- **Lancer** : un clic sur un pion ouvre un petit menu (lancer la mission) ; un compte à rebours part et la mission démarre
+  quand **tous les nains sont à bord**, comme aujourd'hui.
+- Réseau : le pion choisi et le compte à rebours sont tenus par l'hôte et vus par tous.
 
 ## L'intro et le tutoriel (validé le 2026-11-09)
 - **Point de départ de l'histoire** : les nains achètent un vieux robot à la casse. La première fois qu'on apparaît
-  dans une nouvelle partie, on est à la casse, et la première mission est de **ramener le robot jusqu'au garage**.
-  Pas de cinématique longue : on joue tout de suite. Une fois au garage, on est dans le lobby normal.
+  dans une nouvelle partie, on est à la casse, et la première mission est de **ramener le robot jusqu'à la base**.
+  Pas de cinématique longue : on joue tout de suite. Une fois à la base, on est dans le lobby normal.
 - **On apprend une mécanique à la fois, en la faisant** : des choses à faire pour entrer dans le robot, le démarrer,
   marcher, utiliser la foreuse et le grappin, se relever après une chute… L'ordre exact se règle en construisant la mission.
 - **Un personnage parle par un poste radio** posé dans le cockpit : une **voix en charabia** (pas de vrai doublage)

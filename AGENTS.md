@@ -7,7 +7,7 @@
 ## Le projet en 3 lignes
 Jeu coop 3D à 4 joueurs en P2P via Steam. Quatre nains pilotent un robot géant **depuis l'intérieur** :
 ils se déplacent dans le cockpit et manipulent des commandes physiques (joysticks des jambes, postes des bras…).
-Boucle : **camp de base** (lobby : mini-jeux, marchands de skins et d'améliorations) → **une des 10 missions** de l'histoire,
+Boucle : **base souterraine** (lobby : mini-jeux, postes de personnalisation, poste des missions, améliorations) → **une des 10 missions** de l'histoire,
 chacune avec son environnement et sa propre idée de gameplay → retour au camp.
 
 **Avant de toucher au gameplay, lire `docs/jeu.md`** (tout ce qui est validé : boucle, camp, missions, robot, nains).
@@ -244,7 +244,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 2.1 Nain contrôlable dans un cockpit qui bouge, première personne (M1)
 - [x] 2.2 Squelette, animations, `AnimationTree`, état synchronisé (M4)
 - [x] 2.3 Emotes, corps visible, bulle d'état, s'accroupir (M6.5)
-- [ ] 2.4 Skins des nains : pièces interchangeables (barbe, casque, couleurs…), choix synchronisé et sauvegardé — vendus en 4.5
+- [ ] 2.4 Skins des nains : pièces interchangeables (barbe, casque, couleurs…), choix synchronisé et sauvegardé — au poste de personnalisation des nains (4.5)
 - [ ] 2.5 Améliorations des nains : liste à définir avec le porteur du projet (pistes dans `docs/ideas.md`) — vendues en 4.6
 - [x] 2.6 Inventaire de 5 cases, caisses portées à deux mains
 - [x] 2.7 Vue de son vrai corps, animations de port, angle de vue de 90°
@@ -258,7 +258,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 3.5 Foreuse (M8)
 - [x] 3.6 Grappin, postes assis des deux bras (M9, M9.5)
 - [x] 3.7 Sac à dos (M10)
-- [ ] 3.8 Skins du robot : peinture, décorations, choix synchronisé et sauvegardé — vendus en 4.5
+- [ ] 3.8 Skins du robot : peinture, décorations, choix synchronisé et sauvegardé — au poste de personnalisation du robot (4.5)
 - [x] 3.9 Fléchettes dans le robot
 - [x] 3.10 Finitions du salon : ardoise, télé, jeu de dames, roue d'emotes
 - [x] 3.11 Fléchette plantée dans un allié
@@ -271,12 +271,16 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 4.1 Camp minier dans un canyon, terminal de mission, retour au camp (M12, M12.1)
 - [x] 4.2 Mini-jeu : bras de fer (M12.1)
 - [ ] 4.3 Monnaie et sauvegarde de la partie (économie reportée par le porteur du projet le 2026-11-08) : fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte, sauvegarde **chez l'hôte** (validé) ; argent par nain ou commun : à décider
-- [ ] 4.4 Plus de mini-jeux de garage : course de chariots de mécano, lancer de nain dans un pneu, wagonnets sur les rails, bras de fer déplacé sur l'établi (autres pistes dans `docs/ideas.md`)
-- [ ] 4.5 Marchands de skins : un pour les nains (2.4), un pour le robot (3.8)
+- [ ] 4.4 Plus de mini-jeux dans la base : course de chariots de mécano, lancer de nain dans un pneu, wagonnets sur les rails, bras de fer déplacé sur l'établi (autres pistes dans `docs/ideas.md`)
+- [ ] 4.5 **Deux postes de personnalisation** (validés le 2026-11-11, remplacent les « marchands de skins ») : un pour son nain (2.4), un pour le robot (3.8). Écran en trois parties : modèle 3D sur un socle qu'on fait tourner (à gauche), colonne d'icônes des emplacements (au milieu), liste des pièces avec vignette, nom, phrase drôle, prix et cadenas (à droite) ; détail dans `docs/jeu.md`
 - [ ] 4.6 Marchand d'améliorations des nains (2.5)
-- [ ] 4.7 **Garage sous la montagne** (nouvelle DA, validée le 2026-11-09) : remplace le camp du canyon ; roche froide, lumière chaude (lampes, forge), grande ouverture sur l'extérieur ; robot sur un pont élévateur sous une grue, passerelle pour monter à bord ; terminal de mission et bras de fer déplacés dedans
-- [ ] 4.8 **Monte-charge géant** : départ et retour de mission (le robot descend ou monte avec lui), sert de transition pendant que l'hôte crée le niveau
-- [ ] 4.9 Le garage grandit au fil des missions : trophées au mur, nouveaux outils, plaques des clients (lié à 4.3 pour la sauvegarde)
+- [ ] 4.7 **Base souterraine** (validée le 2026-11-11, remplace le camp du canyon et précise le « garage sous la montagne » du 2026-11-09) : une base creusée sous terre où le robot est garé, avec **une sortie pour le robot** ; construite étape par étape
+  - [ ] 4.7.1 La zone vide : sol, parois, plafond, place du robot, sortie du robot, points d'apparition ; terminal et bras de fer posés provisoirement ; rien d'autre
+  - [ ] 4.7.2 Les deux postes de personnalisation et le poste des missions posés à leur place (4.5, 4.10)
+  - [ ] 4.7.3 Remplissage, une zone à la fois (à définir avec le porteur du projet au fur et à mesure), dans la direction artistique
+- [ ] 4.8 **Départ et retour par la sortie du robot** : le robot quitte la base par sa sortie (forme à décider : grande porte, tunnel, monte-charge géant…), ce qui sert de transition pendant que l'hôte crée le niveau ; retour par le même chemin
+- [ ] 4.9 La base grandit au fil des missions : trophées au mur, nouveaux outils, plaques des clients (lié à 4.3 pour la sauvegarde)
+- [ ] 4.10 **Poste des missions** (validé le 2026-11-11, remplace le terminal à deux flèches) : écran avec la carte d'une région en relief, un pion par mission (icône du type, ou cadenas), fiche de la région à gauche, fiche de la mission à droite (objectifs, récompenses, durée, difficulté) ; un clic sur un pion lance le compte à rebours ; choix tenu par l'hôte et vu par tous ; détail dans `docs/jeu.md` (lié à 5.3 et 5.4)
 
 ### Phase 5 — Les missions
 - [x] 5.1 Cadre : `MissionDirector`, niveau créé par l'hôte, mission de test (M12, S1)
@@ -284,7 +288,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 5.3 Cadre commun d'une mission : objectifs, réussie / ratée, récompenses, retour au camp (lié à 4.3) ; chaque mission le remplit à sa façon
 - [ ] 5.4 Histoire : le fil rouge des 10 missions, et la mécanique phare de chacune (à valider avec le porteur du projet) ; point de départ validé : le robot acheté à la casse (5.7)
 - [ ] 5.6 **Radio du personnage guide** : poste radio dans le cockpit, voix en charabia + bulle de texte traduite (`tr()`), réagit aux actions des joueurs (chute, caca lancé…) ; répliques déclenchées par l'hôte, vues et entendues par tous
-- [ ] 5.7 **Intro = mission tutoriel « Ramener le robot de la casse »** : au premier lancement d'une nouvelle partie, les nains apparaissent à la casse et ramènent le robot au garage ; une mécanique à la fois (entrer, démarrer, marcher, foreuse, grappin, se relever) guidée par la radio (5.6) ; arrivée au garage par le monte-charge (4.8). Dépend de 3.4 (marche finie), 5.3 (cadre de mission) et 4.3 (savoir si la partie est neuve)
+- [ ] 5.7 **Intro = mission tutoriel « Ramener le robot de la casse »** : au premier lancement d'une nouvelle partie, les nains apparaissent à la casse et ramènent le robot à la base ; une mécanique à la fois (entrer, démarrer, marcher, foreuse, grappin, se relever) guidée par la radio (5.6) ; arrivée à la base par la sortie du robot (4.8). Dépend de 3.4 (marche finie), 5.3 (cadre de mission) et 4.3 (savoir si la partie est neuve)
 - [ ] 5.5 Les 10 missions, une par une (une ligne par mission ici une fois 5.4 validé) : environnement + mécanique propre + histoire
 
 ### Phase 6 — Finitions
