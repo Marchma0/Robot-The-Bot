@@ -7,7 +7,7 @@
 ## Le projet en 3 lignes
 Jeu coop 3D à 4 joueurs en P2P via Steam. Quatre nains pilotent un robot géant **depuis l'intérieur** :
 ils se déplacent dans le cockpit et manipulent des commandes physiques (joysticks des jambes, postes des bras…).
-Boucle : **camp de base** (lobby : mini-jeux, marchands de skins et d'améliorations) → **une des 10 missions** de l'histoire,
+Boucle : **base souterraine** (lobby : mini-jeux, postes de personnalisation, poste des missions, améliorations) → **une des 10 missions** de l'histoire,
 chacune avec son environnement et sa propre idée de gameplay → retour au camp.
 
 **Avant de toucher au gameplay, lire `docs/jeu.md`** (tout ce qui est validé : boucle, camp, missions, robot, nains).
@@ -76,12 +76,33 @@ tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (
 - Les inputs sont déclarés dans la Input Map (`project.godot`), jamais de touches codées en dur. Prévoir la manette dès le début.
 - **Deux langues (français, anglais)** : tout texte visible par le joueur passe par `tr("texte en français")` (le texte français sert de clé) et a sa ligne dans `assets/translations/texts.csv` (colonnes `keys,fr,en`). Pour un texte avec des valeurs : `tr("Joueur %d") % n`. Les boutons et étiquettes des scènes sont traduits tout seuls, mais leur texte doit aussi être dans le tableau. `run_tests.sh` vérifie qu'aucun texte n'est oublié. Les textes de debug restent en français.
 
+## Direction artistique — cartoon lisse, « atelier de nains » (validée le 2026-11-11)
+Ambiance de référence : une grande caverne de mine bleu nuit éclairée par des lanternes chaudes et une forge, pleine de petits objets (image donnée par le porteur du projet).
+**Plus de low poly** : on ne laisse plus de facettes visibles.
+- **Formes** : trapues et un peu exagérées (gros boulons, gros rivets, outils surdimensionnés pour être lisibles à la
+  première personne). **Toutes les arêtes arrondies** (modificateur Biseau + ombrage lisse dans Blender) ; cylindres et sphères
+  assez découpés pour paraître ronds ; roche lisse en relief, jamais en blocs facettés.
+- **Couleurs : contraste chaud / froid**. Le **froid** pour le décor et les ombres (roche bleu nuit, ciel étoilé,
+  pénombre bleue) ; le **chaud** pour ce qui vit et ce qui sert (lanternes orange, forge, cuivre, jaune industriel).
+  Quelques **néons** (vert, violet, rouge) pour repérer les lieux importants. Toujours les couleurs de la palette
+  (`prop_kit.PALETTE`) ; une couleur nouvelle s'y ajoute d'abord.
+- **Matières** : couleur unie de la palette + **grain procédural ajouté dans Godot** (relief de la roche, veines du bois,
+  usure du métal : bruit projeté selon le monde). Ni photos, ni textures peintes à la main : tout se fabrique par script.
+- **Lumière** : chaque zone a **une source chaude visible** (lanterne, forge, brasero, écran) ; le reste tombe dans la
+  pénombre bleue. Peu de lumières à ombres (performances : Iris Xe), les autres sans ombre.
+- **Détails** : la vie passe par les petits objets (rivets, câbles, chaînes, tuyaux, cambouis, trophées, papiers), à
+  l'échelle d'un nain de 1,2 m. Un lieu n'est jamais vide.
+- **Pas de contour noir façon cel-shading** : à la première personne il devient du bruit, et il se confondrait avec le
+  contour lumineux qui signale les objets utilisables.
+- Les modèles déjà faits en low poly (robot, intérieur, nains, objets) seront repassés dans ce style petit à petit
+  (roadmap 6.5) ; un modèle qu'on retouche passe dans le nouveau style.
+
 ## Pipeline Blender → Godot
 - Échelle : 1 unité Blender = 1 mètre. Appliquer les transforms (Ctrl+A) avant export. +Y up géré par l'export glTF.
 - Nommage des objets pour l'import Godot : suffixes `-col` (collision), `-colonly`, `-rigid`, `-navmesh` quand utile.
 - Armatures du mécha : os nommés de façon explicite (`leg_L_thigh`, `leg_L_shin`, `leg_L_foot`…) pour l'IK (`SkeletonIK3D` / modificateurs de squelette).
 - Ne jamais éditer un `.glb` dans Godot : on modifie le `.blend`, on réexporte. Les ajustements se font dans une **scène héritée** (`scenes/mecha/mecha.tscn` hérite de `assets/models/mecha.glb`).
-- Via le MCP Blender : préférer le **blockout** (formes simples, proportions, collisions) à la modélisation détaillée. Toujours sauvegarder le `.blend` dans `blender/`.
+- Via le MCP Blender : commencer par un **blockout** (formes simples, proportions, collisions), puis détailler dans le style de la « Direction artistique » ci-dessus. Toujours sauvegarder le `.blend` dans `blender/`.
 - **Orientation** : l'avant d'un modèle regarde vers **+Y** dans Blender (devient l'avant -Z dans Godot). Sa droite est donc en +X (mécha : foreuse en +X, grappin en -X).
 
 ### Modéliser avec une IA : fiche + planche de vues (obligatoire)
@@ -223,21 +244,21 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 2.1 Nain contrôlable dans un cockpit qui bouge, première personne (M1)
 - [x] 2.2 Squelette, animations, `AnimationTree`, état synchronisé (M4)
 - [x] 2.3 Emotes, corps visible, bulle d'état, s'accroupir (M6.5)
-- [ ] 2.4 Skins des nains : pièces interchangeables (barbe, casque, couleurs…), choix synchronisé et sauvegardé — vendus en 4.5
+- [ ] 2.4 Skins des nains : pièces interchangeables (barbe, casque, couleurs…), choix synchronisé et sauvegardé — au poste de personnalisation des nains (4.5)
 - [ ] 2.5 Améliorations des nains : liste à définir avec le porteur du projet (pistes dans `docs/ideas.md`) — vendues en 4.6
 - [x] 2.6 Inventaire de 5 cases, caisses portées à deux mains
 - [x] 2.7 Vue de son vrai corps, animations de port, angle de vue de 90°
 - [ ] 2.8 **Nains garagistes** (nouvelle DA, validée le 2026-11-09) : nouveau modèle (combinaison de travail, ceinture à outils, casquette ou masque de soudeur, cambouis) sur **le même squelette** (mêmes os, mêmes noms : toutes les animations restent) ; à faire avant les skins (2.4), qui en découleront
 
 ### Phase 3 — Le robot
-- [x] 3.1 Modèle low poly, postes, boutons / leviers / joysticks (M2, M3)
+- [x] 3.1 Premier modèle (low poly), postes, boutons / leviers / joysticks (M2, M3)
 - [x] 3.2 Circulation : rayon tracteur, trappe, corde, nain dehors (M6)
 - [x] 3.3 Intérieur modulaire et vie à bord : salon, toilettes et mini-jeu « Poussée », cacas (M6.5, M6.7)
 - [x] 3.4 Marche en rythme, jauge d'erreur, chute et relèvement, saut et accroupi par QTE à deux (M7)
 - [x] 3.5 Foreuse (M8)
 - [x] 3.6 Grappin, postes assis des deux bras (M9, M9.5)
 - [x] 3.7 Sac à dos (M10)
-- [ ] 3.8 Skins du robot : peinture, décorations, choix synchronisé et sauvegardé — vendus en 4.5
+- [ ] 3.8 Skins du robot : peinture, décorations, choix synchronisé et sauvegardé — au poste de personnalisation du robot (4.5)
 - [x] 3.9 Fléchettes dans le robot
 - [x] 3.10 Finitions du salon : ardoise, télé, jeu de dames, roue d'emotes
 - [x] 3.11 Fléchette plantée dans un allié
@@ -250,12 +271,16 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [x] 4.1 Camp minier dans un canyon, terminal de mission, retour au camp (M12, M12.1)
 - [x] 4.2 Mini-jeu : bras de fer (M12.1)
 - [ ] 4.3 Monnaie et sauvegarde de la partie (économie reportée par le porteur du projet le 2026-11-08) : fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte, sauvegarde **chez l'hôte** (validé) ; argent par nain ou commun : à décider
-- [ ] 4.4 Plus de mini-jeux de garage : course de chariots de mécano, lancer de nain dans un pneu, wagonnets sur les rails, bras de fer déplacé sur l'établi (autres pistes dans `docs/ideas.md`)
-- [ ] 4.5 Marchands de skins : un pour les nains (2.4), un pour le robot (3.8)
+- [ ] 4.4 Plus de mini-jeux dans la base : course de chariots de mécano, lancer de nain dans un pneu, wagonnets sur les rails, bras de fer déplacé sur l'établi (autres pistes dans `docs/ideas.md`)
+- [ ] 4.5 **Deux postes de personnalisation** (validés le 2026-11-11, remplacent les « marchands de skins ») : un pour son nain (2.4), un pour le robot (3.8). Écran en trois parties : modèle 3D sur un socle qu'on fait tourner (à gauche), colonne d'icônes des emplacements (au milieu), liste des pièces avec vignette, nom, phrase drôle, prix et cadenas (à droite) ; détail dans `docs/jeu.md`
 - [ ] 4.6 Marchand d'améliorations des nains (2.5)
-- [ ] 4.7 **Garage sous la montagne** (nouvelle DA, validée le 2026-11-09) : remplace le camp du canyon ; roche froide, lumière chaude (lampes, forge), grande ouverture sur l'extérieur ; robot sur un pont élévateur sous une grue, passerelle pour monter à bord ; terminal de mission et bras de fer déplacés dedans
-- [ ] 4.8 **Monte-charge géant** : départ et retour de mission (le robot descend ou monte avec lui), sert de transition pendant que l'hôte crée le niveau
-- [ ] 4.9 Le garage grandit au fil des missions : trophées au mur, nouveaux outils, plaques des clients (lié à 4.3 pour la sauvegarde)
+- [ ] 4.7 **Base souterraine** (validée le 2026-11-11, remplace le camp du canyon et précise le « garage sous la montagne » du 2026-11-09) : une base creusée sous terre où le robot est garé, avec **une sortie pour le robot** ; construite étape par étape
+  - [ ] 4.7.1 La zone vide : sol, parois, plafond, place du robot, sortie du robot, points d'apparition ; terminal et bras de fer posés provisoirement ; rien d'autre
+  - [ ] 4.7.2 Les deux postes de personnalisation et le poste des missions posés à leur place (4.5, 4.10)
+  - [ ] 4.7.3 Remplissage, une zone à la fois (à définir avec le porteur du projet au fur et à mesure), dans la direction artistique
+- [ ] 4.8 **Départ et retour par la sortie du robot** : le robot quitte la base par sa sortie (forme à décider : grande porte, tunnel, monte-charge géant…), ce qui sert de transition pendant que l'hôte crée le niveau ; retour par le même chemin
+- [ ] 4.9 La base grandit au fil des missions : trophées au mur, nouveaux outils, plaques des clients (lié à 4.3 pour la sauvegarde)
+- [ ] 4.10 **Poste des missions** (validé le 2026-11-11, remplace le terminal à deux flèches) : écran avec la carte d'une région en relief, un pion par mission (icône du type, ou cadenas), fiche de la région à gauche, fiche de la mission à droite (objectifs, récompenses, durée, difficulté) ; un clic sur un pion lance le compte à rebours ; choix tenu par l'hôte et vu par tous ; détail dans `docs/jeu.md` (lié à 5.3 et 5.4)
 
 ### Phase 5 — Les missions
 - [x] 5.1 Cadre : `MissionDirector`, niveau créé par l'hôte, mission de test (M12, S1)
@@ -263,7 +288,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 5.3 Cadre commun d'une mission : objectifs, réussie / ratée, récompenses, retour au camp (lié à 4.3) ; chaque mission le remplit à sa façon
 - [ ] 5.4 Histoire : le fil rouge des 10 missions, et la mécanique phare de chacune (à valider avec le porteur du projet) ; point de départ validé : le robot acheté à la casse (5.7)
 - [ ] 5.6 **Radio du personnage guide** : poste radio dans le cockpit, voix en charabia + bulle de texte traduite (`tr()`), réagit aux actions des joueurs (chute, caca lancé…) ; répliques déclenchées par l'hôte, vues et entendues par tous
-- [ ] 5.7 **Intro = mission tutoriel « Ramener le robot de la casse »** : au premier lancement d'une nouvelle partie, les nains apparaissent à la casse et ramènent le robot au garage ; une mécanique à la fois (entrer, démarrer, marcher, foreuse, grappin, se relever) guidée par la radio (5.6) ; arrivée au garage par le monte-charge (4.8). Dépend de 3.4 (marche finie), 5.3 (cadre de mission) et 4.3 (savoir si la partie est neuve)
+- [ ] 5.7 **Intro = mission tutoriel « Ramener le robot de la casse »** : au premier lancement d'une nouvelle partie, les nains apparaissent à la casse et ramènent le robot à la base ; une mécanique à la fois (entrer, démarrer, marcher, foreuse, grappin, se relever) guidée par la radio (5.6) ; arrivée à la base par la sortie du robot (4.8). Dépend de 3.4 (marche finie), 5.3 (cadre de mission) et 4.3 (savoir si la partie est neuve)
 - [ ] 5.5 Les 10 missions, une par une (une ligne par mission ici une fois 5.4 validé) : environnement + mécanique propre + histoire
 
 ### Phase 6 — Finitions
@@ -271,3 +296,4 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 6.2 Menus et options (touches, son, graphismes)
 - [ ] 6.3 Passe graphique : effets et couleurs créés dans le code (étincelles, éclats, câble…) passés en scènes et dans la palette
 - [ ] 6.4 Version à distribuer sur Steam (français et anglais)
+- [ ] 6.5 **Passage dans la nouvelle direction artistique** (cartoon lisse, « atelier de nains », validée le 2026-11-11) : arêtes arrondies, grain dans Godot, contraste chaud / froid, pour le robot (coque, intérieur, bras, jambes), les nains et les objets déjà faits en low poly ; un chantier à la fois, sans casser les collisions ni les animations
