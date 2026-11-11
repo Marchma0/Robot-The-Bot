@@ -9,8 +9,8 @@
 ### Modéliser en 3D avec l'IA (proposé le 2026-11-06)
 La planche de vues (`blender/tools/render_views.py`) est faite. Le reste :
 - **Budget + recette par pièces** (inspiré de `ozanzeng/blender-LPM-skill`) : objet découpé en 4 à 12 pièces simples
-  (boîte, prisme, tour, extrusion, plaque) ; règles de style low poly écrites (ombrage plat, silhouette avant les détails,
-  base à z = 0) ; une seule texture « palette » par objet, sans normal map.
+  (boîte, prisme, tour, extrusion, plaque) ; règles de style écrites (silhouette avant les détails,
+  base à z = 0 ; le low poly est abandonné depuis le 2026-11-11, voir la direction artistique d'`AGENTS.md`) ; une seule texture « palette » par objet, sans normal map.
 - **Contrôles automatiques PASS / FAIL avant export** (inspiré de `majidmanzarpour/blender-game-skills`, MIT) : budget,
   transforms appliqués, objet au sol, UV, faces cassées, sommets isolés, nommage (`-col`, os `leg_L_*`) ; réimport du
   `.glb` dans une scène vide (nombre d'os, animations, hauteur à 1 % près). Scripts `blender/tools/check_asset.py`, `roundtrip_glb.py`.

@@ -76,12 +76,33 @@ tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (
 - Les inputs sont déclarés dans la Input Map (`project.godot`), jamais de touches codées en dur. Prévoir la manette dès le début.
 - **Deux langues (français, anglais)** : tout texte visible par le joueur passe par `tr("texte en français")` (le texte français sert de clé) et a sa ligne dans `assets/translations/texts.csv` (colonnes `keys,fr,en`). Pour un texte avec des valeurs : `tr("Joueur %d") % n`. Les boutons et étiquettes des scènes sont traduits tout seuls, mais leur texte doit aussi être dans le tableau. `run_tests.sh` vérifie qu'aucun texte n'est oublié. Les textes de debug restent en français.
 
+## Direction artistique — cartoon lisse, « atelier de nains » (validée le 2026-11-11)
+Image de référence de l'ambiance : la base minière donnée par le porteur du projet (décrite dans `docs/jeu.md`).
+**Plus de low poly** : on ne laisse plus de facettes visibles.
+- **Formes** : trapues et un peu exagérées (gros boulons, gros rivets, outils surdimensionnés pour être lisibles à la
+  première personne). **Toutes les arêtes arrondies** (`kit.soften` : biseau + ombrage lisse) ; cylindres et sphères
+  assez découpés pour paraître ronds ; roche lisse en relief, jamais en blocs facettés.
+- **Couleurs : contraste chaud / froid**. Le **froid** pour le décor et les ombres (roche bleu nuit, ciel étoilé,
+  pénombre bleue) ; le **chaud** pour ce qui vit et ce qui sert (lanternes orange, forge, cuivre, jaune industriel).
+  Quelques **néons** (vert, violet, rouge) pour repérer les lieux importants. Toujours les couleurs de la palette
+  (`prop_kit.PALETTE`) ; une couleur nouvelle s'y ajoute d'abord.
+- **Matières** : couleur unie de la palette + **grain procédural ajouté dans Godot** (relief de la roche, veines du bois,
+  usure du métal : bruit projeté selon le monde). Ni photos, ni textures peintes à la main : tout se fabrique par script.
+- **Lumière** : chaque zone a **une source chaude visible** (lanterne, forge, brasero, écran) ; le reste tombe dans la
+  pénombre bleue. Peu de lumières à ombres (performances : Iris Xe), les autres sans ombre.
+- **Détails** : la vie passe par les petits objets (rivets, câbles, chaînes, tuyaux, cambouis, trophées, papiers), à
+  l'échelle d'un nain de 1,2 m. Un lieu n'est jamais vide.
+- **Pas de contour noir façon cel-shading** : à la première personne il devient du bruit, et il se confondrait avec le
+  contour lumineux qui signale les objets utilisables.
+- Les modèles déjà faits en low poly (robot, intérieur, nains, objets) seront repassés dans ce style petit à petit
+  (roadmap 6.5) ; un modèle qu'on retouche passe dans le nouveau style.
+
 ## Pipeline Blender → Godot
 - Échelle : 1 unité Blender = 1 mètre. Appliquer les transforms (Ctrl+A) avant export. +Y up géré par l'export glTF.
 - Nommage des objets pour l'import Godot : suffixes `-col` (collision), `-colonly`, `-rigid`, `-navmesh` quand utile.
 - Armatures du mécha : os nommés de façon explicite (`leg_L_thigh`, `leg_L_shin`, `leg_L_foot`…) pour l'IK (`SkeletonIK3D` / modificateurs de squelette).
 - Ne jamais éditer un `.glb` dans Godot : on modifie le `.blend`, on réexporte. Les ajustements se font dans une **scène héritée** (`scenes/mecha/mecha.tscn` hérite de `assets/models/mecha.glb`).
-- Via le MCP Blender : préférer le **blockout** (formes simples, proportions, collisions) à la modélisation détaillée. Toujours sauvegarder le `.blend` dans `blender/`.
+- Via le MCP Blender : commencer par un **blockout** (formes simples, proportions, collisions), puis détailler dans le style de la « Direction artistique » ci-dessus. Toujours sauvegarder le `.blend` dans `blender/`.
 - **Orientation** : l'avant d'un modèle regarde vers **+Y** dans Blender (devient l'avant -Z dans Godot). Sa droite est donc en +X (mécha : foreuse en +X, grappin en -X).
 
 ### Modéliser avec une IA : fiche + planche de vues (obligatoire)
@@ -230,7 +251,7 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 2.8 **Nains garagistes** (nouvelle DA, validée le 2026-11-09) : nouveau modèle (combinaison de travail, ceinture à outils, casquette ou masque de soudeur, cambouis) sur **le même squelette** (mêmes os, mêmes noms : toutes les animations restent) ; à faire avant les skins (2.4), qui en découleront
 
 ### Phase 3 — Le robot
-- [x] 3.1 Modèle low poly, postes, boutons / leviers / joysticks (M2, M3)
+- [x] 3.1 Premier modèle (low poly), postes, boutons / leviers / joysticks (M2, M3)
 - [x] 3.2 Circulation : rayon tracteur, trappe, corde, nain dehors (M6)
 - [x] 3.3 Intérieur modulaire et vie à bord : salon, toilettes et mini-jeu « Poussée », cacas (M6.5, M6.7)
 - [x] 3.4 Marche en rythme, jauge d'erreur, chute et relèvement, saut et accroupi par QTE à deux (M7)
@@ -271,3 +292,4 @@ Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se 
 - [ ] 6.2 Menus et options (touches, son, graphismes)
 - [ ] 6.3 Passe graphique : effets et couleurs créés dans le code (étincelles, éclats, câble…) passés en scènes et dans la palette
 - [ ] 6.4 Version à distribuer sur Steam (français et anglais)
+- [ ] 6.5 **Passage dans la nouvelle direction artistique** (cartoon lisse, « atelier de nains », validée le 2026-11-11) : arêtes arrondies, grain dans Godot, contraste chaud / froid, pour le robot (coque, intérieur, bras, jambes), les nains et les objets déjà faits en low poly ; un chantier à la fois, sans casser les collisions ni les animations
