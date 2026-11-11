@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/sandbox_tutorial.gd" id="1_sandbox"]
+[ext_resource type="PackedScene" path="res://scenes/levels/dev_tutorial.tscn" id="2_tuto"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="3_mecha"]
+
+[node name="SandboxTutorial" type="Node3D"]
+process_physics_priority = -20
+script = ExtResource("1_sandbox")
+
+[node name="DevTutorial" parent="." instance=ExtResource("2_tuto")]
+
+[node name="Mecha" parent="." instance=ExtResource("3_mecha")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+fov = 60.0
+current = true

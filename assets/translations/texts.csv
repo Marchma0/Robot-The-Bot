@@ -64,3 +64,19 @@ Robo-Jet,Robo-Jet,Robo-Jet
 Clic pour jouer,Clic pour jouer,Click to play
 Record : %d,Record : %d,Best: %d
 Boum !,Boum !,Boom!
+Tuto (dev),Tuto (dev),Tutorial (dev)
+"Avancer : poussez vos joysticks vers l'avant, chacun son tour","Avancer : poussez vos joysticks vers l'avant, chacun son tour","Walk: push your joysticks forward, taking turns"
+Virage : poussez en diagonale vers la droite pour tourner en marchant,Virage : poussez en diagonale vers la droite pour tourner en marchant,Turn: push diagonally to the right to turn while walking
+"Accroupi : flèche du bas tous les deux, puis les flèches ; passez sous la poutre","Accroupi : flèche du bas tous les deux, puis les flèches ; passez sous la poutre","Crouch: both press the down arrow, then the arrows; go under the beam"
+Demi-tour : poussez sur le côté pour pivoter sur place,Demi-tour : poussez sur le côté pour pivoter sur place,U-turn: push sideways to pivot on the spot
+"Foreuse : en haut, poste de droite, cassez les deux rochers","Foreuse : en haut, poste de droite, cassez les deux rochers","Drill: upstairs, right station, break both rocks"
+"Grappin : en haut, poste de gauche, mettez 2 caisses dans le sac","Grappin : en haut, poste de gauche, mettez 2 caisses dans le sac","Grabber: upstairs, left station, put 2 crates in the backpack"
+Remontez tous dans le robot par la corde,Remontez tous dans le robot par la corde,Everyone climb back into the robot with the rope
+Arrivée : avancez jusqu'à la dernière dalle,Arrivée : avancez jusqu'à la dernière dalle,Finish: walk to the last pad
+Tuto terminé ! Bouton « retour au camp » dans le robot,Tuto terminé ! Bouton « retour au camp » dans le robot,Tutorial done! “Back to camp” button inside the robot
+Étape %d / %d,Étape %d / %d,Step %d / %d
+Étape %d,Étape %d,Step %d
+"Saut : au bord du trou, flèche du haut tous les deux, joysticks vers l'avant, puis les flèches","Saut : au bord du trou, flèche du haut tous les deux, joysticks vers l'avant, puis les flèches","Jump: at the edge of the pit, both press the up arrow, joysticks forward, then the arrows"
+Caisses mobiles : lancez la pince pour les attraper toutes (reste %d),Caisses mobiles : lancez la pince pour les attraper toutes (reste %d),Moving crates: launch the claw to catch them all (%d left)
+Dehors : sortez par la trappe et appuyez sur le bouton au sol,Dehors : sortez par la trappe et appuyez sur le bouton au sol,Outside: exit through the hatch and press the button on the ground
+"Ascenseur : un nain monte sur un bras baissé, son pilote le lève jusqu'en haut de la tour, il appuie sur le bouton","Ascenseur : un nain monte sur un bras baissé, son pilote le lève jusqu'en haut de la tour, il appuie sur le bouton","Lift: a dwarf climbs onto a lowered arm, its pilot raises him to the top of the tower, he presses the button"

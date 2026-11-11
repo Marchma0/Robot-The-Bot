@@ -56,7 +56,7 @@ func _ready() -> void:
 	await _wait(0.2)
 	print("Flèche suivante : mission %d" % terminal.selected)
 	TestCheck.expect(terminal.selected == 1, "terminal : flèche suivante")
-	await _shot_from("5_terminal_verrouille", terminal.to_global(Vector3(0.15, 1.15, -1.0)), terminal.to_global(Vector3(0.0, 0.75, 0.0)))
+	await _shot_from("5_terminal_suivante", terminal.to_global(Vector3(0.15, 1.15, -1.0)), terminal.to_global(Vector3(0.0, 0.75, 0.0)))
 	terminal.get_node("Prev").pressed.emit(1)
 	terminal.get_node("Launch").pressed.emit(1)
 	await _wait(0.3)
@@ -68,7 +68,7 @@ func _ready() -> void:
 	dwarf.position = (mecha.get_node("SpawnPoints").get_child(0) as Node3D).position
 	await _wait(2.5)
 	print("Après montée à bord : niveau %s, robot en %s" % [director.current_level, mecha.global_position])
-	TestCheck.expect(director.current_level == &"test_ground", "tout le monde à bord : la mission part")
+	TestCheck.expect(director.current_level == &"dev_tutorial", "tout le monde à bord : la mission part (tuto de dev, 1re du terminal)")
 	await _shot("7_mission")
 	var button: PushButton = mecha.get_node("Controls/ReturnToCamp")
 	button.pressed.emit(1)

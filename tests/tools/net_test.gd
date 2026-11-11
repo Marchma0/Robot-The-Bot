@@ -145,6 +145,36 @@ func _run_host() -> void:
 	await get_tree().create_timer(STEP_WAIT).timeout
 	await _check("rocher cassé après rechargement")
 
+	# Parcours tuto de dev : étape, portes et caisses mobiles tenues par l'hôte, boutons appuyés par le client.
+	_director._travel(&"dev_tutorial")
+	await get_tree().create_timer(STEP_WAIT * 2.0).timeout
+	await _check("parcours tuto chargé (caisses mobiles en mouvement)")
+	var tuto: DevTutorial = _level() as DevTutorial
+	_backpack().store_node(tuto.get_node("MovingCrates/Mover2"), "crate")
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _check("tuto : caisse mobile rangée dans le sac")
+	if tuto.crates_left != DevTutorial.MOVERS.size() - 1:
+		_failures += 1
+		_log("ÉCHEC  tuto : il devrait rester %d caisses mobiles (%d)" % [DevTutorial.MOVERS.size() - 1, tuto.crates_left])
+	tuto.step = DevTutorial.Step.BUTTON
+	tuto.gates_open = 3
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _check("tuto : étape et portes (hôte)")
+	# Le nain du client se pose au pied du bouton (les boutons du tuto sont trois fois plus gros : la place
+	# « à portée » habituelle du test tombe trop loin).
+	_client_action.rpc_id(_client_id, "Mecha", "place_at", [Vector3(-35.0, 0.1, -46.4)])
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _client_step("tuto : bouton au sol (client)", "Level/DevTutorial/OutsideButton", "stay:request_press")
+	if tuto.step != DevTutorial.Step.LIFT:
+		_failures += 1
+		_log("ÉCHEC  tuto : le bouton au sol n'a pas fait avancer l'étape (%d)" % tuto.step)
+	_client_action.rpc_id(_client_id, "Mecha", "place_at", [Vector3(-45.2, DevTutorial.TOWER_HEIGHT + 0.1, -58.5)])
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _client_step("tuto : bouton de la tour (client)", "Level/DevTutorial/TowerButton", "stay:request_press")
+	if tuto.step != DevTutorial.Step.CLIMB or not tuto.is_gate_open(DevTutorial.Gate.LIFT):
+		_failures += 1
+		_log("ÉCHEC  tuto : le bouton de la tour n'a pas ouvert la porte 3 (étape %d)" % tuto.step)
+
 	_finish.rpc_id(_client_id)
 	_log("NET TEST %s (%d étape(s) en échec)" % ["OK" if _failures == 0 else "ÉCHEC", _failures])
 	await get_tree().create_timer(0.5).timeout
