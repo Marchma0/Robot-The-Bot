@@ -21,13 +21,32 @@
 1. **Avant de modéliser**, écrire en 3 lignes : taille réelle en mètres (repère : un nain fait 1,2 m), budget de triangles, liste des pièces simples qui composent l'objet.
 2. **Après chaque étape** (blockout, formes, détails), générer la **planche de vues** et la **regarder** :
    ```
-   blender -b blender/<fichier>.blend --python blender/tools/render_views.py -- --out build/views/<nom>.png [--target Objet,Collection]
+   blender -b blender/<fichier>.blend --python blender/tools/render_views.py -- --out build/views/<nom>.png [--target Objet,Collection] [--ref]
    ```
    6 vues à la même échelle (avant, droite, arrière, gauche, dessus, 3/4), grille au sol de 1 m, dimensions affichées dans la console.
+   `--ref` pose à droite du modèle (+X) deux **repères d'échelle** en bleu : un nain de 1,2 m et une porte de 2 m ; la console dit combien de « nains » mesure le modèle.
    Avec le MCP Blender ouvert, on peut aussi exécuter le fichier dans Blender puis appeler `render_views(out=..., target=[...])`.
    Le fichier `.blend` doit être **sauvegardé** avant la version en ligne de commande (elle lit le fichier sur le disque).
 3. **Comparer** la planche à la demande (proportions, pièces qui flottent, arrière, symétrie, échelle), **corriger au moins une fois**, régénérer.
 4. Montrer la dernière planche à l'humain avant d'exporter le `.glb`. Les planches vont dans `build/views/` (non versionné).
+
+### Contrôles automatiques à l'export (PASS / FAIL)
+`kit.save_and_export` (et `mecha_shell.py`) contrôle le modèle **avant d'écrire quoi que ce soit** ; un FAIL arrête l'export et dit quoi corriger :
+- `blender/tools/check_asset.py` : budget de triangles, échelle appliquée (et pas de rotation sur un objet libre), **au sol**
+  (le bas touche z = 0, enfoncé de 15 cm au plus, jamais au-dessus ; `ground=False` pour un objet accroché au mur, au plafond
+  ou une pièce de mécanisme), faces cassées et sommets isolés, suffixes de collision bien écrits, UV si un matériau a une image,
+  faces superposées. Les trous (arêtes à une seule face) sont signalés sans bloquer.
+- `blender/tools/roundtrip_glb.py` : après l'export, le `.glb` est **réimporté dans un autre Blender, vide**, et comparé au
+  modèle (triangles, taille à 1 % près, os, animations) : attrape un objet oublié, un modificateur non appliqué, une animation perdue.
+- Sans rien écrire (pour vérifier tous les objets après avoir touché aux outils) : variable d'environnement `ROBOT_CHECK_ONLY=1`
+  devant la commande d'un script d'objet. Seuls : `check_asset.py -- --budget N [--no-ground]` sur un `.blend`,
+  `roundtrip_glb.py -- <fichier>.glb --blend <fichier>.blend`.
+
+### Geometry Nodes (et pas de génération par IA)
+- **Pas de génération 3D par IA** (`generate_3d` du MCP Blender) : elle coûte des crédits. Tout se construit par script.
+- **Geometry Nodes** : pour les objets répétés avec des variantes (rochers, caisses, tuyaux, blocs minables) ; le groupe de nœuds est
+  construit par le script, une variante = une graine. L'export applique le modificateur (le `.glb` contient un maillage figé) et
+  chaque variante passe les contrôles.
 
 ### Intérieur modulaire : coque + un fichier par objet
 - **Modèles construits par script** : le script Python fait foi, le `.blend` et le `.glb` en sont générés. On modifie le script puis on le relance ; si on retouche un `.blend` à la main, le dire dans le commit.

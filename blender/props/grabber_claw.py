@@ -47,7 +47,7 @@ def main():
     b.rivet_row((-0.168, 0.36, -0.14), (-0.168, 0.36, 0.14), (-1, 0, 0), spacing=0.14, size=0.022)
 
     b.finish()
-    kit.save_and_export("grabber_claw", budget_tris=600)
+    kit.save_and_export("grabber_claw", budget_tris=600, ground=False)
 
 
 main()

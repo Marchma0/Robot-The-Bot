@@ -21,6 +21,7 @@
 - [x] 1.7 Rationalisation du code : interactions génériques, nain découpé, base des bras, traduction, dette de `mecha.blend`
 - [x] 1.8 Interface sobre : viseur, contour de l'objet visé, icône de l'action
 - [x] 1.9 Performances (2026-11-10) : ombres allégées (+60 % d'images par seconde sur Iris Xe), rendu Vulkan
+- [x] 1.10 Contrôles des modèles (2026-11-11) : PASS / FAIL avant export, réimport du `.glb`, repères d'échelle sur la planche, règles pour Geometry Nodes (pas de génération 3D par IA)
 
 ### Phase 2 — Les nains
 - [x] 2.1 Nain contrôlable dans un cockpit qui bouge, première personne (M1)

@@ -53,7 +53,7 @@ def main():
         b.cylinder((x0, 0.0, 0.0), (x1, 0.0, 0.0), 0.21, "Copper", segments=12)
 
     b.finish()
-    kit.save_and_export("drill_arm", budget_tris=1200)
+    kit.save_and_export("drill_arm", budget_tris=1200, ground=False)
 
 
 main()

@@ -50,7 +50,7 @@ def main():
     b.cylinder((0.0, 1.11, 0.0), (0.0, 1.35, 0.0), 0.095, "Yellow", segments=10, radius_end=0.012)
 
     b.finish()
-    kit.save_and_export("drill_bit", budget_tris=900)
+    kit.save_and_export("drill_bit", budget_tris=900, ground=False)
 
 
 main()

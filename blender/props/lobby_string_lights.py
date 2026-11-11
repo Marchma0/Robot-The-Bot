@@ -35,7 +35,7 @@ def main():
         b.cylinder((x, y, z), (x, y, z - 0.07), 0.016, "IronDark", segments=6)
         b.sphere((x, y, z - 0.11), 0.045, "Bulb", segments=6)
     b.finish()
-    kit.save_and_export("lobby_string_lights", budget_tris=900)
+    kit.save_and_export("lobby_string_lights", budget_tris=900, ground=False)
 
 
 main()

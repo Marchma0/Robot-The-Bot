@@ -50,7 +50,7 @@ def main():
     b.box((0.18, f, 0.14), (0.3, f + 0.003, 0.23), "Yellow")
     b.sphere((0.24, f + 0.01, 0.22), 0.01, "Velvet", 6)
     b.finish()
-    kit.save_and_export("wall_map", budget_tris=900)
+    kit.save_and_export("wall_map", budget_tris=900, ground=False)
 
 
 main()

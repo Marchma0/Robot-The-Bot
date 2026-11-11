@@ -50,7 +50,7 @@ def main():
         b.cylinder((x0, 0.0, 0.0), (x1, 0.0, 0.0), 0.22, "Copper", segments=12)
 
     b.finish()
-    kit.save_and_export("grabber_arm", budget_tris=900)
+    kit.save_and_export("grabber_arm", budget_tris=900, ground=False)
 
 
 main()

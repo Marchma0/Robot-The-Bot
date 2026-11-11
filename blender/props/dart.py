@@ -32,7 +32,7 @@ def main():
     b.box((-0.022 * S, -0.15 * S, -0.0012 * S), (0.022 * S, -0.11 * S, 0.0012 * S), "DartRed")
     b.box((-0.0011 * S, -0.149 * S, -0.022 * S), (0.0011 * S, -0.111 * S, 0.022 * S), "DartRed")
     b.finish()
-    kit.save_and_export("dart", budget_tris=300)
+    kit.save_and_export("dart", budget_tris=300, ground=False)
 
 
 main()

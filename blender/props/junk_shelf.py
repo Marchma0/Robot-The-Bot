@@ -87,7 +87,7 @@ def main():
         b.box((0.4, 0.04 + k * 0.004, z + k * 0.03), (0.66 - k * 0.02, 0.2 - k * 0.006, z + k * 0.03 + 0.028),
               ("DartRed", "Velvet", "Ochre")[k])
     b.finish()
-    kit.save_and_export("junk_shelf", budget_tris=3200)
+    kit.save_and_export("junk_shelf", budget_tris=3200, ground=False)
 
 
 main()

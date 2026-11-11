@@ -111,7 +111,7 @@ def main():
             b = kit.Builder("Leg_%s_%s" % (side, part))
             func(b, x)
             attach(b.finish(), rig, "leg_%s_%s" % (side, part))
-    kit.save_and_export("mecha_legs", budget_tris=6000, folder="")
+    kit.save_and_export("mecha_legs", budget_tris=6000, folder="", ground=False)
 
 
 main()

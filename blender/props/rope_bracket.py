@@ -39,7 +39,7 @@ def main():
     b.cylinder((0, PULLEY_Y + 0.04, -0.12), (0, PULLEY_Y + 0.04, -0.2), 0.016, "Ochre", 6)
     b.sphere((0, PULLEY_Y + 0.04, -0.21), 0.026, "Ochre", 6)
     b.finish()
-    kit.save_and_export("rope_bracket", budget_tris=700)
+    kit.save_and_export("rope_bracket", budget_tris=700, ground=False)
 
 
 main()

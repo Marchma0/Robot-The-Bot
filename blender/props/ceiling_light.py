@@ -35,7 +35,7 @@ def main():
         for sy in (-1, 1):
             b.box((sx * 0.13 - 0.008, sy * 0.13 - 0.008, -0.024), (sx * 0.13 + 0.008, sy * 0.13 + 0.008, -0.018), "Copper")
     b.finish()
-    kit.save_and_export("ceiling_light", budget_tris=500)
+    kit.save_and_export("ceiling_light", budget_tris=500, ground=False)
 
 
 main()

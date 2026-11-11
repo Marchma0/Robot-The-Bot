@@ -58,7 +58,7 @@ def main():
     b.cylinder((x, D + 0.09, -0.27), (x, D + 0.09, -0.15), 0.04, "Bulb", 8)
     b.cylinder((x, D + 0.09, -0.29), (x, D + 0.09, -0.27), 0.05, "Copper", 8)
     b.finish()
-    kit.save_and_export("coat_rack", budget_tris=1800)
+    kit.save_and_export("coat_rack", budget_tris=1800, ground=False)
 
 
 main()

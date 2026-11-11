@@ -61,7 +61,7 @@ Dossiers : `scenes/` et `scripts/` (main, mecha, player, levels, network, intera
 
 ## Modèles 3D et animation (détail dans `docs/modeles_3d.md`, à lire avant de modéliser ou d'animer)
 - Direction artistique **low poly** : facettes visibles (ombrage plat), robot « cosy mais pas trop » (métal peint, chanfreins, rivets, cuivre), couleurs de `prop_kit.PALETTE`.
-- Modèles **construits par script Python** (le script fait foi). Planche de vues obligatoire, montrée à l'humain avant d'exporter le `.glb`.
+- Modèles **construits par script Python** (le script fait foi). Planche de vues obligatoire, montrée à l'humain avant d'exporter le `.glb`. L'export passe par `kit.save_and_export`, qui contrôle le modèle et le `.glb` (PASS / FAIL).
 - 1 unité = 1 m ; l'avant d'un modèle regarde vers **+Y** dans Blender (-Z dans Godot) ; ne jamais éditer un `.glb` dans Godot.
 - **Tout ce qui bouge est animé** (rien ne glisse ni ne se téléporte). On synchronise l'**état**, chaque joueur joue l'animation chez lui.
 

@@ -40,7 +40,7 @@ def main():
     b.box((-0.008, 0.0, HH + 0.1), (0.008, 0.03, HH + 0.116), "Iron")
     b.tilted_box((0.0, 0.012, HH + 0.05), (0.004, 0.004, 0.11), 0.0, "Ochre")
     b.finish()
-    kit.save_and_export("chalkboard", budget_tris=600)
+    kit.save_and_export("chalkboard", budget_tris=600, ground=False)
 
 
 main()

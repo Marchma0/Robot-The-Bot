@@ -38,7 +38,7 @@ def main():
     b.pipe([(0.16, 0.12, 0.275), (0.16, 1.50, 0.275)], 0.032, "Copper", "IronDark", segments=8)
 
     b.finish()
-    kit.save_and_export("drill_barrel", budget_tris=600)
+    kit.save_and_export("drill_barrel", budget_tris=600, ground=False)
 
 
 main()

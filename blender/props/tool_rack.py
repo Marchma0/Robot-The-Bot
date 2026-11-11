@@ -69,7 +69,7 @@ def main():
     b.cylinder((0.37, D + 0.002, -0.12), (0.37, D + 0.04, -0.12), 0.035, "Yellow", 10)
     b.cylinder((0.37, D + 0.04, -0.12), (0.37, D + 0.044, -0.12), 0.015, "IronDark", 8)
     b.finish()
-    kit.save_and_export("tool_rack", budget_tris=1600)
+    kit.save_and_export("tool_rack", budget_tris=1600, ground=False)
 
 
 main()

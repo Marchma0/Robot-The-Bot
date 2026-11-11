@@ -50,7 +50,7 @@ def main():
     b.box((0.15, 0.30, 0.415), (0.20, 0.32, 0.485), "Lamp")
 
     b.finish()
-    kit.save_and_export("grabber_slider", budget_tris=1100)
+    kit.save_and_export("grabber_slider", budget_tris=1100, ground=False)
 
 
 main()
