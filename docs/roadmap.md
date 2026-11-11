@@ -7,7 +7,7 @@
 > Une tâche finie tient en **une ligne** : le détail (comment, pourquoi) va dans `docs/decisions.md`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : rien pour l'instant.
+**En cours** : 5.8 parcours tuto de dev [en cours — Marchma0].
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) : aucun.
 
@@ -72,6 +72,7 @@
 - [ ] 5.4 Histoire : le fil rouge des 10 missions, et la mécanique phare de chacune (à valider avec le porteur du projet) ; point de départ validé : le robot acheté à la casse (5.7)
 - [ ] 5.6 **Radio du personnage guide** : poste radio dans le cockpit, voix en charabia + bulle de texte traduite (`tr()`), réagit aux actions des joueurs (chute, caca lancé…) ; répliques déclenchées par l'hôte, vues et entendues par tous
 - [ ] 5.7 **Intro = mission tutoriel « Ramener le robot de la casse »** : au premier lancement d'une nouvelle partie, les nains apparaissent à la casse et ramènent le robot à la base ; une mécanique à la fois (entrer, démarrer, marcher, foreuse, grappin, se relever) guidée par la radio (5.6) ; arrivée à la base par la sortie du robot (4.8). Dépend de 3.4 (marche finie), 5.3 (cadre de mission) et 4.3 (savoir si la partie est neuve)
+- [ ] 5.8 **Parcours tuto de dev** (provisoire, pour les développeurs) [en cours — Marchma0] : parcours linéaire lancé depuis le terminal du camp, une étape par commande (avancer, virage, saut, accroupi, demi-tour, foreuse, grappin, sortir et remonter) ; le robot ne traverse plus les obstacles
 - [ ] 5.5 Les 10 missions, une par une (une ligne par mission ici une fois 5.4 validé) : environnement + mécanique propre + histoire
 
 ### Phase 6 — Finitions
