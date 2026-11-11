@@ -185,6 +185,7 @@ locale/translations=PackedStringArray("res://assets/translations/texts.en.transl
 3d_render/layer_2="intérieur du robot"
 3d_physics/layer_1="world"
 3d_physics/layer_3="interactable"
+3d_physics/layer_5="robot_obstacle"
 
 [physics]
 

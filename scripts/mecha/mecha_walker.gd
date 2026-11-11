@@ -5,6 +5,11 @@ extends Node
 ##
 ## Accroupi et saut (M7.5) : voir `set_crouched` et `jump`, lancés par MechaManeuvers.
 ##
+## Obstacles : le robot n'a pas de collision quand il marche (il pose ses pieds). Un pas, un saut ou un
+## relèvement qui le ferait entrer dans un corps du calque physique « obstacle du robot » (`OBSTACLE_LAYER`)
+## est refusé : le robot vacille sur place (`blocked`), sans remplir la jauge d'erreur. Deux contrôles :
+## le trajet du pied (bas des murs, muret, fossé) et une boîte autour de la caisse du corps (murs, poutre basse).
+##
 ## Réseau : tout est calculé sur l'hôte. Les clients n'envoient que leurs joysticks (Lever, déjà en place).
 ## L'hôte déplace le corps du mécha (synchronisé et lissé par le NetSmoother du mécha) et les deux
 ## cibles de pied (`FootL`, `FootR`, chacune avec son NetSmoother, même horloge que le corps).
@@ -15,6 +20,8 @@ signal stepped(leg: int)
 signal stumbled
 signal fell
 signal got_up
+## Pas, saut ou relèvement refusé : il entrerait dans un obstacle.
+signal blocked
 
 enum Leg { LEFT, RIGHT }
 ## WALKING : on marche (debout ou accroupi, voir `crouched`). FALLING / FALLEN : jauge d'erreur pleine, il
@@ -32,6 +39,16 @@ const TRIGGER: float = 0.6
 const RELEASE: float = 0.3
 ## Élan : le corps ne s'écarte jamais de plus de ça (m) de sa place entre les pieds.
 const MAX_MOMENTUM_LEAD: float = 0.9
+## Calque physique 5 « obstacle du robot » (murs, poutres, fossés…) : le robot n'y entre pas.
+const OBSTACLE_LAYER: int = 1 << 4
+## Caisse du corps pour les obstacles (repère du robot) : demi-largeur (x) et demi-profondeur (z), bas et haut
+## au-dessus du sol, debout (accroupi : le haut descend de `crouch_drop`). Le bas laisse passer les jambes
+## au-dessus d'un fossé ; le haut est celui de la tête (la cheminée dépasse un peu, sans compter).
+const BODY_HALF: Vector2 = Vector2(2.8, 2.4)
+const BODY_BOTTOM: float = 2.0
+const BODY_TOP: float = 9.1
+## Hauteurs (au-dessus du sol) du trajet du pied contrôlées contre les obstacles.
+const FOOT_CHECK_HEIGHTS: Array[float] = [0.3, 1.2]
 
 @export var body: Node3D
 @export var stick_left: Lever
@@ -205,6 +222,9 @@ func add_error(amount: float) -> void:
 
 ## Hôte : le robot s'accroupit (QTE réussi) ou se relève. Le corps descend / remonte en douceur.
 func set_crouched(value: bool) -> void:
+	if not value and crouched and not _can_stand():
+		_refuse()   # sous une poutre : il reste accroupi
+		return
 	crouched = value
 
 
@@ -213,11 +233,18 @@ func set_crouched(value: bool) -> void:
 func jump(angle: float) -> void:
 	if not can_maneuver():
 		return
-	crouched = false
-	_crouch_amount = 0.0
 	var forward: bool = absf(angle) <= deg_to_rad(30.0)
 	var distance: float = jump_distance if forward else jump_distance_other
 	var move: Vector3 = Basis(Vector3.UP, _yaw) * Vector3(sin(angle), 0.0, -cos(angle)) * distance
+	# Il ne saute ni dans un obstacle (fossé, mur), ni en se relevant sous une poutre.
+	var landing: Array[Vector3] = [_ground_at(_feet[Leg.LEFT].pos + move), _ground_at(_feet[Leg.RIGHT].pos + move)]
+	var landing_mid: Vector3 = (landing[0] + landing[1]) / 2.0
+	if (crouched and not _can_stand()) or _feet_in_obstacle(landing) \
+			or _body_hits_obstacle(landing_mid, _yaw, BODY_TOP):
+		_refuse()
+		return
+	crouched = false
+	_crouch_amount = 0.0
 	for foot: Foot in _feet:
 		foot.from = foot.pos
 		foot.to = _ground_at(foot.pos + move)
@@ -235,7 +262,7 @@ func jump(angle: float) -> void:
 func fall() -> void:
 	if phase != Phase.WALKING:
 		return
-	crouched = false
+	crouched = crouched and not _can_stand()   # sous une poutre, il se relèvera accroupi
 	error_gauge = 1.0
 	_pending = [NAN, NAN]
 	_set_phase(Phase.FALLING)
@@ -364,6 +391,9 @@ func _start_step(leg: int, angle: float) -> void:
 	var lateral: float = (HIP_LOCAL[leg].x - HIP_LOCAL[other].x)
 	var target: Vector3 = _feet[other].pos + basis * Vector3(lateral, 0.0, -advance)
 	target = _ground_at(target)
+	if _step_hits_obstacle(_feet[leg].pos, target, _feet[other].pos, new_yaw):
+		_refuse()
+		return
 	var foot: Foot = _feet[leg]
 	foot.swing = true
 	foot.t = 0.0
@@ -565,6 +595,76 @@ func _publish() -> void:
 	swinging_right = _feet[Leg.RIGHT].swing
 	landing_left = _feet[Leg.LEFT].to
 	landing_right = _feet[Leg.RIGHT].to
+
+
+## Pas refusé (obstacle) : il vacille sur place et oublie les pas demandés.
+func _refuse() -> void:
+	_stumble = maxf(_stumble, 0.4)
+	_pending = [NAN, NAN]
+	blocked.emit()
+
+
+## Vrai si un pas de `from` à `to` (l'autre pied resté en `planted`, le robot tourné vers `yaw`) entre dans
+## un obstacle : trajet du pied, ou caisse du corps à sa nouvelle place.
+func _step_hits_obstacle(from: Vector3, to: Vector3, planted: Vector3, yaw: float) -> bool:
+	if _foot_path_blocked(from, to):
+		return true
+	var top: float = BODY_TOP - (crouch_drop if crouched else 0.0)
+	return _body_hits_obstacle((planted + to) / 2.0, yaw, top)
+
+
+## Vrai si le robot peut se tenir debout là où il est (rien au-dessus de sa tête).
+func _can_stand() -> bool:
+	if not _ready_done:
+		return true
+	var ground: Vector3 = (_feet[Leg.LEFT].to + _feet[Leg.RIGHT].to) / 2.0
+	return not _body_hits_obstacle(ground, _yaw, BODY_TOP, true)
+
+
+func _foot_path_blocked(from: Vector3, to: Vector3) -> bool:
+	var space: PhysicsDirectSpaceState3D = body.get_world_3d().direct_space_state
+	for height: float in FOOT_CHECK_HEIGHTS:
+		var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
+			from + Vector3.UP * height, to + Vector3.UP * height, OBSTACLE_LAYER)
+		query.exclude = _own_bodies()
+		if not space.intersect_ray(query).is_empty():
+			return true
+	return false
+
+
+func _feet_in_obstacle(points: Array[Vector3]) -> bool:
+	var space: PhysicsDirectSpaceState3D = body.get_world_3d().direct_space_state
+	for point: Vector3 in points:
+		var query: PhysicsPointQueryParameters3D = PhysicsPointQueryParameters3D.new()
+		query.position = point + Vector3.UP * FOOT_CHECK_HEIGHTS[0]
+		query.collision_mask = OBSTACLE_LAYER
+		query.exclude = _own_bodies()
+		if not space.intersect_point(query, 1).is_empty():
+			return true
+	return false
+
+
+## Vrai si la caisse du corps, posée au-dessus du point du sol `ground` et tournée vers `yaw`, touche un
+## obstacle. Si le corps est déjà dans un obstacle là où il est (il y est entré par un autre chemin), on le
+## laisse en sortir : seule une nouvelle place libre compte, sauf `strict`.
+func _body_hits_obstacle(ground: Vector3, yaw: float, top: float, strict: bool = false) -> bool:
+	if not strict and _ready_done:
+		var here: Vector3 = (_feet[Leg.LEFT].to + _feet[Leg.RIGHT].to) / 2.0
+		var here_top: float = BODY_TOP - (crouch_drop if crouched else 0.0)
+		if _box_overlaps(here, _yaw, here_top):
+			return false
+	return _box_overlaps(ground, yaw, top)
+
+
+func _box_overlaps(ground: Vector3, yaw: float, top: float) -> bool:
+	var shape: BoxShape3D = BoxShape3D.new()
+	shape.size = Vector3(BODY_HALF.x * 2.0, top - BODY_BOTTOM, BODY_HALF.y * 2.0)
+	var query: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
+	query.shape = shape
+	query.transform = Transform3D(Basis(Vector3.UP, yaw), ground + Vector3.UP * (BODY_BOTTOM + top) / 2.0)
+	query.collision_mask = OBSTACLE_LAYER
+	query.exclude = _own_bodies()
+	return not body.get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
 
 
 ## Point du sol sous `point` (rayon vertical qui ignore le mécha lui-même).

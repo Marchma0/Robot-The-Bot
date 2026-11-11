@@ -92,6 +92,9 @@ par le porteur du projet :
   et on **remonte** par une **corde** qui pend jusqu'au sol. Dehors, le nain ne suit plus le robot.
 - **Commandes physiques** : boutons, leviers et joysticks dans le cockpit, toujours actifs ; on attrape un levier
   en maintenant clic / RT et on peut marcher à portée de bras. Pas de poste verrouillant, sauf les postes assis des bras.
+- **Obstacles** (2026-11-11) : le robot ne traverse pas ce qui est marqué « obstacle du robot » dans un niveau (murs, poutre
+  basse, fossé, rochers, porte) : un pas ou un saut qui y entrerait est refusé, le robot vacille sur place sans remplir la
+  jauge d'erreur. Sous une poutre, il ne peut pas se relever.
 
 ### Les jambes : marche en rythme
 - Chaque nain du ventre pilote **sa** jambe avec un joystick. **Un coup de joystick = un pas** : haut = avance,

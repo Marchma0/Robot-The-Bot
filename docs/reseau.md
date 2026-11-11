@@ -69,6 +69,9 @@ Le robot est dans `main.tscn` : ses commandes existent déjà chez tout le monde
 L'ajouter à `MissionDirector.LEVELS`. Ses objets réseau suivent la recette ci-dessus (un
 `NetSpawner` par dossier d'objets, comme `CargoSpawner` dans `test_ground.tscn`). Rien d'autre :
 le `LevelSpawner` s'occupe d'envoyer le niveau à tout le monde, y compris en cours de partie.
+Ce que le robot ne doit pas traverser (murs, poutres, fossés, rochers qui bouchent un passage, portes) va **aussi** sur le
+calque physique 5 « robot_obstacle » (`MechaWalker.OBSTACLE_LAYER`) : sans lui, le robot marche à travers (il pose ses
+pieds, il n'a pas de collision). Rien de réseau : seul l'hôte fait marcher le robot. Exemple : `scenes/levels/dev_tutorial.tscn`.
 
 ## Les garde-fous
 
