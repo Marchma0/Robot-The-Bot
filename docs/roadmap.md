@@ -33,7 +33,7 @@
 - [ ] 2.8 **Nains garagistes** (nouvelle DA, validée le 2026-11-09) : nouveau modèle (combinaison de travail, ceinture à outils, casquette ou masque de soudeur, cambouis) sur **le même squelette** (mêmes os, mêmes noms : toutes les animations restent) ; à faire avant les skins (2.4), qui en découleront
 
 ### Phase 3 — Le robot
-- [x] 3.1 Premier modèle (low poly), postes, boutons / leviers / joysticks (M2, M3)
+- [x] 3.1 Modèle low poly, postes, boutons / leviers / joysticks (M2, M3)
 - [x] 3.2 Circulation : rayon tracteur, trappe, corde, nain dehors (M6)
 - [x] 3.3 Intérieur modulaire et vie à bord : salon, toilettes et mini-jeu « Poussée », cacas (M6.5, M6.7)
 - [x] 3.4 Marche en rythme, jauge d'erreur, chute et relèvement, saut et accroupi par QTE à deux (M7)
@@ -78,4 +78,3 @@
 - [ ] 6.2 Menus et options (touches, son, graphismes)
 - [ ] 6.3 Passe graphique : effets et couleurs créés dans le code (étincelles, éclats, câble…) passés en scènes et dans la palette
 - [ ] 6.4 Version à distribuer sur Steam (français et anglais)
-- [ ] 6.5 **Passage dans la nouvelle direction artistique** (cartoon lisse, « atelier de nains », validée le 2026-11-11) : arêtes arrondies, grain dans Godot, contraste chaud / froid, pour le robot (coque, intérieur, bras, jambes), les nains et les objets déjà faits en low poly ; un chantier à la fois, sans casser les collisions ni les animations

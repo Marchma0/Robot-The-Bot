@@ -82,8 +82,8 @@ par le porteur du projet :
 - Aujourd'hui : une mission de test (rochers à miner, caisses), un bouton « retour au camp » au fond du ventre.
 
 ## Le robot
-- Robot trapu, style « robot cosy mais pas trop » : métal peint, arêtes arrondies, rivets, hublots ronds,
-  touches de cuivre. Pas d'ambiance cabane. Il suit la direction artistique du jeu (voir « Principes qui valent partout »).
+- Robot trapu low poly, style « robot cosy mais pas trop » : métal peint, chanfreins, rivets, hublots ronds,
+  touches de cuivre. Pas d'ambiance cabane.
 - **Deux étages** :
   - **Ventre** : 2 nains aux postes des **jambes** (une jambe chacun) ; c'est aussi le salon.
   - **Tête** : 2 nains aux postes des **bras** — gauche **grappin**, droite **foreuse**. On voit dehors par les deux yeux ronds.
@@ -162,7 +162,7 @@ par le porteur du projet :
 - **À venir** : skins (vendus au camp), améliorations (vendues au camp).
 
 ## Principes qui valent partout
-- **Direction artistique : cartoon lisse, « atelier de nains »** (validée le 2026-11-11, remplace le low poly) : formes trapues et un peu exagérées aux arêtes arrondies, contraste entre le froid du décor (roche bleu nuit, pénombre) et le chaud de ce qui vit (lanternes, forge, cuivre, jaune), quelques néons, beaucoup de petits détails. Règles dans `docs/modeles_3d.md`.
+- **Direction artistique : low poly** (le « cartoon lisse » du 2026-11-11 est abandonné le jour même) : formes simples à facettes visibles, robot « cosy mais pas trop ». Règles dans `docs/modeles_3d.md`.
 - **Coop chaotique** : les commandes sont dans le cockpit, il faut se coordonner et se déplacer.
 - **Deux langues** : français et anglais.
 - **Rien d'écrit à l'écran, interface sobre** : la place est au jeu, pas aux touches. Ce qu'on peut utiliser se reconnaît en le visant : le **point de visée devient un petit anneau** et l'**objet s'illumine sur ses bords** (lueur chaude qui respire) ; à côté de l'anneau, en petit, l'**icône de l'action** (appuyer, grimper, s'asseoir…), avec sa touche seulement si ce n'est ni le clic ni E (ex. Espace pour lâcher la corde). « Viser » n'est jamais affiché ; la touche pour poser l'objet en main est un petit G sur sa case d'inventaire ; le panneau des touches d'un poste se replie tout seul après 5 s (Tab le rouvre) ; « Échap → quitter » s'efface après 6 s. Au pire de petits mots en police Fredoka.
