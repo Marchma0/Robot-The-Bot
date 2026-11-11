@@ -49,3 +49,26 @@ Résumé (détail dans la section « Travail à deux » d'[AGENTS.md](AGENTS.md)
 
 ## Tester le multi en local
 Godot → Debug → *Customize Run Instances* → 2 à 4 instances (une hôte, les autres clients).
+
+## Arborescence
+```
+project.godot
+addons/            # plugins tiers (GodotSteam, etc.) — ne pas modifier, NON versionnés : liste + installation dans addons/ADDONS.txt
+assets/
+  models/          # .glb exportés depuis Blender
+  textures/ audio/ fonts/
+  translations/    # texts.csv : tous les textes du jeu, français + anglais
+blender/           # fichiers sources .blend (pas importés par Godot, voir .gdignore)
+scenes/
+  main/            # menus, lobby, scène de jeu racine
+  mecha/           # le mécha, ses jambes, son cockpit
+  player/          # le nain
+  levels/
+scripts/
+  network/         # NetworkManager (autoload), lobby, spawn
+  mecha/           # contrôle, IK, équilibre, stations
+  player/
+  interaction/     # système générique d'interaction (stations, panneaux)
+docs/              # jeu.md, decisions.md, ideas.md, reseau.md (voir « Les documents du projet » d'`AGENTS.md`)
+tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (tests/tools/)
+```
