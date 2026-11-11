@@ -77,10 +77,10 @@ tests/             # scènes de test isolées (sandbox_*.tscn), outils de test (
 - **Deux langues (français, anglais)** : tout texte visible par le joueur passe par `tr("texte en français")` (le texte français sert de clé) et a sa ligne dans `assets/translations/texts.csv` (colonnes `keys,fr,en`). Pour un texte avec des valeurs : `tr("Joueur %d") % n`. Les boutons et étiquettes des scènes sont traduits tout seuls, mais leur texte doit aussi être dans le tableau. `run_tests.sh` vérifie qu'aucun texte n'est oublié. Les textes de debug restent en français.
 
 ## Direction artistique — cartoon lisse, « atelier de nains » (validée le 2026-11-11)
-Image de référence de l'ambiance : la base minière donnée par le porteur du projet (décrite dans `docs/jeu.md`).
+Ambiance de référence : une grande caverne de mine bleu nuit éclairée par des lanternes chaudes et une forge, pleine de petits objets (image donnée par le porteur du projet).
 **Plus de low poly** : on ne laisse plus de facettes visibles.
 - **Formes** : trapues et un peu exagérées (gros boulons, gros rivets, outils surdimensionnés pour être lisibles à la
-  première personne). **Toutes les arêtes arrondies** (`kit.soften` : biseau + ombrage lisse) ; cylindres et sphères
+  première personne). **Toutes les arêtes arrondies** (modificateur Biseau + ombrage lisse dans Blender) ; cylindres et sphères
   assez découpés pour paraître ronds ; roche lisse en relief, jamais en blocs facettés.
 - **Couleurs : contraste chaud / froid**. Le **froid** pour le décor et les ombres (roche bleu nuit, ciel étoilé,
   pénombre bleue) ; le **chaud** pour ce qui vit et ce qui sert (lanternes orange, forge, cuivre, jaune industriel).
