@@ -145,6 +145,20 @@ func _run_host() -> void:
 	await get_tree().create_timer(STEP_WAIT).timeout
 	await _check("rocher cassé après rechargement")
 
+	# Parcours tuto de dev : étape et porte tenues par l'hôte, bouton du dehors appuyé par le client.
+	_director._travel(&"dev_tutorial")
+	await get_tree().create_timer(STEP_WAIT * 2.0).timeout
+	await _check("parcours tuto chargé")
+	var tuto: DevTutorial = _level() as DevTutorial
+	tuto.step = DevTutorial.Step.BUTTON
+	tuto.gate_open = true
+	await get_tree().create_timer(STEP_WAIT).timeout
+	await _check("tuto : étape et porte du grappin (hôte)")
+	await _client_step("tuto : bouton du dehors (client)", "Level/DevTutorial/OutsideButton", "request_press")
+	if tuto.step != DevTutorial.Step.CLIMB:
+		_failures += 1
+		_log("ÉCHEC  tuto : le bouton du dehors n'a pas fait avancer l'étape (%d)" % tuto.step)
+
 	_finish.rpc_id(_client_id)
 	_log("NET TEST %s (%d étape(s) en échec)" % ["OK" if _failures == 0 else "ÉCHEC", _failures])
 	await get_tree().create_timer(0.5).timeout

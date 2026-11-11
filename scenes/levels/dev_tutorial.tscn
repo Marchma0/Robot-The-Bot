@@ -1,0 +1,76 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/dev_tutorial.gd" id="1_tuto"]
+[ext_resource type="PackedScene" path="res://scenes/props/cargo_crate.tscn" id="2_crate"]
+[ext_resource type="PackedScene" path="res://scenes/props/mineable_rock.tscn" id="3_rock"]
+[ext_resource type="Script" path="res://scripts/network/net_spawner.gd" id="4_netspawner"]
+[ext_resource type="PackedScene" path="res://scenes/mecha/controls/push_button.tscn" id="5_button"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+ambient_light_source = 3
+tonemap_mode = 2
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_tuto"]
+properties/0/path = NodePath(".:step")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:gate_open")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+
+[node name="DevTutorial" type="Node3D"]
+script = ExtResource("1_tuto")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.321394, 0.383022, 0, 0.766044, 0.642788, -0.5, -0.55667, 0.663414, 0, 20, 0)
+shadow_enabled = true
+shadow_caster_mask = 4294967293
+directional_shadow_mode = 1
+directional_shadow_max_distance = 60.0
+directional_shadow_pancake_size = 0.0
+
+[node name="MechaStart" type="Marker3D" parent="."]
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_tuto")
+
+[node name="CargoCrates" type="Node3D" parent="."]
+
+[node name="Crate1" parent="CargoCrates" instance=ExtResource("2_crate")]
+transform = Transform3D(0.939693, 0, 0.34202, 0, 1, 0, -0.34202, 0, 0.939693, 23.5, 0, -47.3)
+
+[node name="Crate2" parent="CargoCrates" instance=ExtResource("2_crate")]
+transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, 23.5, 0, -56.7)
+
+[node name="CargoSpawner" type="MultiplayerSpawner" parent="."]
+script = ExtResource("4_netspawner")
+_spawnable_scenes = PackedStringArray("res://scenes/props/cargo_crate.tscn")
+spawn_path = NodePath("../CargoCrates")
+
+[node name="MineableRocks" type="Node3D" parent="."]
+
+[node name="Rock1" parent="MineableRocks" node_paths=PackedStringArray("drops_container") instance=ExtResource("3_rock")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0, -50.4)
+collision_layer = 25
+drops_container = NodePath("../../CargoCrates")
+
+[node name="Rock2" parent="MineableRocks" node_paths=PackedStringArray("drops_container") instance=ExtResource("3_rock")]
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 36, 0, -53.6)
+collision_layer = 25
+drops_container = NodePath("../../CargoCrates")
+
+[node name="OutsideButton" parent="." instance=ExtResource("5_button")]
+unique_name_in_owner = true
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 2, 1, -48)
+display_name = "Bouton du tuto"
+cap_color = Color(0.2, 0.75, 0.25, 1)

@@ -64,3 +64,17 @@ Robo-Jet,Robo-Jet,Robo-Jet
 Clic pour jouer,Clic pour jouer,Click to play
 Record : %d,Record : %d,Best: %d
 Boum !,Boum !,Boom!
+Tuto (dev),Tuto (dev),Tutorial (dev)
+"Avancer : poussez vos joysticks vers l'avant, chacun son tour","Avancer : poussez vos joysticks vers l'avant, chacun son tour","Walk: push your joysticks forward, taking turns"
+Virage : poussez en diagonale vers la droite pour tourner en marchant,Virage : poussez en diagonale vers la droite pour tourner en marchant,Turn: push diagonally to the right to turn while walking
+"Saut : flèche du haut tous les deux, joysticks vers l'avant, puis les flèches","Saut : flèche du haut tous les deux, joysticks vers l'avant, puis les flèches","Jump: both press the up arrow, joysticks forward, then the arrows"
+"Accroupi : flèche du bas tous les deux, puis les flèches ; passez sous la poutre","Accroupi : flèche du bas tous les deux, puis les flèches ; passez sous la poutre","Crouch: both press the down arrow, then the arrows; go under the beam"
+Demi-tour : poussez sur le côté pour pivoter sur place,Demi-tour : poussez sur le côté pour pivoter sur place,U-turn: push sideways to pivot on the spot
+"Foreuse : en haut, poste de droite, cassez les deux rochers","Foreuse : en haut, poste de droite, cassez les deux rochers","Drill: upstairs, right station, break both rocks"
+"Grappin : en haut, poste de gauche, mettez 2 caisses dans le sac","Grappin : en haut, poste de gauche, mettez 2 caisses dans le sac","Grabber: upstairs, left station, put 2 crates in the backpack"
+Dehors : sortez par la trappe et appuyez sur le bouton,Dehors : sortez par la trappe et appuyez sur le bouton,Outside: exit through the hatch and press the button
+Remontez tous dans le robot par la corde,Remontez tous dans le robot par la corde,Everyone climb back into the robot with the rope
+Arrivée : avancez jusqu'à la dernière dalle,Arrivée : avancez jusqu'à la dernière dalle,Finish: walk to the last pad
+Tuto terminé ! Bouton « retour au camp » dans le robot,Tuto terminé ! Bouton « retour au camp » dans le robot,Tutorial done! “Back to camp” button inside the robot
+Étape %d / %d,Étape %d / %d,Step %d / %d
+Étape %d,Étape %d,Step %d

@@ -18,11 +18,13 @@ const LOBBY: StringName = &"lobby"
 ## (et le camp un nœud `PlayerSpawns` avec un Marker3D par joueur).
 const LEVELS: Dictionary[StringName, String] = {
 	&"lobby": "res://scenes/levels/lobby.tscn",
+	&"dev_tutorial": "res://scenes/levels/dev_tutorial.tscn",
 	&"test_ground": "res://scenes/levels/test_ground.tscn",
 }
 
 ## Missions proposées au terminal du camp, dans l'ordre. `id` vide = verrouillée (pas encore faite).
 const MISSIONS: Array[Dictionary] = [
+	{"id": &"dev_tutorial", "title": "Tuto (dev)"},
 	{"id": &"test_ground", "title": "Terrain d'essai"},
 	{"id": &"", "title": "Mission 1"},
 	{"id": &"", "title": "Mission 2"},

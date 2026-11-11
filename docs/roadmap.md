@@ -9,7 +9,8 @@
 
 **En cours** : 5.8 parcours tuto de dev [en cours — Marchma0].
 
-**Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) : aucun.
+**Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) :
+- `net_test.sh` échoue sur deux étapes des fléchettes au sol (« fléchette au sol ramassée », « la dernière fléchette posée au sol ») ; vu le 2026-11-11, déjà présent avant le tuto. L'étape « grappin : nain posé sous le rayon » rate aussi de temps en temps.
 
 ### Phase 1 — Fondations (moteur, réseau, outils)
 - [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet, 4 nains (M0)
