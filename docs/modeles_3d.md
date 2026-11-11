@@ -42,11 +42,8 @@
   devant la commande d'un script d'objet. Seuls : `check_asset.py -- --budget N [--no-ground]` sur un `.blend`,
   `roundtrip_glb.py -- <fichier>.glb --blend <fichier>.blend`.
 
-### Génération par IA et Geometry Nodes
-- **`generate_3d` / `search_assets` du MCP Blender** : seulement pour des **décors et petits objets**, jamais pour le robot ni les
-  nains (squelette précis). Une génération peut coûter un crédit : demander à l'humain avant. Le fichier obtenu est rangé dans
-  `blender/sources/` (avec sa source et sa licence notées dans le script) ; un script `blender/props/<nom>.py` l'importe et le
-  retravaille (réduit au budget, couleurs de la palette, ombrage plat low poly, collisions), puis passe par `kit.save_and_export`.
+### Geometry Nodes (et pas de génération par IA)
+- **Pas de génération 3D par IA** (`generate_3d` du MCP Blender) : elle coûte des crédits. Tout se construit par script.
 - **Geometry Nodes** : pour les objets répétés avec des variantes (rochers, caisses, tuyaux, blocs minables) ; le groupe de nœuds est
   construit par le script, une variante = une graine. L'export applique le modificateur (le `.glb` contient un maillage figé) et
   chaque variante passe les contrôles.

@@ -7,7 +7,7 @@
 ## Phase 1 — Fondations
 
 ### Modéliser en 3D avec l'IA (proposé le 2026-11-06)
-Planche de vues, contrôles PASS / FAIL, réimport du `.glb`, repères d'échelle et règles pour la génération IA et Geometry Nodes
+Planche de vues, contrôles PASS / FAIL, réimport du `.glb`, repères d'échelle et règle pour Geometry Nodes
 sont faits (voir `docs/modeles_3d.md`). Reste :
 - **Croquis de référence** : dessins de face et de profil posés comme plans dans le `.blend`, et comparaison chiffrée de la
   silhouette du modèle avec eux.
