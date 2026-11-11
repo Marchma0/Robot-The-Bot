@@ -7,7 +7,8 @@ extends Node
 ##
 ## Obstacles : le robot n'a pas de collision quand il marche (il pose ses pieds). Un pas, un saut ou un
 ## relèvement qui le ferait entrer dans un corps du calque physique « obstacle du robot » (`OBSTACLE_LAYER`)
-## est refusé : le robot vacille sur place (`blocked`), sans remplir la jauge d'erreur. Deux contrôles :
+## est refusé : le robot vacille sur place (`blocked`), sans remplir la jauge d'erreur. Avant de refuser un
+## pas, on essaie un pas plus court (il s'approche du bord à petits pas). Deux contrôles :
 ## le trajet du pied (bas des murs, muret, fossé) et une boîte autour de la caisse du corps (murs, poutre basse).
 ##
 ## Réseau : tout est calculé sur l'hôte. Les clients n'envoient que leurs joysticks (Lever, déjà en place).
@@ -49,6 +50,10 @@ const BODY_BOTTOM: float = 2.0
 const BODY_TOP: float = 9.1
 ## Hauteurs (au-dessus du sol) du trajet du pied contrôlées contre les obstacles.
 const FOOT_CHECK_HEIGHTS: Array[float] = [0.3, 1.2]
+## Pas essayés devant un obstacle : le pas entier, puis de plus en plus court.
+const OBSTACLE_STEP_SCALES: Array[float] = [1.0, 0.5, 0.25]
+## Le corps n'est « coincé dans un obstacle » (et libre d'en sortir) que s'il y est enfoncé de plus que ça (m).
+const STUCK_MARGIN: float = 0.3
 
 @export var body: Node3D
 @export var stick_left: Lever
@@ -240,7 +245,7 @@ func jump(angle: float) -> void:
 	var landing: Array[Vector3] = [_ground_at(_feet[Leg.LEFT].pos + move), _ground_at(_feet[Leg.RIGHT].pos + move)]
 	var landing_mid: Vector3 = (landing[0] + landing[1]) / 2.0
 	if (crouched and not _can_stand()) or _feet_in_obstacle(landing) \
-			or _body_hits_obstacle(landing_mid, _yaw, BODY_TOP):
+			or _body_hits_obstacle(landing_mid, _feet_yaw(), BODY_TOP):
 		_refuse()
 		return
 	crouched = false
@@ -389,9 +394,20 @@ func _start_step(leg: int, angle: float) -> void:
 	var new_yaw: float = other_yaw - side * deg_to_rad(turn)
 	var basis: Basis = Basis(Vector3.UP, new_yaw)
 	var lateral: float = (HIP_LOCAL[leg].x - HIP_LOCAL[other].x)
-	var target: Vector3 = _feet[other].pos + basis * Vector3(lateral, 0.0, -advance)
-	target = _ground_at(target)
-	if _step_hits_obstacle(_feet[leg].pos, target, _feet[other].pos, new_yaw):
+	var target: Vector3 = Vector3.ZERO
+	var free: bool = false
+	# Devant un obstacle, on essaie un pas plus court (le robot s'approche à petits pas du bord d'un trou,
+	# d'un mur…), tant que ce pas fait encore avancer le pied.
+	for scale: float in OBSTACLE_STEP_SCALES:
+		target = _ground_at(_feet[other].pos + basis * Vector3(lateral, 0.0, -advance * scale))
+		var gain: float = (target - _feet[leg].pos).dot(basis * Vector3(0.0, 0.0, -signf(advance)))
+		if scale < 1.0 and (is_zero_approx(advance) or gain < 0.1):
+			break
+		if not _step_hits_obstacle(_feet[leg].pos, target, _feet[other].pos,
+				lerp_angle(other_yaw, new_yaw, 0.5)):
+			free = true
+			break
+	if not free:
 		_refuse()
 		return
 	var foot: Foot = _feet[leg]
@@ -604,8 +620,13 @@ func _refuse() -> void:
 	blocked.emit()
 
 
-## Vrai si un pas de `from` à `to` (l'autre pied resté en `planted`, le robot tourné vers `yaw`) entre dans
-## un obstacle : trajet du pied, ou caisse du corps à sa nouvelle place.
+## Direction du corps une fois les pieds posés : la moyenne de celles des deux pieds.
+func _feet_yaw() -> float:
+	return lerp_angle(_feet[Leg.LEFT].to_yaw, _feet[Leg.RIGHT].to_yaw, 0.5)
+
+
+## Vrai si un pas de `from` à `to` (l'autre pied resté en `planted`, le corps tourné vers `yaw` une fois le
+## pied posé) entre dans un obstacle : trajet du pied, ou caisse du corps à sa nouvelle place.
 func _step_hits_obstacle(from: Vector3, to: Vector3, planted: Vector3, yaw: float) -> bool:
 	if _foot_path_blocked(from, to):
 		return true
@@ -618,7 +639,7 @@ func _can_stand() -> bool:
 	if not _ready_done:
 		return true
 	var ground: Vector3 = (_feet[Leg.LEFT].to + _feet[Leg.RIGHT].to) / 2.0
-	return not _body_hits_obstacle(ground, _yaw, BODY_TOP, true)
+	return not _body_hits_obstacle(ground, _feet_yaw(), BODY_TOP, true)
 
 
 func _foot_path_blocked(from: Vector3, to: Vector3) -> bool:
@@ -645,20 +666,21 @@ func _feet_in_obstacle(points: Array[Vector3]) -> bool:
 
 
 ## Vrai si la caisse du corps, posée au-dessus du point du sol `ground` et tournée vers `yaw`, touche un
-## obstacle. Si le corps est déjà dans un obstacle là où il est (il y est entré par un autre chemin), on le
-## laisse en sortir : seule une nouvelle place libre compte, sauf `strict`.
+## obstacle. Si le corps est déjà franchement dans un obstacle là où il est (plus de STUCK_MARGIN : il y est
+## entré par un autre chemin, niveau chargé autour de lui…), on le laisse en sortir, sauf `strict`.
 func _body_hits_obstacle(ground: Vector3, yaw: float, top: float, strict: bool = false) -> bool:
 	if not strict and _ready_done:
 		var here: Vector3 = (_feet[Leg.LEFT].to + _feet[Leg.RIGHT].to) / 2.0
 		var here_top: float = BODY_TOP - (crouch_drop if crouched else 0.0)
-		if _box_overlaps(here, _yaw, here_top):
+		if _box_overlaps(here, _feet_yaw(), here_top, STUCK_MARGIN):
 			return false
 	return _box_overlaps(ground, yaw, top)
 
 
-func _box_overlaps(ground: Vector3, yaw: float, top: float) -> bool:
+## `shrink` : la caisse est rentrée d'autant sur chaque face.
+func _box_overlaps(ground: Vector3, yaw: float, top: float, shrink: float = 0.0) -> bool:
 	var shape: BoxShape3D = BoxShape3D.new()
-	shape.size = Vector3(BODY_HALF.x * 2.0, top - BODY_BOTTOM, BODY_HALF.y * 2.0)
+	shape.size = Vector3(BODY_HALF.x * 2.0, top - BODY_BOTTOM, BODY_HALF.y * 2.0) - Vector3.ONE * 2.0 * shrink
 	var query: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
 	query.shape = shape
 	query.transform = Transform3D(Basis(Vector3.UP, yaw), ground + Vector3.UP * (BODY_BOTTOM + top) / 2.0)

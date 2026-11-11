@@ -8,10 +8,14 @@ extends RefCounted
 ## - chaque propriété « à chaque changement » des MultiplayerSynchronizer tenus par l'hôte ;
 ## - chaque objet réseau (RigidBody3D, ou nœud qui porte un MultiplayerSynchronizer) : sa présence
 ##   et sa place (à 10 cm près).
-## Les nains sont ignorés (chaque joueur a l'autorité sur le sien).
+## Les nains sont ignorés (chaque joueur a l'autorité sur le sien). Les objets du groupe `MOVING_GROUP` ne comptent
+## que par leur présence.
 
 const POSITION_TOLERANCE: float = 0.15
 const FLOAT_TOLERANCE: float = 0.05
+## Objets que l'hôte déplace sans arrêt (caisses mobiles du tuto…) : leur place n'est jamais la même au même
+## instant chez deux joueurs. On ne compare que leur présence. Le groupe est donné chez chaque joueur.
+const MOVING_GROUP: StringName = &"net_moving"
 
 
 ## `continuous` : ajoute aussi les propriétés envoyées en continu (bras, jauges…). Elles bougent tout le
@@ -45,7 +49,8 @@ static func _walk(root: Node, node: Node, out: Dictionary, continuous: bool) -> 
 	if node is MultiplayerSynchronizer:
 		_add_sync(root, node as MultiplayerSynchronizer, out, continuous)
 	elif node is Node3D and _is_net_object(node):
-		var place: Vector3 = (node as Node3D).global_position.snappedf(0.1)
+		var moving: bool = node.is_in_group(MOVING_GROUP)
+		var place: Variant = "présent" if moving else (node as Node3D).global_position.snappedf(0.1)
 		out["objet " + str(root.get_path_to(node))] = place
 	for child: Node in node.get_children():
 		_walk(root, child, out, continuous)
@@ -64,7 +69,7 @@ static func _add_sync(root: Node, sync: MultiplayerSynchronizer, out: Dictionary
 	if sync.get_multiplayer_authority() != 1 or sync.replication_config == null:
 		return
 	var target: Node = sync.get_node_or_null(sync.root_path)
-	if target == null:
+	if target == null or target.is_in_group(MOVING_GROUP):
 		return
 	var config: SceneReplicationConfig = sync.replication_config
 	for prop: NodePath in config.get_properties():

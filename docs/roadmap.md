@@ -7,10 +7,10 @@
 > Une tâche finie tient en **une ligne** : le détail (comment, pourquoi) va dans `docs/decisions.md`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : 5.8 parcours tuto de dev [en cours — Marchma0].
+**En cours** : rien pour l'instant.
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) :
-- `net_test.sh` échoue sur deux étapes des fléchettes au sol (« fléchette au sol ramassée », « la dernière fléchette posée au sol ») ; vu le 2026-11-11, déjà présent avant le tuto. L'étape « grappin : nain posé sous le rayon » rate aussi de temps en temps.
+- `net_test.sh` échoue parfois (pas à chaque fois) sur deux étapes des fléchettes au sol (« fléchette au sol ramassée », « la dernière fléchette posée au sol ») ; vu le 2026-11-11, déjà présent avant le tuto. L'étape « grappin : nain posé sous le rayon » rate aussi de temps en temps.
 
 ### Phase 1 — Fondations (moteur, réseau, outils)
 - [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet, 4 nains (M0)
@@ -73,7 +73,7 @@
 - [ ] 5.4 Histoire : le fil rouge des 10 missions, et la mécanique phare de chacune (à valider avec le porteur du projet) ; point de départ validé : le robot acheté à la casse (5.7)
 - [ ] 5.6 **Radio du personnage guide** : poste radio dans le cockpit, voix en charabia + bulle de texte traduite (`tr()`), réagit aux actions des joueurs (chute, caca lancé…) ; répliques déclenchées par l'hôte, vues et entendues par tous
 - [ ] 5.7 **Intro = mission tutoriel « Ramener le robot de la casse »** : au premier lancement d'une nouvelle partie, les nains apparaissent à la casse et ramènent le robot à la base ; une mécanique à la fois (entrer, démarrer, marcher, foreuse, grappin, se relever) guidée par la radio (5.6) ; arrivée à la base par la sortie du robot (4.8). Dépend de 3.4 (marche finie), 5.3 (cadre de mission) et 4.3 (savoir si la partie est neuve)
-- [ ] 5.8 **Parcours tuto de dev** (provisoire, pour les développeurs) [en cours — Marchma0] : parcours linéaire lancé depuis le terminal du camp, une étape par commande (avancer, virage, saut, accroupi, demi-tour, foreuse, grappin, sortir et remonter) ; le robot ne traverse plus les obstacles
+- [x] 5.8 **Parcours tuto de dev** (2026-11-11, provisoire, pour les développeurs) : parcours linéaire en 12 étapes lancé depuis le terminal du camp (avancer, virage, saut d'un trou, accroupi, demi-tour, foreuse, grappin, caisses mobiles, bouton au sol, nain monté sur la tour par un bras, remonter, arrivée) ; le robot ne traverse plus les obstacles
 - [ ] 5.5 Les 10 missions, une par une (une ligne par mission ici une fois 5.4 validé) : environnement + mécanique propre + histoire
 
 ### Phase 6 — Finitions

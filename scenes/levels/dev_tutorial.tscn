@@ -21,9 +21,12 @@ tonemap_mode = 2
 properties/0/path = NodePath(".:step")
 properties/0/spawn = true
 properties/0/replication_mode = 2
-properties/1/path = NodePath(".:gate_open")
+properties/1/path = NodePath(".:gates_open")
 properties/1/spawn = true
 properties/1/replication_mode = 2
+properties/2/path = NodePath(".:crates_left")
+properties/2/spawn = true
+properties/2/replication_mode = 2
 
 [node name="DevTutorial" type="Node3D"]
 script = ExtResource("1_tuto")
@@ -71,6 +74,32 @@ drops_container = NodePath("../../CargoCrates")
 
 [node name="OutsideButton" parent="." instance=ExtResource("5_button")]
 unique_name_in_owner = true
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 2, 1, -48)
+transform = Transform3D(-3, 0, 0, 0, 3, 0, 0, 0, -3, -35, 1, -45.2)
 display_name = "Bouton du tuto"
 cap_color = Color(0.2, 0.75, 0.25, 1)
+
+[node name="TowerButton" parent="." instance=ExtResource("5_button")]
+unique_name_in_owner = true
+transform = Transform3D(0, 0, 3, 0, 3, 0, -3, 0, 0, -44, 6.3, -58.5)
+display_name = "Bouton de la tour du tuto"
+cap_color = Color(0.2, 0.75, 0.25, 1)
+
+[node name="MovingCrates" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Mover1" parent="MovingCrates" instance=ExtResource("2_crate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 0, -64)
+
+[node name="Mover2" parent="MovingCrates" instance=ExtResource("2_crate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -68.5)
+
+[node name="Mover3" parent="MovingCrates" instance=ExtResource("2_crate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 0, -76)
+
+[node name="Mover4" parent="MovingCrates" instance=ExtResource("2_crate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 0.3, -75)
+
+[node name="MovingSpawner" type="MultiplayerSpawner" parent="."]
+script = ExtResource("4_netspawner")
+_spawnable_scenes = PackedStringArray("res://scenes/props/cargo_crate.tscn")
+spawn_path = NodePath("../MovingCrates")
