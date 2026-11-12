@@ -27,45 +27,55 @@ from mathutils import Matrix, Vector
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 
-# Palette partagée par TOUT l'intérieur (mêmes noms et valeurs que dans mecha.blend).
+# Palette partagée par TOUS les modèles (direction artistique : docs/modeles_3d.md).
+# Couleurs de jouet peint, valeurs moyennes à claires et saturées : les ombres viennent de la lumière, pas des couleurs.
+# Le noir pur est réservé aux contours (shader dans Godot). Les noms ne changent pas : les scripts s'en servent.
+# Un .blend déjà construit (mecha.blend…) garde ses anciennes couleurs tant que son script n'est pas relancé.
 # nom: (couleur linéaire RGB, rugosité, métal, émission)
 PALETTE = {
-    "Board": ((0.120, 0.170, 0.140), 0.90, 0.0, 0.0),
-    "Bulb": ((1.000, 0.800, 0.450), 0.40, 0.0, 4.0),
-    "Canvas": ((0.880, 0.800, 0.640), 0.95, 0.0, 0.0),
-    "ButtonGreen": ((0.200, 0.700, 0.250), 0.75, 0.0, 0.0),
-    "ButtonRed": ((0.800, 0.150, 0.100), 0.75, 0.0, 0.0),
-    "Ceiling": ((0.700, 0.660, 0.580), 0.75, 0.0, 0.0),
-    "Copper": ((0.780, 0.450, 0.220), 0.35, 0.9, 0.0),
-    "Cream": ((0.860, 0.790, 0.630), 0.75, 0.0, 0.0),
-    "Cushion": ((0.860, 0.600, 0.220), 0.90, 0.0, 0.0),
-    "DartBlack": ((0.070, 0.070, 0.070), 0.80, 0.0, 0.0),
-    "DartGreen": ((0.120, 0.400, 0.200), 0.80, 0.0, 0.0),
-    "DartRed": ((0.700, 0.100, 0.080), 0.80, 0.0, 0.0),
-    "FloorPlate": ((0.300, 0.310, 0.330), 0.60, 0.6, 0.0),
-    "Glass": ((0.600, 0.800, 0.900), 0.05, 0.0, 0.0),
-    "Grime": ((0.160, 0.130, 0.100), 1.00, 0.0, 0.0),
-    "Iron": ((0.420, 0.430, 0.460), 0.45, 0.8, 0.0),
-    "IronDark": ((0.170, 0.170, 0.190), 0.55, 0.7, 0.0),
-    "Lamp": ((1.000, 0.750, 0.400), 0.75, 0.0, 3.0),
-    "Neon": ((0.100, 0.850, 1.000), 0.40, 0.0, 3.0),
-    "Ochre": ((0.800, 0.480, 0.240), 0.95, 0.0, 0.0),
-    "Paint": ((0.290, 0.470, 0.450), 0.75, 0.0, 0.0),
-    "Paper": ((0.920, 0.860, 0.700), 0.90, 0.0, 0.0),
-    "Patch": ((0.360, 0.400, 0.380), 0.60, 0.4, 0.0),
-    "Plant": ((0.250, 0.500, 0.200), 0.90, 0.0, 0.0),
-    "Rug": ((0.550, 0.150, 0.120), 1.00, 0.0, 0.0),
-    "RugTrim": ((0.880, 0.720, 0.360), 1.00, 0.0, 0.0),
-    "Rust": ((0.300, 0.170, 0.090), 1.00, 0.0, 0.0),
-    "RockDark": ((0.420, 0.230, 0.160), 0.95, 0.0, 0.0),
-    "Sand": ((0.860, 0.660, 0.430), 1.00, 0.0, 0.0),
-    "Scrub": ((0.470, 0.500, 0.250), 0.95, 0.0, 0.0),
-    "Terracotta": ((0.640, 0.300, 0.180), 0.95, 0.0, 0.0),
-    "Velvet": ((0.170, 0.360, 0.240), 0.95, 0.0, 0.0),
-    "WallCream": ((0.800, 0.740, 0.620), 0.75, 0.0, 0.0),
-    "WallTeal": ((0.220, 0.360, 0.350), 0.75, 0.0, 0.0),
-    "Wood": ((0.450, 0.280, 0.140), 0.75, 0.0, 0.0),
-    "Yellow": ((0.900, 0.700, 0.150), 0.75, 0.0, 0.0),
+    # --- Robot et métal (récupéré à la casse, repeint, rafistolé)
+    "Paint": ((0.100, 0.360, 0.330), 0.70, 0.0, 0.0),        # peinture sarcelle du robot : ressort sur les décors chauds
+    "Patch": ((0.520, 0.300, 0.120), 0.65, 0.3, 0.0),        # tôle rapportée d'une autre couleur (rustine)
+    "Iron": ((0.360, 0.380, 0.440), 0.45, 0.8, 0.0),         # acier gris-bleu
+    "IronDark": ((0.090, 0.100, 0.140), 0.55, 0.7, 0.0),     # acier sombre bleu nuit (jamais noir)
+    "Copper": ((0.850, 0.400, 0.150), 0.35, 0.9, 0.0),       # cuivre et laiton des détails
+    "Rust": ((0.420, 0.150, 0.050), 1.00, 0.0, 0.0),
+    "Grime": ((0.130, 0.100, 0.080), 1.00, 0.0, 0.0),
+    "Yellow": ((0.950, 0.620, 0.050), 0.70, 0.0, 0.0),       # jaune chantier : ce qu'on peut toucher
+    "ButtonGreen": ((0.100, 0.750, 0.150), 0.60, 0.0, 0.0),
+    "ButtonRed": ((0.850, 0.080, 0.050), 0.60, 0.0, 0.0),
+    # --- Intérieur du robot (coque : mecha_shell.py)
+    "WallCream": ((0.780, 0.620, 0.420), 0.75, 0.0, 0.0),
+    "WallTeal": ((0.060, 0.220, 0.210), 0.75, 0.0, 0.0),
+    "FloorPlate": ((0.260, 0.280, 0.320), 0.60, 0.6, 0.0),
+    "Ceiling": ((0.520, 0.460, 0.380), 0.75, 0.0, 0.0),
+    "Cream": ((0.820, 0.680, 0.460), 0.75, 0.0, 0.0),
+    # --- Lumières et écrans (émissifs : guident l'œil)
+    "Lamp": ((1.000, 0.620, 0.220), 0.75, 0.0, 4.0),         # lanternes, ampoules ambre
+    "Bulb": ((1.000, 0.750, 0.380), 0.40, 0.0, 4.0),
+    "Neon": ((0.050, 0.750, 1.000), 0.40, 0.0, 3.0),         # écrans à tube, rayon tracteur
+    "Ore": ((0.100, 0.900, 0.750), 0.30, 0.0, 2.0),          # veines de minerai qui brillent
+    "Glass": ((0.450, 0.700, 0.850), 0.05, 0.0, 0.0),
+    # --- Mine et nature
+    "Wood": ((0.420, 0.220, 0.090), 0.75, 0.0, 0.0),
+    "Canvas": ((0.800, 0.680, 0.480), 0.95, 0.0, 0.0),
+    "RockDark": ((0.300, 0.180, 0.130), 0.95, 0.0, 0.0),     # roche brune
+    "Slate": ((0.180, 0.200, 0.280), 0.90, 0.0, 0.0),        # roche ardoise gris-bleu (grottes)
+    "Sand": ((0.800, 0.550, 0.300), 1.00, 0.0, 0.0),
+    "Terracotta": ((0.620, 0.240, 0.110), 0.95, 0.0, 0.0),
+    "Ochre": ((0.850, 0.420, 0.120), 0.95, 0.0, 0.0),
+    "Scrub": ((0.350, 0.420, 0.120), 0.95, 0.0, 0.0),
+    "Plant": ((0.150, 0.500, 0.100), 0.90, 0.0, 0.0),
+    # --- Vie des nains (tissus, jeux, papier)
+    "Velvet": ((0.080, 0.320, 0.180), 0.95, 0.0, 0.0),
+    "Cushion": ((0.880, 0.520, 0.120), 0.90, 0.0, 0.0),
+    "Rug": ((0.550, 0.100, 0.070), 1.00, 0.0, 0.0),
+    "RugTrim": ((0.900, 0.650, 0.250), 1.00, 0.0, 0.0),
+    "Paper": ((0.900, 0.800, 0.600), 0.90, 0.0, 0.0),
+    "Board": ((0.060, 0.100, 0.090), 0.90, 0.0, 0.0),
+    "DartBlack": ((0.030, 0.030, 0.040), 0.80, 0.0, 0.0),
+    "DartGreen": ((0.060, 0.380, 0.150), 0.80, 0.0, 0.0),
+    "DartRed": ((0.750, 0.060, 0.040), 0.80, 0.0, 0.0),
 }
 
 

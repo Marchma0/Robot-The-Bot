@@ -82,8 +82,8 @@ par le porteur du projet :
 - Aujourd'hui : une mission de test (rochers à miner, caisses), un bouton « retour au camp » au fond du ventre.
 
 ## Le robot
-- Robot trapu low poly, style « robot cosy mais pas trop » : métal peint, chanfreins, rivets, hublots ronds,
-  touches de cuivre. Pas d'ambiance cabane.
+- Robot trapu low poly, vieux robot de casse retapé par les nains : tôle peinte sarcelle écaillée, pièces rapportées,
+  rivets, hublots ronds, touches de cuivre (direction artistique : `docs/modeles_3d.md`).
 - **Deux étages** :
   - **Ventre** : 2 nains aux postes des **jambes** (une jambe chacun) ; c'est aussi le salon.
   - **Tête** : 2 nains aux postes des **bras** — gauche **grappin**, droite **foreuse**. On voit dehors par les deux yeux ronds.
