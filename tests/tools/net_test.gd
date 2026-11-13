@@ -118,6 +118,7 @@ func _run_host() -> void:
 	await get_tree().create_timer(STEP_WAIT * 3.0).timeout
 	await _check("caca attrapé par le grappin et rangé dans le sac")
 	await _inventory_steps()
+	await _grab_ally_steps()
 
 	_director._travel(&"lobby")
 	await get_tree().create_timer(STEP_WAIT * 2.0).timeout
@@ -460,3 +461,33 @@ func _on_timeout() -> void:
 func _log(text: String) -> void:
 	print("[net_test %s] %s" % [_role, text])
 
+
+## Grappin (3.14) : le nain du client est dehors, la pince de l'hôte le saisit (il pend dessous, chez tout le
+## monde), puis le pose au sol devant le robot, sous la main du grappin. C'est le client qui déplace son nain (il en a l'autorité).
+func _grab_ally_steps() -> void:
+	var mecha: Node3D = _world.get_node("Mecha") as Node3D
+	var arm: GrabberArm = mecha.get_node("GrabberArm") as GrabberArm
+	var client_dwarf: Dwarf = Dwarf.of_peer(_client_id)
+	var outside: Vector3 = mecha.global_transform * Vector3(-6.0, 0.2, -4.0)
+	_client_action.rpc_id(_client_id, "Mecha", "place_at", [outside])
+	await get_tree().create_timer(STEP_WAIT).timeout
+	if not arm.grab_node(client_dwarf, GrabberArm.KIND_DWARF):
+		_failures += 1
+		_log("ÉCHEC  grappin : la pince ne saisit pas le nain du client (dehors)")
+		return
+	await get_tree().create_timer(0.3).timeout
+	var hold: Vector3 = arm.get_hold_point().global_position
+	if client_dwarf.global_position.distance_to(hold) > 2.0:
+		_failures += 1
+		_log("ÉCHEC  grappin : le nain du client ne pend pas sous la pince (%.1f m)" % client_dwarf.global_position.distance_to(hold))
+	else:
+		_log("OK     grappin : le nain du client pend sous la pince")
+	await get_tree().create_timer(GrabberArm.DELIVER_DURATION + STEP_WAIT).timeout
+	var beam: Vector3 = mecha.get_node("ClawDropPoint").global_position
+	var flat: float = Vector2(client_dwarf.global_position.x - beam.x, client_dwarf.global_position.z - beam.z).length()
+	# Devant le robot : l'avant est -Z dans son repère, la coque s'arrête vers z = -2,3.
+	var front: bool = mecha.to_local(client_dwarf.global_position).z < -2.5
+	if arm.held_peer_id != 0 or flat > 1.0 or not front:
+		_failures += 1
+		_log("ÉCHEC  grappin : le nain du client n'est pas posé devant le robot, sous la main du grappin (%.1f m)" % flat)
+	await _check("grappin : le nain du client est posé devant le robot")
