@@ -570,10 +570,6 @@ func _stay_seated(seat: Seat, stick_look: Vector2) -> void:
 		_seat_look = Vector2.ZERO
 	else:
 		_look(Vector2(-stick_look.x, stick_look.y))
-		# Mini-jeu assis (bras de fer) : chaque clic part vers le jeu, sur l'hôte.
-		if seat.game != null and Input.is_action_just_pressed("grab"):
-			seat.request_game_push.rpc_id(1)
-			anim_press_count += 1
 		sit = seat.get_sit_transform() * Transform3D(Basis(Vector3.UP, _seat_yaw), Vector3.ZERO)
 	if _sit_glide < 1.0:
 		_sit_glide = minf(_sit_glide + get_physics_process_delta_time() / SIT_GLIDE_TIME, 1.0)

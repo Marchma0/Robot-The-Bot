@@ -11,9 +11,6 @@ extends Interactable
 ## l'occupant arrivent en unreliable_ordered ; l'hôte ignore celles des autres.
 ## L'image brouillée (écran et plein écran) est calculée localement par chaque peer.
 
-## Hôte : l'occupant a cliqué pendant un mini-jeu joué assis (game, ex. bras de fer).
-signal game_pushed(peer_id: int)
-
 ## Viseur dessiné en plein écran : pince du grappin ou cible de la foreuse.
 enum Reticle { CLAW, DRILL }
 
@@ -36,8 +33,6 @@ const SCREEN_VIEW_FILL: float = 0.9
 @export var reticle: Reticle = Reticle.CLAW
 ## Vrai si le saut lance quelque chose depuis ce poste (grappin) : affiche l'icône correspondante.
 @export var can_launch: bool = false
-## Mini-jeu joué assis (bras de fer) : chaque clic de l'occupant est signalé par `game_pushed` (sur l'hôte).
-@export var game: Node
 
 ## Peer installé sur le siège (0 = libre). Autorité : hôte.
 var occupant_peer_id: int = 0
@@ -111,8 +106,6 @@ func get_hints() -> Array[InputHint]:
 				station_hints.append(InputHint.make(&"jump", &"throw"))
 			station_hints.append(InputHint.make(&"interact", &"stand_up"))
 			return station_hints
-		if game != null:
-			return [InputHint.make(&"grab", &"hand_grab"), InputHint.make(&"interact", &"stand_up")]
 		return [InputHint.make(&"interact", &"stand_up")]
 	if occupant_peer_id != 0:
 		return [InputHint.state(&"locked")]
@@ -185,12 +178,6 @@ func request_leave() -> void:
 	if multiplayer.is_server() and multiplayer.get_remote_sender_id() == occupant_peer_id:
 		_free_seat()
 
-
-## Occupant -> hôte : un clic pendant le mini-jeu de ce siège.
-@rpc("any_peer", "call_local", "reliable")
-func request_game_push() -> void:
-	if multiplayer.is_server() and game != null and multiplayer.get_remote_sender_id() == occupant_peer_id:
-		game_pushed.emit(occupant_peer_id)
 
 
 @rpc("any_peer", "call_local", "unreliable_ordered")

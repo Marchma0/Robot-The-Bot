@@ -1,6 +1,6 @@
 extends Node
 ## Bac à sable M12 / M12.1 : lance le jeu (scène principale) en hôte hors réseau, puis joue tout le parcours :
-## apparition au camp, vues du camp, bras de fer (contre un adversaire simulé),
+## apparition au camp, vues du camp,
 ## terminal (flèches + bouton vert, compte à rebours), départ en mission (terrain de test) quand le nain
 ## monte à bord, puis bouton « retour au camp ». Captures : build/views/lobby_*.png.
 
@@ -28,25 +28,6 @@ func _ready() -> void:
 	_cam = Camera3D.new()
 	add_child(_cam)
 	await _shot_from("2_vue_ensemble", Vector3(16.0, 14.0, -22.0), Vector3(0.0, 2.0, 4.0))
-
-	# Bras de fer : le nain s'assoit à gauche, un adversaire simulé à droite (peer 99)
-	var arm: ArmwrestleGame = level.get_node("Minigames/ArmWrestling")
-	arm.seat_left.occupant_peer_id = 1
-	arm.seat_right.occupant_peer_id = 99
-	await _wait(3.4)
-	print("Bras de fer : état %d (2 = combat), occupants %d / %d" % [arm.state, arm.seat_left.occupant_peer_id, arm.seat_right.occupant_peer_id])
-	for k: int in 12:
-		arm.seat_left.game_pushed.emit(1)
-		await _wait(0.05)
-	await _shot_from("4_bras_de_fer", arm.to_global(Vector3(0.2, 1.5, 2.2)), arm.to_global(Vector3(0.0, 0.9, 0.0)))
-	for k: int in 30:
-		arm.seat_left.game_pushed.emit(1)
-		await _wait(0.05)
-	await _wait(0.2)
-	print("Bras de fer : état %d (3 = gagné), rapport %.2f, gagnant « %s »" % [arm.state, arm.balance, arm.winner_name])
-	TestCheck.expect(arm.state == ArmwrestleGame.State.WIN and arm.winner_name == dwarf.get_display_name(), "bras de fer : le joueur qui martèle gagne")
-	arm.seat_left.occupant_peer_id = 0
-	arm.seat_right.occupant_peer_id = 0
 
 	# Terminal : flèche suivante (mission verrouillée), retour, bouton vert
 	var terminal: MissionTerminal = level.get_node("MissionTerminal")

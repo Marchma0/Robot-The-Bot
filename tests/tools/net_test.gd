@@ -125,17 +125,15 @@ func _run_host() -> void:
 	await _client_step("terminal : mission suivante (client)", "Level/Lobby/MissionTerminal/Next", "request_press")
 	await _client_step("fléchettes du robot prises (client)", "Mecha/Controls/Darts", "darts_take")
 	await _client_step("fléchette lancée (client)", "Mecha/Controls/Darts", "throw")
-	await _client_step("fléchettes en main : assis au bras de fer, fléchettes rangées (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit")
-	await _client_step("levé du bras de fer, fléchettes revenues en main (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_leave")
-	await _client_step("G : une fléchette posée au sol (client)", "Mecha/Controls/Darts", "request_drop_one")
+	await _client_step("fléchettes en main : assis sur le canapé, fléchettes rangées (client)", "Mecha/Controls/Sofa_Left", "request_sit")
+	await _client_step("levé du canapé, fléchettes revenues en main (client)", "Mecha/Controls/Sofa_Left", "request_leave")
+	await _client_step("G : une fléchette posée au sol (client)", "Mecha/Controls/Darts", "darts_drop")
 	await _client_step("fléchette au sol ramassée, celle-là seulement (client)", "Mecha/Controls/Darts",
 		"stay:request_take_one", [_dart_on_floor()])
-	await _client_step("G : fléchette reposée au sol (client)", "Mecha/Controls/Darts", "request_drop_one")
-	await _client_step("G : la dernière fléchette posée au sol (client)", "Mecha/Controls/Darts", "request_drop_one")
+	await _client_step("G : fléchette reposée au sol (client)", "Mecha/Controls/Darts", "darts_drop")
+	await _client_step("G : la dernière fléchette posée au sol (client)", "Mecha/Controls/Darts", "darts_drop")
 	await _client_step("clic sur la cible : fléchettes remises (client)", "Mecha/Controls/Darts", "request_reset")
 	await _dart_in_client_step()
-	await _client_step("bras de fer : assis (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit")
-	await _client_step("bras de fer : levé (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_leave")
 
 	_director._travel(&"test_ground")
 	await get_tree().create_timer(STEP_WAIT * 2.0).timeout
@@ -356,14 +354,16 @@ func _client_action(path: String, action: String, args: Array) -> void:
 			(player as Dwarf).place_at(front)
 			await get_tree().create_timer(0.6).timeout
 			(target as RoboJetTouch).game.tap()
-		"darts_take", "throw":
-			# Devant la cible du salon (au sol du ventre), puis : prendre, ou lancer vers la cible.
+		"darts_take", "darts_drop", "throw":
+			# Devant la cible du salon (au sol du ventre), puis : prendre, poser une fléchette (G), ou lancer.
 			var thrower: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
 			var stand: Vector3 = target.to_global(Vector3(0.0, -1.2, -1.6))
 			(thrower as Dwarf).place_at(stand)
 			await get_tree().create_timer(0.6).timeout
 			if action == "darts_take":
 				target.request_take.rpc_id(1)
+			elif action == "darts_drop":
+				target.request_drop_one.rpc_id(1)
 			else:
 				var eye: Vector3 = stand + target.global_basis.y * 0.95
 				var aim: Vector3 = target.to_global(Vector3(0.0, 0.15, 0.0))
