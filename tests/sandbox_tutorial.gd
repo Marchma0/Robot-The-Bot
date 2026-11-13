@@ -128,42 +128,17 @@ func _ready() -> void:
 
 	# Collé à la barrière, il ne peut pas pivoter (un pied avancerait dedans) : il recule d'abord.
 	await _step_back(4)
-	# Bouton au sol (appui déjà validé par l'hôte), puis la tour.
+	# Porte 3 fermée tant que le bouton au sol n'est pas appuyé (appui déjà validé par l'hôte).
 	await _walk_to(Vector2(-10.0, -52.0))
-	await _walk_to(Vector2(-40.0, -52.0))
-	(_level.get_node("%OutsideButton") as PushButton).pressed.emit(1)
-	await _wait(0.3)
-	_expect_step(DevTutorial.Step.LIFT, "étape 9 : bouton au sol")
-	(_level.get_node("%OutsideButton") as PushButton).pressed.emit(1)
-	_expect_step(DevTutorial.Step.LIFT, "le bouton au sol ne valide pas l'étape de la tour")
-
-	# Ascenseur : la foreuse baissée touche le sol (un nain y monte) ; levée et tournée, elle arrive au-dessus
-	# de la tour (il en descend sur la plateforme).
-	var drill: DrillArm = _mecha.get_node("DrillArm") as DrillArm
-	var bit: Node3D = drill.get_node("ElbowPivot/SliderPivot/ArmBody/CollisionShape3D")
-	drill.arm_yaw = 0.0
-	drill.arm_pitch = MechaArmUtils.PITCH_MIN
-	drill.extension = DrillArm.MAX_EXTENSION
-	await _wait(0.5)
-	TestCheck.expect(bit.global_position.y < 1.2, "foreuse baissée : le bout est au sol (%.2f m)" % bit.global_position.y)
-	await _shot_follow("4_bras_baisse")
-	drill.arm_yaw = -deg_to_rad(45.0)
-	drill.arm_pitch = deg_to_rad(22.0)
-	await _wait(0.5)
-	var tip: Vector3 = bit.global_position
-	TestCheck.expect(DevTutorial.TOWER.has_point(Vector2(tip.x, tip.z)) and tip.y - 0.4 > DevTutorial.TOWER_HEIGHT,
-		"foreuse levée : le bout est au-dessus de la tour (%s)" % tip)
-	await _shot("5_bras_sur_la_tour", Vector3(-51.0, 11.0, -67.0), Vector3(-43.0, 5.0, -57.0))
-	drill.reset_arm()
 	_blocked = 0
 	await _walk_to(Vector2(-56.0, -52.0), true)
 	TestCheck.expect(_blocked > 0 and _pos().x > -48.0, "porte 3 : fermée, le robot s'arrête devant (x = %.1f)" % _pos().x)
-	(_level.get_node("%TowerButton") as PushButton).pressed.emit(1)
+	(_level.get_node("%OutsideButton") as PushButton).pressed.emit(1)
 	await _wait(DevTutorial.GATE_TIME + 0.5)
-	TestCheck.expect(_level.is_gate_open(DevTutorial.Gate.LIFT), "bouton de la tour : la porte 3 s'ouvre")
-	_expect_step(DevTutorial.Step.FINISH, "étapes 10 et 11 : bouton de la tour, puis tout le monde à bord (pas de nain ici)")
+	TestCheck.expect(_level.is_gate_open(DevTutorial.Gate.BUTTON), "bouton au sol : la porte 3 s'ouvre")
+	_expect_step(DevTutorial.Step.FINISH, "étapes 9 et 10 : bouton au sol, puis tout le monde à bord (pas de nain ici)")
 	await _walk_to(Vector2(-58.0, -52.0))
-	_expect_step(DevTutorial.Step.DONE, "étape 12 : arrivée, tuto terminé")
+	_expect_step(DevTutorial.Step.DONE, "étape 11 : arrivée, tuto terminé")
 	TestCheck.expect(_walker.phase == MechaWalker.Phase.WALKING, "le robot n'est jamais tombé")
 	await _shot_follow("6_arrivee")
 	TestCheck.finish(get_tree())

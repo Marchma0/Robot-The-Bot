@@ -3,15 +3,14 @@ extends Node3D
 ## Parcours tuto de dev (provisoire, sans décor) : un parcours linéaire, une étape par commande du robot.
 ## Chaque étape a sa consigne en haut de l'écran ; celles qui se valident en arrivant quelque part ont une
 ## dalle au sol (grise : plus tard, jaune : en cours, verte : faite) et un panneau. Les obstacles (murs, trou,
-## poutre, rochers, portes, barrière, tour) sont sur le calque « obstacle du robot »
+## poutre, rochers, portes, barrière) sont sur le calque « obstacle du robot »
 ## (MechaWalker.OBSTACLE_LAYER) : on ne passe qu'en utilisant la bonne commande.
 ##
 ## Plan (vu de dessus, le robot part en (0, 0) tourné vers -Z) :
 ## - couloir A vers -Z, virage à droite, couloir B vers +X : trou à sauter, poutre basse ;
 ## - salle du demi-tour, puis couloir C vers -X : deux rochers à forer, porte 1 (2 caisses dans le sac) ;
 ## - salle des caisses mobiles (au sud du chemin, derrière une barrière) : les 4 rangées, la porte 2 s'ouvre ;
-## - couloir F : bouton au sol (un nain sort), tour avec un bouton en haut (un nain monte sur un bras du
-##   robot, le pilote du bras le lève), porte 3, arrivée.
+## - couloir F : bouton au sol (un nain sort, la porte 3 s'ouvre), arrivée.
 ## Murs, sol, trou et rails sont créés par le script (tables ci-dessous) : faciles à retoucher.
 ##
 ## Réseau : l'hôte tient `step`, `gates_open` et `crates_left` (synchronisés, On Change, spawn) ; chaque
@@ -21,9 +20,9 @@ extends Node3D
 ## Les murs sont créés pareil chez tout le monde (rien de réseau). Rochers, caisses et boutons sont dans la
 ## scène (recettes de docs/reseau.md).
 
-enum Step { WALK, TURN, JUMP, CROUCH, U_TURN, DRILL, GRAB, MOVING, BUTTON, LIFT, CLIMB, FINISH, DONE }
-## Portes (bits de `gates_open`) : 2 caisses dans le sac, caisses mobiles toutes rangées, bouton de la tour.
-enum Gate { CRATES, MOVING, LIFT }
+enum Step { WALK, TURN, JUMP, CROUCH, U_TURN, DRILL, GRAB, MOVING, BUTTON, CLIMB, FINISH, DONE }
+## Portes (bits de `gates_open`) : 2 caisses dans le sac, caisses mobiles toutes rangées, bouton au sol.
+enum Gate { CRATES, MOVING, BUTTON }
 
 ## Dalle de chaque étape qui en a une : Rect2(x, z, largeur en x, profondeur en z), dans le repère du niveau.
 const PADS: Dictionary[Step, Rect2] = {
@@ -40,7 +39,7 @@ const PADS: Dictionary[Step, Rect2] = {
 const GATES: Dictionary[Gate, Rect2] = {
 	Gate.CRATES: Rect2(19.5, -58.0, 1.0, 12.0),
 	Gate.MOVING: Rect2(-30.5, -58.0, 1.0, 12.0),
-	Gate.LIFT: Rect2(-50.5, -60.0, 1.0, 16.0),
+	Gate.BUTTON: Rect2(-50.5, -60.0, 1.0, 16.0),
 }
 const GATE_HEIGHT: float = 6.0
 const GATE_TIME: float = 1.5
@@ -49,9 +48,6 @@ const CRATES_NEEDED: int = 2
 ## Trou à sauter : 3 m de large (le saut en fait 5,5), 6 m de fond.
 const PIT: Rect2 = Rect2(22.0, -42.0, 3.0, 12.0)
 const PIT_DEPTH: float = 6.0
-## Tour de l'étape « ascenseur » : le bouton est en haut, hors d'atteinte sans un bras du robot.
-const TOWER: Rect2 = Rect2(-47.0, -60.0, 6.0, 3.0)
-const TOWER_HEIGHT: float = 5.5
 ## Trajet de chaque caisse mobile (nom du nœud sous `MovingCrates`) : va-et-vient de `from` à `to` à
 ## `speed` m/s, ou cercle de rayon `radius` autour de `center` à `speed` rad/s.
 const MOVERS: Dictionary[StringName, Dictionary] = {
@@ -93,7 +89,6 @@ var _time: float = 0.0
 var _released: Dictionary[StringName, bool] = {}
 
 @onready var _ground_button: PushButton = %OutsideButton
-@onready var _tower_button: PushButton = %TowerButton
 @onready var _moving_crates: Node3D = %MovingCrates
 
 
@@ -104,15 +99,12 @@ func _ready() -> void:
 	_build_pit()
 	_build_beam()
 	_build_arena()
-	_build_tower()
 	for gate: Gate in GATES:
 		_build_gate(gate)
 	_build_pads()
 	_build_hud()
 	_add_pedestal(_ground_button, 0.0)
-	_add_pedestal(_tower_button, TOWER_HEIGHT)
 	_ground_button.pressed.connect(_on_ground_button)
-	_tower_button.pressed.connect(_on_tower_button)
 	# Caisses mobiles (celles de la scène, puis celles que l'hôte envoie) : leur place change sans arrêt.
 	for crate: Node in _moving_crates.get_children():
 		crate.add_to_group(NetAudit.MOVING_GROUP)
@@ -154,8 +146,6 @@ func step_text(index: int) -> String:
 			return tr("Caisses mobiles : lancez la pince pour les attraper toutes (reste %d)") % crates_left
 		Step.BUTTON:
 			return tr("Dehors : sortez par la trappe et appuyez sur le bouton au sol")
-		Step.LIFT:
-			return tr("Ascenseur : un nain monte sur un bras baissé, son pilote le lève jusqu'en haut de la tour, il appuie sur le bouton")
 		Step.CLIMB:
 			return tr("Remontez tous dans le robot par la corde")
 		Step.FINISH:
@@ -184,7 +174,7 @@ func _host_update(delta: float) -> void:
 			if crates_left == 0:
 				_open(Gate.MOVING)
 				step += 1
-		Step.BUTTON, Step.LIFT, Step.DONE:
+		Step.BUTTON, Step.DONE:
 			pass   # les boutons font avancer l'étape
 		Step.CLIMB:
 			if _everyone_aboard():
@@ -231,12 +221,7 @@ func _open(gate: Gate) -> void:
 func _on_ground_button(_peer_id: int) -> void:
 	# Émis chez l'hôte seulement (appui déjà validé par le PushButton).
 	if step == Step.BUTTON:
-		step += 1
-
-
-func _on_tower_button(_peer_id: int) -> void:
-	if step == Step.LIFT:
-		_open(Gate.LIFT)
+		_open(Gate.BUTTON)
 		step += 1
 
 
@@ -298,8 +283,6 @@ func _walls() -> Array[AABB]:
 		_xz(-65.0, -31.0, -44.0, -43.0, h),
 		_xz(-65.0, -31.0, -61.0, -60.0, h),
 		_xz(-65.0, -64.0, -60.0, -44.0, h),
-		# Mur plus haut derrière la tour : d'en haut, un nain ne sort pas du parcours.
-		_xz(TOWER.position.x, TOWER.end.x, -61.0, -60.0, TOWER_HEIGHT + 2.5),
 	]
 
 
@@ -385,12 +368,6 @@ func _build_arena() -> void:
 		else:
 			_add_strip(Rect2(minf(from.x, to.x), minf(from.z, to.z) - 0.2,
 				maxf(absf(to.x - from.x), 0.4), maxf(absf(to.z - from.z), 0.4)), COLOR_DARK)
-
-
-## Tour de l'étape « ascenseur » : un bloc plein, le bouton est posé dessus (dans la scène).
-func _build_tower() -> void:
-	_add_box(_xz(TOWER.position.x, TOWER.end.x, TOWER.position.y, TOWER.end.y, TOWER_HEIGHT), COLOR_WALL, 1 | OBSTACLE)
-	_add_strip(TOWER, COLOR_PAD_NOW, TOWER_HEIGHT)
 
 
 func _build_gate(gate: Gate) -> void:

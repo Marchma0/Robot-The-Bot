@@ -11,7 +11,7 @@ extends MechaArm
 ## Dès qu'un objet est saisi, la pince le ramène à l'épaule gauche puis
 ## le transfère automatiquement dans le sac à dos (`Backpack.store_node`, M10).
 ## Un allié dehors se saisit aussi (au bras ou au lancer) : la pince le ramène et le pose au sol sous
-## `drop_point` (le rayon tracteur), au lieu du sac.
+## `drop_point` (devant le robot, sous la main du grappin), au lieu du sac.
 ##
 ## Réseau : l'hôte est seul autoritaire sur `arm_yaw`, `arm_pitch`, `extension`, `claw_closed`,
 ## `shot_state`, `shot_distance` et `held_peer_id` (répliqués par MultiplayerSynchronizer). Chaque peer anime le
@@ -23,6 +23,7 @@ signal item_grabbed(item: Node3D, item_kind: String)
 ## Pince lancée : au repos, partie, en train de revenir.
 enum Shot { IDLE, OUT, BACK }
 
+## Groupe des grappins (le tuto de dev écoute leurs prises, un nain cherche la pince qui le tient).
 const GROUP: StringName = &"grabber_arms"
 ## Type « objet » d'un allié saisi (il n'entre pas dans le sac : il est posé sous le robot).
 const KIND_DWARF: String = "dwarf"
@@ -57,7 +58,7 @@ const CABLE_ROOT_Z: float = -0.32
 const CABLE_SAG: float = 0.035
 
 @export var backpack: Backpack
-## Où l'on pose un allié saisi : au sol, sous ce nœud (le rayon tracteur sous le ventre).
+## Où l'on pose un allié saisi : au sol, sous ce nœud (devant le robot, sous la main du grappin).
 @export var drop_point: Node3D
 
 ## Joueur dont le nain est dans la pince (0 = personne). Autorité : hôte.

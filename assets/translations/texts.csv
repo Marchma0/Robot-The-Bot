@@ -41,10 +41,6 @@ CACA LÉGENDAIRE !,CACA LÉGENDAIRE !,LEGENDARY POOP!
 Plop !,Plop !,Plop!
 LÉGENDAIRE !,LÉGENDAIRE !,LEGENDARY!
 Pousse !,Pousse !,Push!
-Tirez !,Tirez !,Pull!
-%s gagne !,%s gagne !,%s wins!
-BRAS DE FER,BRAS DE FER,ARM WRESTLING
-asseyez-vous à deux,asseyez-vous à deux,two players: take a seat
 Terrain d'essai,Terrain d'essai,Test ground
 à bord : %d / %d,à bord : %d / %d,aboard: %d / %d
 Montez à bord !  %d,Montez à bord !  %d,All aboard!  %d
@@ -79,4 +75,24 @@ Tuto terminé ! Bouton « retour au camp » dans le robot,Tuto terminé ! Bouton
 "Saut : au bord du trou, flèche du haut tous les deux, joysticks vers l'avant, puis les flèches","Saut : au bord du trou, flèche du haut tous les deux, joysticks vers l'avant, puis les flèches","Jump: at the edge of the pit, both press the up arrow, joysticks forward, then the arrows"
 Caisses mobiles : lancez la pince pour les attraper toutes (reste %d),Caisses mobiles : lancez la pince pour les attraper toutes (reste %d),Moving crates: launch the claw to catch them all (%d left)
 Dehors : sortez par la trappe et appuyez sur le bouton au sol,Dehors : sortez par la trappe et appuyez sur le bouton au sol,Outside: exit through the hatch and press the button on the ground
-"Ascenseur : un nain monte sur un bras baissé, son pilote le lève jusqu'en haut de la tour, il appuie sur le bouton","Ascenseur : un nain monte sur un bras baissé, son pilote le lève jusqu'en haut de la tour, il appuie sur le bouton","Lift: a dwarf climbs onto a lowered arm, its pilot raises him to the top of the tower, he presses the button"
+Pause,Pause,Pause
+Reprendre,Reprendre,Resume
+Options,Options,Options
+Inviter des amis,Inviter des amis,Invite friends
+Quitter la partie,Quitter la partie,Leave game
+Quitter le jeu,Quitter le jeu,Quit to desktop
+Options graphiques,Options graphiques,Graphics options
+Plein écran,Plein écran,Fullscreen
+Synchronisation verticale,Synchronisation verticale,Vertical sync
+Images par seconde max,Images par seconde max,Max frames per second
+Sans limite,Sans limite,Unlimited
+Résolution du rendu,Résolution du rendu,Render resolution
+Ombres,Ombres,Shadows
+Désactivées,Désactivées,Off
+Basses,Basses,Low
+Moyennes,Moyennes,Medium
+Hautes,Hautes,High
+Anticrénelage,Anticrénelage,Anti-aliasing
+Aucun,Aucun,None
+Retour,Retour,Back
+%d %%,%d %%,%d %%

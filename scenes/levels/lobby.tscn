@@ -2,7 +2,6 @@
 
 [ext_resource type="PackedScene" path="res://assets/models/levels/lobby_canyon.glb" id="1_canyon"]
 [ext_resource type="PackedScene" path="res://scenes/props/mission_terminal.tscn" id="2_terminal"]
-[ext_resource type="PackedScene" path="res://scenes/props/armwrestle_game.tscn" id="4_arm"]
 [ext_resource type="PackedScene" path="res://scenes/props/lobby_campfire.tscn" id="5_fire"]
 [ext_resource type="PackedScene" path="res://assets/models/props/lobby_tent.glb" id="6_tent"]
 [ext_resource type="PackedScene" path="res://assets/models/props/lobby_scaffold.glb" id="7_scaffold"]
@@ -48,10 +47,7 @@ transform = Transform3D(-0.929, -0.118, 0.35, 0, 0.947, 0.32, -0.37, 0.297, -0.8
 light_color = Color(1, 0.72, 0.5, 1)
 light_energy = 1.7
 shadow_enabled = true
-shadow_caster_mask = 4294967293
-directional_shadow_mode = 1
-directional_shadow_max_distance = 60.0
-directional_shadow_pancake_size = 0.0
+directional_shadow_max_distance = 90.0
 
 [node name="Canyon" parent="." instance=ExtResource("1_canyon")]
 
@@ -73,11 +69,6 @@ transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 3, 0.1, -9)
 
 [node name="MissionTerminal" parent="." instance=ExtResource("2_terminal")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5.2)
-
-[node name="Minigames" type="Node3D" parent="."]
-
-[node name="ArmWrestling" parent="Minigames" instance=ExtResource("4_arm")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5, 0, 2)
 
 [node name="Campfire" parent="." instance=ExtResource("5_fire")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 0, 11)

@@ -117,8 +117,8 @@ func _run_host() -> void:
 	arm.grab_node(_world.get_node("Mecha/Props").get_child(0) as Node3D, "poop")
 	await get_tree().create_timer(STEP_WAIT * 3.0).timeout
 	await _check("caca attrapé par le grappin et rangé dans le sac")
-	await _grab_ally_steps()
 	await _inventory_steps()
+	await _grab_ally_steps()
 
 	_director._travel(&"lobby")
 	await get_tree().create_timer(STEP_WAIT * 2.0).timeout
@@ -126,17 +126,15 @@ func _run_host() -> void:
 	await _client_step("terminal : mission suivante (client)", "Level/Lobby/MissionTerminal/Next", "request_press")
 	await _client_step("fléchettes du robot prises (client)", "Mecha/Controls/Darts", "darts_take")
 	await _client_step("fléchette lancée (client)", "Mecha/Controls/Darts", "throw")
-	await _client_step("fléchettes en main : assis au bras de fer, fléchettes rangées (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit")
-	await _client_step("levé du bras de fer, fléchettes revenues en main (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_leave")
-	await _client_step("G : une fléchette posée au sol (client)", "Mecha/Controls/Darts", "request_drop_one")
+	await _client_step("fléchettes en main : assis sur le canapé, fléchettes rangées (client)", "Mecha/Controls/Sofa_Left", "request_sit")
+	await _client_step("levé du canapé, fléchettes revenues en main (client)", "Mecha/Controls/Sofa_Left", "request_leave")
+	await _client_step("G : une fléchette posée au sol (client)", "Mecha/Controls/Darts", "darts_drop")
 	await _client_step("fléchette au sol ramassée, celle-là seulement (client)", "Mecha/Controls/Darts",
 		"stay:request_take_one", [_dart_on_floor()])
-	await _client_step("G : fléchette reposée au sol (client)", "Mecha/Controls/Darts", "request_drop_one")
-	await _client_step("G : la dernière fléchette posée au sol (client)", "Mecha/Controls/Darts", "request_drop_one")
+	await _client_step("G : fléchette reposée au sol (client)", "Mecha/Controls/Darts", "darts_drop")
+	await _client_step("G : la dernière fléchette posée au sol (client)", "Mecha/Controls/Darts", "darts_drop")
 	await _client_step("clic sur la cible : fléchettes remises (client)", "Mecha/Controls/Darts", "request_reset")
 	await _dart_in_client_step()
-	await _client_step("bras de fer : assis (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_sit")
-	await _client_step("bras de fer : levé (client)", "Level/Lobby/Minigames/ArmWrestling/SeatLeft", "request_leave")
 
 	_director._travel(&"test_ground")
 	await get_tree().create_timer(STEP_WAIT * 2.0).timeout
@@ -165,15 +163,9 @@ func _run_host() -> void:
 	_client_action.rpc_id(_client_id, "Mecha", "place_at", [Vector3(-35.0, 0.1, -46.4)])
 	await get_tree().create_timer(STEP_WAIT).timeout
 	await _client_step("tuto : bouton au sol (client)", "Level/DevTutorial/OutsideButton", "stay:request_press")
-	if tuto.step != DevTutorial.Step.LIFT:
+	if tuto.step != DevTutorial.Step.CLIMB or not tuto.is_gate_open(DevTutorial.Gate.BUTTON):
 		_failures += 1
-		_log("ÉCHEC  tuto : le bouton au sol n'a pas fait avancer l'étape (%d)" % tuto.step)
-	_client_action.rpc_id(_client_id, "Mecha", "place_at", [Vector3(-45.2, DevTutorial.TOWER_HEIGHT + 0.1, -58.5)])
-	await get_tree().create_timer(STEP_WAIT).timeout
-	await _client_step("tuto : bouton de la tour (client)", "Level/DevTutorial/TowerButton", "stay:request_press")
-	if tuto.step != DevTutorial.Step.CLIMB or not tuto.is_gate_open(DevTutorial.Gate.LIFT):
-		_failures += 1
-		_log("ÉCHEC  tuto : le bouton de la tour n'a pas ouvert la porte 3 (étape %d)" % tuto.step)
+		_log("ÉCHEC  tuto : le bouton au sol n'a pas ouvert la porte 3 (étape %d)" % tuto.step)
 
 	_finish.rpc_id(_client_id)
 	_log("NET TEST %s (%d étape(s) en échec)" % ["OK" if _failures == 0 else "ÉCHEC", _failures])
@@ -363,14 +355,16 @@ func _client_action(path: String, action: String, args: Array) -> void:
 			(player as Dwarf).place_at(front)
 			await get_tree().create_timer(0.6).timeout
 			(target as RoboJetTouch).game.tap()
-		"darts_take", "throw":
-			# Devant la cible du salon (au sol du ventre), puis : prendre, ou lancer vers la cible.
+		"darts_take", "darts_drop", "throw":
+			# Devant la cible du salon (au sol du ventre), puis : prendre, poser une fléchette (G), ou lancer.
 			var thrower: Node3D = _world.get_node_or_null("Mecha/Players/%d" % multiplayer.get_unique_id()) as Node3D
 			var stand: Vector3 = target.to_global(Vector3(0.0, -1.2, -1.6))
 			(thrower as Dwarf).place_at(stand)
 			await get_tree().create_timer(0.6).timeout
 			if action == "darts_take":
 				target.request_take.rpc_id(1)
+			elif action == "darts_drop":
+				target.request_drop_one.rpc_id(1)
 			else:
 				var eye: Vector3 = stand + target.global_basis.y * 0.95
 				var aim: Vector3 = target.to_global(Vector3(0.0, 0.15, 0.0))
@@ -469,7 +463,7 @@ func _log(text: String) -> void:
 
 
 ## Grappin (3.14) : le nain du client est dehors, la pince de l'hôte le saisit (il pend dessous, chez tout le
-## monde), puis le pose au sol sous le rayon tracteur. C'est le client qui déplace son nain (il en a l'autorité).
+## monde), puis le pose au sol devant le robot, sous la main du grappin. C'est le client qui déplace son nain (il en a l'autorité).
 func _grab_ally_steps() -> void:
 	var mecha: Node3D = _world.get_node("Mecha") as Node3D
 	var arm: GrabberArm = mecha.get_node("GrabberArm") as GrabberArm
@@ -489,9 +483,11 @@ func _grab_ally_steps() -> void:
 	else:
 		_log("OK     grappin : le nain du client pend sous la pince")
 	await get_tree().create_timer(GrabberArm.DELIVER_DURATION + STEP_WAIT).timeout
-	var beam: Vector3 = mecha.get_node("TractorBeam").global_position
+	var beam: Vector3 = mecha.get_node("ClawDropPoint").global_position
 	var flat: float = Vector2(client_dwarf.global_position.x - beam.x, client_dwarf.global_position.z - beam.z).length()
-	if arm.held_peer_id != 0 or flat > 1.0:
+	# Devant le robot : l'avant est -Z dans son repère, la coque s'arrête vers z = -2,3.
+	var front: bool = mecha.to_local(client_dwarf.global_position).z < -2.5
+	if arm.held_peer_id != 0 or flat > 1.0 or not front:
 		_failures += 1
-		_log("ÉCHEC  grappin : le nain du client n'est pas posé sous le rayon tracteur (%.1f m)" % flat)
-	await _check("grappin : le nain du client est posé sous le robot")
+		_log("ÉCHEC  grappin : le nain du client n'est pas posé devant le robot, sous la main du grappin (%.1f m)" % flat)
+	await _check("grappin : le nain du client est posé devant le robot")

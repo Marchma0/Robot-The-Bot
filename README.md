@@ -58,7 +58,7 @@ assets/
   models/          # .glb exportés depuis Blender
   textures/ audio/ fonts/
   translations/    # texts.csv : tous les textes du jeu, français + anglais
-blender/           # fichiers sources .blend (pas importés par Godot, voir .gdignore)
+blender/           # scripts Python des modèles (ils recréent les .blend, non versionnés sauf mecha et dwarf)
 scenes/
   main/            # menus, lobby, scène de jeu racine
   mecha/           # le mécha, ses jambes, son cockpit

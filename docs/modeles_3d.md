@@ -32,7 +32,6 @@ Une capture prise au hasard doit être **lisible en petit** (vignette de la page
   sortie, objet à prendre).
 - **Lumière de contour** (rim) froide sur les personnages et le robot pour les détacher du fond.
 - **Chaque mission a sa couleur dominante** (canyon orangé, grotte bleue, forêt verte…) mais garde la règle chaud / froid.
-- **Performances (Iris Xe)** : peu de lumières à ombres, les autres sans ombre.
 
 ## Couleurs
 - **Valeurs moyennes à claires et saturées**, comme un jouet peint ; les ombres viennent de l'éclairage, pas des couleurs.
@@ -41,3 +40,41 @@ Une capture prise au hasard doit être **lisible en petit** (vignette de la page
 - **Accents** : jaune chantier et rouge pour ce qu'on peut toucher (leviers, boutons, danger) ; cuivre pour les détails ;
   cyan pour les écrans, le rayon et le minerai.
 - Ni photos ni textures peintes à la main : tout vient de la palette et des scripts.
+
+## Prompt des nains (images de référence)
+Sert à générer des **images de référence** (planche de face / profil / dos, variantes de tenue) avant de construire le nain
+par script ; pas à générer le modèle 3D lui-même (les personnages se font par script, sur le squelette existant).
+Le prompt est en anglais (les générateurs d'images le comprennent mieux). Synthèse de la DA (2026-11-12) et des
+« nains garagistes » de la roadmap (2.8) : des **mineurs-mécanos**.
+
+**Prompt :**
+```
+Stylized low poly 3D character, a stocky dwarf mechanic-miner who repairs an old junkyard robot, video game hero for a
+cozy co-op game. Chunky exaggerated proportions: 1.2 m tall, big head (about a third of the body), huge hands and boots,
+short thick legs, broad barrel chest. Big bushy braided beard in warm ginger, round nose, small cheerful eyes under
+heavy eyebrows. Outfit: patched canvas work overalls with rolled sleeves, thick leather tool belt with a wrench, a
+hammer and pouches, oversized leather work gloves, steel-toe boots, mining helmet with a brass headlamp and welding
+goggles pushed up on it, small oil stains and soot smudges. Player color on the overalls: {COLOR}. Visible flat-shaded
+facets, clean simple shapes, readable silhouette, thick black ink outlines, toy-like painted colors with medium to light
+saturated values, warm amber key light, light blue-violet shadows (never black), cold rim light. Retro-industrial mining
+mood (copper, brass, riveted metal, wood). Full body, neutral A-pose, character turnaround sheet: front, side, back
+views at the same scale, plain light background.
+```
+
+**À éviter (prompt négatif) :**
+```
+realistic, photo, high poly, smooth subdivided surfaces, PBR scans, grimy dark horror, black shadows, thin elongated
+proportions, fantasy armor, chainmail, horned helmet, axe, sci-fi neon, plastic, futuristic suit, text, watermark
+```
+
+**Couleur du joueur** (`{COLOR}`, comme `DwarfLook.SLOT_COLORS`) : `brick red` (joueur 1), `cobalt blue` (2),
+`grass green` (3), `mustard yellow` (4). Seule la combinaison change de couleur : barbe, cuir et métal restent les mêmes
+(un joueur se reconnaît de loin à sa couleur).
+
+**Variantes** (pour les skins, 2.4) : remplacer le casque par `welding mask flipped up` ou `flat cap`, la barbe par
+`black forked beard` / `white long beard`, ajouter `goggles with cracked lens`, `copper prosthetic arm`, `patched scarf`.
+
+**Contraintes à garder en modélisant** : même squelette et mêmes noms d'os que `dwarf.blend` (toutes les animations
+restent) ; la combinaison garde le matériau `Tunic` (c'est lui que le jeu teinte) ; pas de détail plus fin que ce qui se
+lit à 3 m ; la tête est cachée à la première personne, donc **le ventre, la ceinture, les gants et les manches** sont ce
+que le joueur voit de lui : c'est là qu'on met le détail.

@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/sandbox_pause_menu.gd" id="1_sandbox"]
+
+[node name="SandboxPauseMenu" type="Node"]
+script = ExtResource("1_sandbox")

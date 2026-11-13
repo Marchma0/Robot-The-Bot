@@ -75,18 +75,17 @@ pieds, il n'a pas de collision). Rien de réseau : seul l'hôte fait marcher le 
 
 ## Les garde-fous
 
-- **Test automatique** (obligatoire avant de fusionner dans `main` quand on touche au réseau,
-  aux objets ou aux interactions) :
+- **Test automatique** (lancé par `sh tests/tools/run_tests.sh`, ou seul) :
   ```
   sh tests/tools/net_test.sh
   ```
   Lance un hôte et un client sans fenêtre (ENet local) ; l'hôte prépare une partie, le client arrive
   en cours de route, puis on enchaîne les actions (rochers, caisses, sac, cacas, grappin, foreuse,
-  boutons, leviers, sièges, porte, rayon, terminal, fléchettes, bras de fer, changements de niveau).
+  boutons, leviers, sièges, porte, rayon, terminal, fléchettes, changements de niveau).
   Après chaque étape : l'hôte compare ce qu'il voit et ce que voit le client (`NetAudit`), et vérifie
   qu'une demande du client a bien eu un effet. Sortie : `NET TEST OK` ou la liste des écarts.
   Journaux complets dans `build/net_test_host.log` et `build/net_test_client.log`.
-  **Une nouvelle interaction = une étape de plus dans `tests/tools/net_test.gd`** (`_client_step` : la demande doit changer quelque chose chez l'hôte ; `_client_refused` : une demande interdite ne change rien).
+  Une nouvelle interaction peut y ajouter son étape dans `tests/tools/net_test.gd` (`_client_step` : la demande doit changer quelque chose chez l'hôte ; `_client_refused` : une demande interdite ne change rien).
 - **F9 en partie** (même en Steam, chez n'importe quel joueur) : l'hôte envoie sa « photo » du monde,
   chaque client la compare à la sienne ; « OK » ou le nombre d'écarts s'affiche en haut à gauche, le
   détail dans la console. À faire quand quelque chose a l'air différent chez l'autre.
