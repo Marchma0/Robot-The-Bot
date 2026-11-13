@@ -29,3 +29,9 @@ __pycache__/
 
 # VS Code : réglages propres à chaque machine (chemin de Godot…)
 .vscode/
+
+# Blender : les .blend fabriqués par un script (le script fait foi, il les recrée) ne sont pas versionnés.
+# Seuls mecha.blend et dwarf.blend, faits en partie à la main, le sont.
+/blender/props/*.blend
+/blender/levels/*.blend
+/blender/mecha_legs.blend
