@@ -37,9 +37,6 @@ if [ -n "$FILTERS" ]; then
 fi
 export FAST
 
-# Scènes purement visuelles (rien de scripté) : on vérifie seulement qu'elles se lancent sans erreur.
-VISUAL="sandbox_dwarf_anim sandbox_emotes sandbox_interaction"
-
 start=$(date +%s)
 
 # Le test réseau tourne en temps réel (en accéléré, l'hôte et le client se décalent et il rate au hasard) :
@@ -53,11 +50,7 @@ run_scene() {
 	scene=$1
 	name=$(basename "$scene" .tscn)
 	log="build/tests/$name.log"
-	case " $VISUAL " in
-		*" $name "*) extra="--quit-after 120" ;;
-		*) extra="" ;;
-	esac
-	timeout 180 "$GODOT_PATH" --headless $FAST --path . "res://$scene" $extra -- --auto > "$log" 2>&1
+	timeout 180 "$GODOT_PATH" --headless $FAST --path . "res://$scene" -- --auto > "$log" 2>&1
 	code=$?
 	# Bruit connu sans fenêtre ni Steam : ignoré.
 	errors=$(grep -E "SCRIPT ERROR|^ERROR|\[test\] ÉCHEC" "$log" \
