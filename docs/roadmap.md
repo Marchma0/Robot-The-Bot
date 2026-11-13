@@ -7,7 +7,7 @@
 > Une tâche finie tient en **une ligne** : le détail (comment, pourquoi) va dans `docs/decisions.md`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : rien pour l'instant.
+**En cours** : rationalisation du dépôt (optimisations graphiques, physique bras ↔ nain, bras de fer, règles) [en cours — Marchma0]
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) :
 - `net_test.sh` échoue parfois (pas à chaque fois) sur deux étapes des fléchettes au sol (« fléchette au sol ramassée », « la dernière fléchette posée au sol ») ; vu le 2026-11-11, déjà présent avant le tuto. L'étape « grappin : nain posé sous le rayon » rate aussi de temps en temps.
