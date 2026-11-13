@@ -7,7 +7,7 @@
 > Une tâche finie tient en **une ligne** : le détail (comment, pourquoi) va dans `docs/decisions.md`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : 1.11 Rationalisation 2 [en cours — Marchma0]
+**En cours** : rien pour l'instant.
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) :
 - aucun pour l'instant.
@@ -23,7 +23,7 @@
 - [x] 1.8 Interface sobre : viseur, contour de l'objet visé, icône de l'action
 - [x] 1.9 ~~Performances~~ : retirées le 2026-11-13 (rationalisation, 1.11)
 - [x] 1.10 Contrôles des modèles (2026-11-11) : PASS / FAIL avant export, réimport du `.glb`, repères d'échelle sur la planche, règles pour la génération IA et Geometry Nodes
-- [ ] 1.11 Rationalisation 2 (2026-11-13) : optimisations graphiques, physique bras ↔ nain et bras de fer retirés, `AGENTS.md` allégé, `docs/decisions.md` compacté, `.blend` des scripts non versionnés, tests visuels supprimés ; menu Échap avec options graphiques [en cours — Marchma0]
+- [x] 1.11 Rationalisation 2 (2026-11-13) : optimisations graphiques, physique bras ↔ nain et bras de fer retirés, `AGENTS.md` allégé, `docs/decisions.md` compacté, `.blend` des scripts non versionnés, tests visuels supprimés ; menu Échap avec options graphiques
 
 ### Phase 2 — Les nains
 - [x] 2.1 Nain contrôlable dans un cockpit qui bouge, première personne (M1)
