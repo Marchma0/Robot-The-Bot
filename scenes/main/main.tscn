@@ -7,11 +7,13 @@
 [ext_resource type="Script" path="res://scripts/ui/screen_fader.gd" id="8_fader"]
 [ext_resource type="PackedScene" path="res://scenes/mecha/mecha.tscn" id="5_mecha"]
 [ext_resource type="Script" path="res://scripts/ui/hint_bar.gd" id="7_hintbar"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="9_pause"]
 
 [node name="Main" type="Node" unique_id=708183551]
 
-[node name="LobbyMenu" type="CanvasLayer" parent="." unique_id=1483567492]
+[node name="LobbyMenu" type="CanvasLayer" parent="." unique_id=1483567492 node_paths=PackedStringArray("pause_menu")]
 script = ExtResource("1_lobby")
+pause_menu = NodePath("../PauseMenu")
 
 [node name="Center" type="CenterContainer" parent="LobbyMenu" unique_id=1635161312]
 anchors_preset = 15
@@ -95,6 +97,11 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Rejoindre (adresse IP)"
 
+[node name="OptionsButton" type="Button" parent="LobbyMenu/Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Options"
+
 [node name="StatusLabel" type="Label" parent="LobbyMenu/Center/Panel/Margin/VBox" unique_id=1432779429]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 40)
@@ -153,3 +160,5 @@ return_button = NodePath("../Mecha/Controls/ReturnToCamp")
 
 [node name="Fader" type="CanvasLayer" parent="."]
 script = ExtResource("8_fader")
+
+[node name="PauseMenu" parent="." instance=ExtResource("9_pause")]

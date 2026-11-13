@@ -26,7 +26,7 @@ Format : date - décision - raison. Seules les décisions **en vigueur** sont ic
 - 2026-11-04 - Commandes physiques toujours actives (boutons, leviers et joysticks qu'on attrape en maintenant clic / RT), à l'échelle des nains ; seuls les postes des bras sont assis - chaos coopératif
 - 2026-11-05 - Circulation : rayon tracteur entre les étages (un interrupteur par étage inverse son sens), trappe dans le ventre pour sortir, corde pour remonter (un grimpeur à la fois)
 - 2026-11-05 - Nain dehors : il reste enfant du mécha mais annule son déplacement et prend la gravité du monde ; sa place est envoyée dans le monde ; « dehors » = hors de l'`InteriorVolume`
-- 2026-11-13 - Dehors, le nain ne suit pas ce qu'il a sous les pieds, n'est pas projeté, on ne monte pas sur les bras et la pince n'attrape pas les nains - système retiré (demandé par Marchma0)
+- 2026-11-13 - Dehors, le nain ne suit pas ce qu'il a sous les pieds et n'est pas projeté (système retiré) ; les bras restent solides, déployés ou non (épaule, fût, glissière) ; la pince attrape un allié dehors et le pose au sol devant le robot, sous la main du grappin (`ClawDropPoint`), et non plus sous le rayon tracteur à l'arrière - demandé par Marchma0
 - 2026-11-06 - Marche en rythme : un coup de joystick = un pas, pas alternés dans la même direction = le robot avance (haut / diagonale / côté / bas = avance / tourne / pivote / recule), désaccord = il trébuche - plus simple et plus drôle à deux
 - 2026-11-06 - Jauge d'erreur (pas décalés, tolérance 15°) ; pleine = le robot s'effondre à genoux ; relèvement par QTE à tour de rôle sur les flèches - le porteur du projet préfère l'effondrement au ragdoll (gardé dans `docs/ideas.md`)
 - 2026-11-07 - Joysticks des jambes : à ressort, poussée tenue 0,14 s à la souris, « clac » au seuil du pas ; un pas demandé pendant que l'autre pied est en l'air attend qu'il se pose ; le corps suit les pieds avec un ressort amorti
@@ -65,6 +65,7 @@ Format : date - décision - raison. Seules les décisions **en vigueur** sont ic
 - 2026-11-11 - Parcours tuto de dev provisoire (11 étapes depuis le 2026-11-13) : murs créés depuis des tables, `step` / `gates_open` / `crates_left` tenus par l'hôte ; caisses mobiles dans `NetAudit.MOVING_GROUP`
 
 ## Interface et langue
+- 2026-11-13 - Menu Échap (`PauseMenu`) : reprendre, options graphiques, inviter, quitter la partie / le jeu ; la partie continue (jeu en ligne), les touches du jeu sont retirées de la Input Map tant que le menu est ouvert (un seul endroit, aucun script de jeu à modifier). Options (`GraphicsSettings`) gardées dans `user://settings.cfg`, purement locales ; « Ombres : désactivées » coupe l'ombre de chaque lumière, qui reprend la sienne ensuite - demandé par Marchma0 (Échap quittait directement la partie)
 - 2026-11-06 - Pas de texte d'aide : icônes « touche → action » dessinées d'après la Input Map (clavier / manette selon le dernier appareil) ; police Fredoka
 - 2026-11-09 - Interface sobre : la commande visée s'illumine sur ses bords, le viseur devient un anneau, l'icône de l'action s'affiche à côté (sans la touche quand c'est le clic) ; panneau des touches d'un poste replié après 5 s (Tab le rouvre)
 - 2026-11-08 - Français et anglais : `tr("texte français")` + `assets/translations/texts.csv` ; langue du système, anglais sinon - plus simple tôt que sur un jeu fini

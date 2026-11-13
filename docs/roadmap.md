@@ -23,7 +23,7 @@
 - [x] 1.8 Interface sobre : viseur, contour de l'objet visé, icône de l'action
 - [x] 1.9 ~~Performances~~ : retirées le 2026-11-13 (rationalisation, 1.11)
 - [x] 1.10 Contrôles des modèles (2026-11-11) : PASS / FAIL avant export, réimport du `.glb`, repères d'échelle sur la planche, règles pour la génération IA et Geometry Nodes
-- [ ] 1.11 Rationalisation 2 (2026-11-13) : optimisations graphiques, physique bras ↔ nain et bras de fer retirés, `AGENTS.md` allégé, `docs/decisions.md` compacté, `.blend` des scripts non versionnés, tests visuels supprimés [en cours — Marchma0]
+- [ ] 1.11 Rationalisation 2 (2026-11-13) : optimisations graphiques, physique bras ↔ nain et bras de fer retirés, `AGENTS.md` allégé, `docs/decisions.md` compacté, `.blend` des scripts non versionnés, tests visuels supprimés ; menu Échap avec options graphiques [en cours — Marchma0]
 
 ### Phase 2 — Les nains
 - [x] 2.1 Nain contrôlable dans un cockpit qui bouge, première personne (M1)
@@ -79,6 +79,6 @@
 
 ### Phase 6 — Finitions
 - [ ] 6.1 Son et musique
-- [ ] 6.2 Menus et options (touches, son, graphismes)
+- [ ] 6.2 Menus et options : menu Échap et options graphiques faits (2026-11-13) ; restent les touches et le son
 - [ ] 6.3 Passe graphique : effets et couleurs créés dans le code (étincelles, éclats, câble…) passés en scènes et dans la palette
 - [ ] 6.4 Version à distribuer sur Steam (français et anglais)

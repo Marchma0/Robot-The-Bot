@@ -1,7 +1,11 @@
 extends CanvasLayer
 ## Menu : héberger / rejoindre, via Steam (lobby d'amis, à distance) ou en local / VPN (adresse IP).
 ## Le panneau se cache pendant une partie ; un bandeau rappelle alors le code du lobby Steam.
-## En partie : "pause" (Échap / Start) = quitter (temporaire), "invite_friends" (F2 / Select) = inviter.
+## En partie : "invite_friends" (F2 / Select) = inviter ; Échap ouvre le menu (`PauseMenu`).
+## Le bouton « Options » de l'écran d'accueil ouvre les options graphiques du même menu.
+
+## Menu Échap (options, quitter).
+@export var pause_menu: PauseMenu
 
 @onready var _center: Control = $Center
 @onready var _steam_status_label: Label = %SteamStatusLabel
@@ -15,6 +19,7 @@ extends CanvasLayer
 @onready var _session_info: Control = %SessionInfo
 @onready var _lobby_code_label: Label = %LobbyCodeLabel
 @onready var _session_hints: HintBar = %SessionHints
+@onready var _options_button: Button = %OptionsButton
 
 
 func _ready() -> void:
@@ -22,6 +27,7 @@ func _ready() -> void:
 	_steam_join_button.pressed.connect(_on_steam_join_pressed)
 	_host_button.pressed.connect(_on_host_pressed)
 	_join_button.pressed.connect(_on_join_pressed)
+	_options_button.pressed.connect(pause_menu.open_options)
 	NetworkManager.session_started.connect(_on_session_started)
 	NetworkManager.session_ended.connect(_on_session_ended)
 	NetworkManager.connection_failed.connect(_on_connection_failed)
@@ -33,10 +39,7 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not NetworkManager.is_online():
 		return
-	if event.is_action_pressed("pause"):
-		NetworkManager.leave_game()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("invite_friends"):
+	if event.is_action_pressed("invite_friends"):
 		NetworkManager.invite_friends()
 		get_viewport().set_input_as_handled()
 
@@ -77,9 +80,6 @@ func _on_session_started() -> void:
 	_center.visible = false
 	if NetworkManager.is_steam_session() and not multiplayer.is_server():
 		_lobby_code_label.visible = false
-		_session_hints.show_hints([InputHint.make(&"pause", &"exit")])
-		_session_hints.fade_out_after(6.0)   # interface minimaliste : rappel au début seulement
-		_session_info.visible = true
 
 
 func _on_steam_lobby_created(code: String) -> void:
@@ -87,7 +87,7 @@ func _on_steam_lobby_created(code: String) -> void:
 	# Le code reste écrit (il faut pouvoir le donner) ; il est aussi copié dans le presse-papiers.
 	_lobby_code_label.text = code
 	_lobby_code_label.visible = true
-	_session_hints.show_hints([InputHint.make(&"invite_friends", &"invite"), InputHint.make(&"pause", &"exit")])
+	_session_hints.show_hints([InputHint.make(&"invite_friends", &"invite")])
 	_session_hints.fade_out_after(6.0)
 	_session_info.visible = true
 

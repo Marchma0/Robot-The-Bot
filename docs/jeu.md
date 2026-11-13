@@ -89,7 +89,7 @@ par le porteur du projet :
   - **Tête** : 2 nains aux postes des **bras** — gauche **grappin**, droite **foreuse**. On voit dehors par les deux yeux ronds.
 - **Circulation** : un **rayon tracteur** (colonne lumineuse) relie les étages, un interrupteur à chaque étage
   inverse son sens (bleu = monte, orange = descend). On **sort** par une **trappe** dans le plancher du ventre
-  et on **remonte** par une **corde** qui pend jusqu'au sol. Dehors, le nain ne suit plus le robot (ni ses bras : on ne monte pas dessus).
+  et on **remonte** par une **corde** qui pend jusqu'au sol. Dehors, le nain ne suit plus le robot. Les bras sont solides (on peut se tenir dessus), mais ne portent pas le nain quand ils bougent.
 - **Commandes physiques** : boutons, leviers et joysticks dans le cockpit, toujours actifs ; on attrape un levier
   en maintenant clic / RT et on peut marcher à portée de bras. Pas de poste verrouillant, sauf les postes assis des bras.
 - **Obstacles** (2026-11-11) : le robot ne traverse pas ce qui est marqué « obstacle du robot » dans un niveau (murs, poutre
@@ -129,7 +129,7 @@ par le porteur du projet :
 - Les bras ne rentrent **jamais dans la coque** (angles bornés dans `MechaArmUtils`).
 - **Foreuse** : orientée à la souris / au stick, Z/S l'étend jusqu'à 3 m, clic maintenu = la mèche tourne et
   **mine** ce qui est minable devant elle (le rocher éclate, une caisse de minerai tombe).
-- **Grappin** : orienté et étendu pareil, clic = refermer la pince, saut = **lancer la pince** au bout d'un câble (15 m). Elle n'attrape que des objets, jamais un nain.
+- **Grappin** : orienté et étendu pareil, clic = refermer la pince, saut = **lancer la pince** au bout d'un câble (15 m). Elle attrape aussi un allié dehors : il pend sous la pince, puis elle le pose au sol **devant le robot, sous la main du grappin**.
 - **Sac à dos** : ce qui est attrapé va **automatiquement** dans un gros sac à dos sur le dos du robot (animation de rangement).
   Seul le robot y range les caisses (grappin, ou lancées dans l'ouverture) ; les nains peuvent seulement les porter pour les déplacer.
 
@@ -165,11 +165,12 @@ par le porteur du projet :
 - **À venir** : skins (vendus au camp), améliorations (vendues au camp).
 
 ## Principes qui valent partout
-- **Direction artistique : low poly** (le « cartoon lisse » du 2026-11-11 est abandonné le jour même) : formes simples à facettes visibles, robot « cosy mais pas trop ». Règles dans `docs/modeles_3d.md`.
+- **Direction artistique : diorama low poly lumineux et encré** (2026-11-12). Règles dans `docs/modeles_3d.md`.
 - **Coop chaotique** : les commandes sont dans le cockpit, il faut se coordonner et se déplacer.
 - **Deux langues** : français et anglais.
-- **Rien d'écrit à l'écran, interface sobre** : la place est au jeu, pas aux touches. Ce qu'on peut utiliser se reconnaît en le visant : le **point de visée devient un petit anneau** et l'**objet s'illumine sur ses bords** (lueur chaude qui respire) ; à côté de l'anneau, en petit, l'**icône de l'action** (appuyer, grimper, s'asseoir…), avec sa touche seulement si ce n'est ni le clic ni E (ex. Espace pour lâcher la corde). « Viser » n'est jamais affiché ; la touche pour poser l'objet en main est un petit G sur sa case d'inventaire ; le panneau des touches d'un poste se replie tout seul après 5 s (Tab le rouvre) ; « Échap → quitter » s'efface après 6 s. Au pire de petits mots en police Fredoka.
+- **Rien d'écrit à l'écran, interface sobre** : la place est au jeu, pas aux touches. Ce qu'on peut utiliser se reconnaît en le visant : le **point de visée devient un petit anneau** et l'**objet s'illumine sur ses bords** (lueur chaude qui respire) ; à côté de l'anneau, en petit, l'**icône de l'action** (appuyer, grimper, s'asseoir…), avec sa touche seulement si ce n'est ni le clic ni E (ex. Espace pour lâcher la corde). « Viser » n'est jamais affiché ; la touche pour poser l'objet en main est un petit G sur sa case d'inventaire ; le panneau des touches d'un poste se replie tout seul après 5 s (Tab le rouvre) . Au pire de petits mots en police Fredoka.
   Seule exception : la bulle de texte du personnage de la radio (voir « L'intro et le tutoriel »).
   Les infos de jeu (jauges, QTE, tour de qui) sont **dans le cockpit**.
+- **Menu Échap** (Start à la manette) : reprendre, options graphiques (plein écran, synchro verticale, images par seconde max, résolution du rendu, ombres, anticrénelage), inviter des amis (Steam), quitter la partie, quitter le jeu. La partie continue derrière (jeu en ligne) ; les options s'ouvrent aussi depuis l'écran d'accueil et sont gardées sur la machine du joueur.
 - **Tout ce qui bouge est animé**, rien ne glisse ni ne se téléporte.
 - **Tout est synchronisé** : ce qu'un joueur fait, tous le voient (voir `docs/reseau.md`).
