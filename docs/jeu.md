@@ -25,7 +25,7 @@
 - **Construite étape par étape** : d'abord la zone vide (sol, parois, plafond, place du robot, sortie), puis les postes,
   puis le reste, une zone à la fois, dans la direction artistique du jeu (voir « Principes qui valent partout »).
 - **Deux postes de personnalisation** (un pour son nain, un pour le robot) et **un poste des missions** (voir plus bas).
-- **Mini-jeux** : bras de fer (jouable) ; à venir : course de chariots, lancer de nain dans un pneu, wagonnets.
+- **Mini-jeux** : aucun pour l'instant (le bras de fer a été retiré le 2026-11-13) ; à venir : course de chariots, lancer de nain dans un pneu, wagonnets.
   Les fléchettes se jouent dans le robot (voir « Vie à bord »).
 - **Marchand d'améliorations** des nains (à venir).
 - **La base grandit** au fil des missions : trophées accrochés au mur, nouveaux outils, plaques des clients satisfaits.
@@ -89,7 +89,7 @@ par le porteur du projet :
   - **Tête** : 2 nains aux postes des **bras** — gauche **grappin**, droite **foreuse**. On voit dehors par les deux yeux ronds.
 - **Circulation** : un **rayon tracteur** (colonne lumineuse) relie les étages, un interrupteur à chaque étage
   inverse son sens (bleu = monte, orange = descend). On **sort** par une **trappe** dans le plancher du ventre
-  et on **remonte** par une **corde** qui pend jusqu'au sol. Dehors, le nain ne suit plus le robot.
+  et on **remonte** par une **corde** qui pend jusqu'au sol. Dehors, le nain ne suit plus le robot (ni ses bras : on ne monte pas dessus).
 - **Commandes physiques** : boutons, leviers et joysticks dans le cockpit, toujours actifs ; on attrape un levier
   en maintenant clic / RT et on peut marcher à portée de bras. Pas de poste verrouillant, sauf les postes assis des bras.
 - **Obstacles** (2026-11-11) : le robot ne traverse pas ce qui est marqué « obstacle du robot » dans un niveau (murs, poutre
@@ -129,7 +129,7 @@ par le porteur du projet :
 - Les bras ne rentrent **jamais dans la coque** (angles bornés dans `MechaArmUtils`).
 - **Foreuse** : orientée à la souris / au stick, Z/S l'étend jusqu'à 3 m, clic maintenu = la mèche tourne et
   **mine** ce qui est minable devant elle (le rocher éclate, une caisse de minerai tombe).
-- **Grappin** : orienté et étendu pareil, clic = refermer la pince, saut = **lancer la pince** au bout d'un câble (15 m).
+- **Grappin** : orienté et étendu pareil, clic = refermer la pince, saut = **lancer la pince** au bout d'un câble (15 m). Elle n'attrape que des objets, jamais un nain.
 - **Sac à dos** : ce qui est attrapé va **automatiquement** dans un gros sac à dos sur le dos du robot (animation de rangement).
   Seul le robot y range les caisses (grappin, ou lancées dans l'ouverture) ; les nains peuvent seulement les porter pour les déplacer.
 

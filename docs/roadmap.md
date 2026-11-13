@@ -7,10 +7,10 @@
 > Une tâche finie tient en **une ligne** : le détail (comment, pourquoi) va dans `docs/decisions.md`.
 > Les codes entre parenthèses (M7, M12, S1…) sont les anciens numéros, encore cités dans le code et dans `docs/decisions.md`.
 
-**En cours** : rationalisation du dépôt (optimisations graphiques, physique bras ↔ nain, bras de fer, règles) [en cours — Marchma0]
+**En cours** : 1.11 Rationalisation 2 [en cours — Marchma0]
 
 **Bugs connus** (notés pour plus tard, à corriger quand le porteur du projet le demande) :
-- `net_test.sh` échoue parfois (pas à chaque fois) sur deux étapes des fléchettes au sol (« fléchette au sol ramassée », « la dernière fléchette posée au sol ») ; vu le 2026-11-11, déjà présent avant le tuto. L'étape « grappin : nain posé sous le rayon » rate aussi de temps en temps.
+- aucun pour l'instant.
 
 ### Phase 1 — Fondations (moteur, réseau, outils)
 - [x] 1.1 Projet Godot, Input Map clavier + manette, `NetworkManager` ENet, 4 nains (M0)
@@ -21,8 +21,9 @@
 - [x] 1.6 Pipeline 3D : un script Python par objet, palette, planche de vues, captures `interior_shots` (M6.7)
 - [x] 1.7 Rationalisation du code : interactions génériques, nain découpé, base des bras, traduction, dette de `mecha.blend`
 - [x] 1.8 Interface sobre : viseur, contour de l'objet visé, icône de l'action
-- [x] 1.9 Performances (2026-11-10) : ombres allégées (+60 % d'images par seconde sur Iris Xe), rendu Vulkan
+- [x] 1.9 ~~Performances~~ : retirées le 2026-11-13 (rationalisation, 1.11)
 - [x] 1.10 Contrôles des modèles (2026-11-11) : PASS / FAIL avant export, réimport du `.glb`, repères d'échelle sur la planche, règles pour la génération IA et Geometry Nodes
+- [ ] 1.11 Rationalisation 2 (2026-11-13) : optimisations graphiques, physique bras ↔ nain et bras de fer retirés, `AGENTS.md` allégé, `docs/decisions.md` compacté, `.blend` des scripts non versionnés, tests visuels supprimés [en cours — Marchma0]
 
 ### Phase 2 — Les nains
 - [x] 2.1 Nain contrôlable dans un cockpit qui bouge, première personne (M1)
@@ -48,18 +49,18 @@
 - [x] 3.11 Fléchette plantée dans un allié
 - [x] 3.12 Télé : jeu « Robo-Jet »
 - [x] 3.13 Finitions de pilotage (2026-11-10) : pas plus jamais perdus, vue stable au saut, caisse portée sans à-coups, QTE à étapes « Ensemble ! »
-- [x] 3.14 Robot praticable (2026-11-10) : collisions sur tout le robot, le nain suit ce qu'il a sous les pieds et se fait projeter si ça accélère d'un coup, le grappin rattrape un allié et le pose sous le robot
+- [x] 3.14 Robot praticable (2026-11-10) : collisions sur la coque du robot (le suivi du support, la projection et la pince qui attrape un allié ont été retirés le 2026-11-13)
 - [ ] 3.15 Échelle à l'arrière (validée par Marchma0) : un tronçon du sol au dessus du sac à dos, un du rebord au toit ; grimpe en réutilisant `Rope` (sans corde visible, sans balancement, côté extérieur)
 
 ### Phase 4 — Le camp de base (lobby)
 - [x] 4.1 Camp minier dans un canyon, terminal de mission, retour au camp (M12, M12.1)
-- [x] 4.2 Mini-jeu : bras de fer (M12.1)
+- [x] 4.2 ~~Mini-jeu : bras de fer~~ : retiré le 2026-11-13 (rationalisation, 1.11)
 - [ ] 4.3 Monnaie et sauvegarde de la partie (économie reportée par le porteur du projet le 2026-11-08) : fiches de données (objets, missions, skins en `.tres`), `GameState` tenu par l'hôte, sauvegarde **chez l'hôte** (validé) ; argent par nain ou commun : à décider
-- [ ] 4.4 Plus de mini-jeux dans la base : course de chariots de mécano, lancer de nain dans un pneu, wagonnets sur les rails, bras de fer déplacé sur l'établi (autres pistes dans `docs/ideas.md`)
+- [ ] 4.4 Plus de mini-jeux dans la base : course de chariots de mécano, lancer de nain dans un pneu, wagonnets sur les rails (autres pistes dans `docs/ideas.md`)
 - [ ] 4.5 **Deux postes de personnalisation** (validés le 2026-11-11, remplacent les « marchands de skins ») : un pour son nain (2.4), un pour le robot (3.8). Écran en trois parties : modèle 3D sur un socle qu'on fait tourner (à gauche), colonne d'icônes des emplacements (au milieu), liste des pièces avec vignette, nom, phrase drôle, prix et cadenas (à droite) ; détail dans `docs/jeu.md`
 - [ ] 4.6 Marchand d'améliorations des nains (2.5)
 - [ ] 4.7 **Base souterraine** (validée le 2026-11-11, remplace le camp du canyon et précise le « garage sous la montagne » du 2026-11-09) : une base creusée sous terre où le robot est garé, avec **une sortie pour le robot** ; construite étape par étape
-  - [ ] 4.7.1 La zone vide : sol, parois, plafond, place du robot, sortie du robot, points d'apparition ; terminal et bras de fer posés provisoirement ; rien d'autre
+  - [ ] 4.7.1 La zone vide : sol, parois, plafond, place du robot, sortie du robot, points d'apparition ; terminal posé provisoirement ; rien d'autre
   - [ ] 4.7.2 Les deux postes de personnalisation et le poste des missions posés à leur place (4.5, 4.10)
   - [ ] 4.7.3 Remplissage, une zone à la fois (à définir avec le porteur du projet au fur et à mesure), dans la direction artistique
 - [ ] 4.8 **Départ et retour par la sortie du robot** : le robot quitte la base par sa sortie (forme à décider : grande porte, tunnel…), ce qui sert de transition pendant que l'hôte crée le niveau ; retour par le même chemin
@@ -73,7 +74,7 @@
 - [ ] 5.4 Histoire : le fil rouge des 10 missions, et la mécanique phare de chacune (à valider avec le porteur du projet) ; point de départ validé : le robot acheté à la casse (5.7)
 - [ ] 5.6 **Radio du personnage guide** : poste radio dans le cockpit, voix en charabia + bulle de texte traduite (`tr()`), réagit aux actions des joueurs (chute, caca lancé…) ; répliques déclenchées par l'hôte, vues et entendues par tous
 - [ ] 5.7 **Intro = mission tutoriel « Ramener le robot de la casse »** : au premier lancement d'une nouvelle partie, les nains apparaissent à la casse et ramènent le robot à la base ; une mécanique à la fois (entrer, démarrer, marcher, foreuse, grappin, se relever) guidée par la radio (5.6) ; arrivée à la base par la sortie du robot (4.8). Dépend de 3.4 (marche finie), 5.3 (cadre de mission) et 4.3 (savoir si la partie est neuve)
-- [x] 5.8 **Parcours tuto de dev** (2026-11-11, provisoire, pour les développeurs) : parcours linéaire en 12 étapes lancé depuis le terminal du camp (avancer, virage, saut d'un trou, accroupi, demi-tour, foreuse, grappin, caisses mobiles, bouton au sol, nain monté sur la tour par un bras, remonter, arrivée) ; le robot ne traverse plus les obstacles
+- [x] 5.8 **Parcours tuto de dev** (2026-11-11, provisoire, pour les développeurs) : parcours linéaire en 11 étapes lancé depuis le terminal du camp (avancer, virage, saut d'un trou, accroupi, demi-tour, foreuse, grappin, caisses mobiles, bouton au sol qui ouvre la porte 3, remonter, arrivée) ; le robot ne traverse plus les obstacles
 - [ ] 5.5 Les 10 missions, une par une (une ligne par mission ici une fois 5.4 validé) : environnement + mécanique propre + histoire
 
 ### Phase 6 — Finitions

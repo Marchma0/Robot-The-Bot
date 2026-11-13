@@ -1,139 +1,80 @@
 # AGENTS.md — Projet "Robot-The-Bot"
 
-> **Source unique des consignes pour toutes les IA du projet** (Claude Code, Antigravity, etc.).
-> `CLAUDE.md` et `.agent/rules/` ne font que renvoyer ici : une règle du projet s'écrit ici ou dans un fichier de `docs/` que ce fichier désigne, jamais ailleurs.
-> Deux développeurs travaillent sur le projet, chacun avec sa propre IA : lire la section « Travail à deux » avant toute chose.
+> **Source unique des consignes pour toutes les IA du projet** (Claude Code, Antigravity…). `CLAUDE.md` et `.agent/rules/` ne font que renvoyer ici.
+> Deux développeurs, chacun avec son IA : le dépôt git est leur seule mémoire commune. Lire « Travail à deux ».
 
-## Le projet en 3 lignes
-Jeu coop 3D à 4 joueurs en P2P via Steam. Quatre nains pilotent un robot géant **depuis l'intérieur** :
-ils se déplacent dans le cockpit et manipulent des commandes physiques (joysticks des jambes, postes des bras…).
-Boucle : **base souterraine** (lobby : mini-jeux, postes de personnalisation, poste des missions, améliorations) → **une des 10 missions** de l'histoire,
-chacune avec son environnement et sa propre idée de gameplay → retour au camp.
+## Le projet
+Jeu coop 3D à 4 joueurs en P2P via Steam. Quatre nains pilotent un robot géant **depuis l'intérieur** (joysticks des jambes, postes des bras…).
+Boucle : **base souterraine** (lobby) → **une des 10 missions** → retour à la base. **Avant de toucher au gameplay, lire `docs/jeu.md`.**
 
-**Avant de toucher au gameplay, lire `docs/jeu.md`** (tout ce qui est validé : boucle, camp, missions, robot, nains).
-
-## Les documents du projet
-| Fichier | Contenu | Quand l'écrire |
-|---|---|---|
-| `AGENTS.md` | règles, conventions, procédure git | règle qui change |
-| `docs/roadmap.md` | tâches en cours, faites, à faire, bugs connus | tâche commencée ou finie |
-| `docs/modeles_3d.md` | direction artistique, Blender → Godot, animation | modèle 3D, animation, nouveau niveau |
-| `docs/tests.md` | tests automatiques, test du multi, export | scène ou outil de test |
-| `docs/jeu.md` | description **validée** du jeu | dès qu'une décision change le jeu |
-| `docs/decisions.md` | journal des décisions (date - décision - raison) | à chaque décision, dans le commit du code |
-| `docs/ideas.md` | idées **non validées**, rangées par phase | idée proposée, pas encore choisie |
-| `docs/reseau.md` | modèle réseau et recettes de synchro | avant toute interaction, objet ou niveau |
-| `README.md` | installation pour un nouveau développeur | outil ou étape d'installation qui change |
-| `addons/ADDONS.txt` | addons requis (version, source, installation) | à chaque addon ajouté |
+## Les documents
+| Fichier | Contenu |
+|---|---|
+| `docs/roadmap.md` | tâches en cours, faites, à faire, bugs connus |
+| `docs/jeu.md` | description **validée** du jeu (à mettre à jour quand une décision change le jeu) |
+| `docs/decisions.md` | journal des décisions en vigueur (date - décision - raison), écrit dans le commit du code |
+| `docs/ideas.md` | idées **non validées** (jamais implémentées sans accord d'un humain) |
+| `docs/reseau.md` | modèle réseau et recettes de synchro : **à lire avant toute interaction, objet ou niveau** |
+| `docs/modeles_3d.md` | direction artistique : à lire avant de modéliser ou d'éclairer |
+| `docs/tests.md` | tests, test du multi, export |
+| `README.md` / `addons/ADDONS.txt` | installation / addons requis |
 
 ## Stack
-- **Moteur** : Godot 4.7.x, **GDScript uniquement** (pas de C#), physique 3D **Jolt**.
-- **3D** : Blender → export **glTF binaire (.glb)** dans `assets/models/`.
-- **Réseau** : `MultiplayerAPI` haut niveau de Godot (RPC, `MultiplayerSpawner`, `MultiplayerSynchronizer`).
-  - En dev : `ENetMultiplayerPeer` en local (plusieurs instances).
-  - En prod : `SteamMultiplayerPeer` via **GodotSteam** (GDExtension), App ID de test 480.
-  - Le choix du peer est isolé dans `scripts/network/network_manager.gd` : le reste du code ne doit JAMAIS dépendre de Steam directement.
-- **Outils IA** : Claude Code (Marchma0) et Antigravity (massyl12), chacun avec MCP Godot + MCP Blender.
+- **Godot 4.7.2**, **GDScript uniquement**, physique **Jolt**. 3D : Blender → `.glb` dans `assets/models/`.
+- Réseau : `MultiplayerAPI` haut niveau (RPC, `MultiplayerSpawner`, `MultiplayerSynchronizer`). ENet en dev, `SteamMultiplayerPeer` (GodotSteam, App ID 480) en prod.
+  Le choix du peer est isolé dans `scripts/network/network_manager.gd` : **aucun autre code ne dépend de Steam** (le jeu doit tourner en ENet local).
 
-## Arborescence
-Dossiers : `scenes/` et `scripts/` (main, mecha, player, levels, network, interaction, props), `assets/models/` (.glb), `blender/` (scripts et .blend), `tests/`, `docs/` ; `addons/` n'est pas versionné (voir `addons/ADDONS.txt`). Arborescence détaillée dans `README.md`.
-
-## Architecture réseau — règles NON négociables
-1. **Hôte autoritaire** : seul l'hôte (peer id 1) simule la physique du mécha. Les clients envoient leurs **inputs**, jamais des positions du mécha.
-2. Les nains : chaque joueur a l'autorité sur le déplacement de **son** nain (`set_multiplayer_authority(peer_id)`), l'hôte valide les interactions avec les stations.
-3. Les interactions (prendre un poste, appuyer sur un bouton) passent par des RPC `@rpc("any_peer", "call_local", "reliable")` vers l'hôte, qui vérifie puis applique.
-4. Les inputs continus (joystick) : `"unreliable_ordered"`.
-5. Tout nouveau système doit être pensé "comment ça se synchronise ?" **avant** d'être codé. Si ce n'est pas clair, demander.
-   **Toute interaction doit être synchronisée avec tous les joueurs** (ce que l'un fait, tous le voient), et testée en multi (hôte + au moins un client) avant d'être considérée comme finie.
-6. Le cockpit est dans un repère **local au mécha** : les nains sont enfants du mécha (ou d'un nœud qui le suit), pour ne pas glisser quand il bouge.
-7. Recettes (état qui dure, effet d'un instant, objet qui apparaît, niveau, objet figé) : **lire `docs/reseau.md` avant toute interaction, objet ou niveau**.
-8. **Test réseau automatique** : `sh tests/tools/net_test.sh` (hôte + client sans fenêtre, compare ce que chacun voit) doit afficher `NET TEST OK` avant de fusionner une branche qui touche au réseau, aux objets ou aux interactions. Chaque nouvelle interaction ajoute son étape dans `tests/tools/net_test.gd`. En vraie partie (Steam compris), **F9** compare l'état du client à celui de l'hôte.
+## Réseau — règles NON négociables
+1. **Hôte autoritaire** (peer 1) : seul l'hôte simule le mécha. Les clients envoient des **inputs**, jamais des positions du mécha.
+2. Chaque joueur a l'autorité sur le déplacement de **son** nain ; l'hôte valide les interactions.
+3. Interactions : RPC `@rpc("any_peer", "call_local", "reliable")` vers l'hôte, qui vérifie puis applique. Inputs continus : `"unreliable_ordered"`.
+4. **Ce que l'un fait, tous le voient** : penser la synchro avant de coder (si ce n'est pas clair, demander), tester avec un hôte et un client.
+5. Le cockpit est dans le repère du mécha : les nains en sont enfants.
 
 ## Conventions GDScript
-- **Typage statique partout** (`var speed: float = 3.0`, `func foo(x: int) -> void`).
-- `snake_case` pour fichiers/variables/fonctions, `PascalCase` pour `class_name` et nœuds.
-- Un script = une responsabilité. Préférer composition (nœuds enfants) à l'héritage profond.
-- Signaux plutôt que références directes entre systèmes. Pas de `get_node("../../..")` : utiliser `@export` ou `%NomUnique`.
-- Ordre dans un script : `class_name`, `extends`, signaux, enums, constantes, `@export`, variables, `_ready`, `_physics_process`, méthodes publiques, méthodes privées (`_prefixe`).
-- Toute la logique de gameplay physique dans `_physics_process`, pas `_process`.
-- Les inputs sont déclarés dans la Input Map (`project.godot`), jamais de touches codées en dur. Prévoir la manette dès le début.
-- **Deux langues (français, anglais)** : tout texte visible par le joueur passe par `tr("texte en français")` (le texte français sert de clé) et a sa ligne dans `assets/translations/texts.csv` (colonnes `keys,fr,en`). Pour un texte avec des valeurs : `tr("Joueur %d") % n`. Les boutons et étiquettes des scènes sont traduits tout seuls, mais leur texte doit aussi être dans le tableau. `run_tests.sh` vérifie qu'aucun texte n'est oublié. Les textes de debug restent en français.
+- Typage statique partout. `snake_case` (fichiers, variables, fonctions), `PascalCase` (`class_name`, nœuds).
+- Un script = une responsabilité ; composition plutôt qu'héritage ; signaux plutôt que références directes ; `@export` ou `%NomUnique`, jamais `get_node("../../..")`.
+- Ordre : `class_name`, `extends`, signaux, enums, constantes, `@export`, variables, `_ready`, `_physics_process`, méthodes publiques, privées (`_prefixe`).
+- Gameplay physique dans `_physics_process`. Touches dans la Input Map (clavier + manette), jamais en dur.
+- **Textes visibles** : `tr("texte en français")` + une ligne dans `assets/translations/texts.csv` (`keys,fr,en`). Textes de debug en français, sans `tr()`.
 
-## Modèles 3D et animation (détail dans `docs/modeles_3d.md`, à lire avant de modéliser ou d'animer)
-- Direction artistique : **diorama low poly lumineux et encré** (facettes, contours noirs, proportions trapues), mine + rétro-industriel, vieux robot de casse retapé ; lumière chaude, ombres bleutées claires, jamais d'image sombre. Couleurs de `prop_kit.PALETTE`.
-- Modèles **construits par script Python** (le script fait foi). Planche de vues obligatoire, montrée à l'humain avant d'exporter le `.glb`. L'export passe par `kit.save_and_export`, qui contrôle le modèle et le `.glb` (PASS / FAIL).
-- 1 unité = 1 m ; l'avant d'un modèle regarde vers **+Y** dans Blender (-Z dans Godot) ; ne jamais éditer un `.glb` dans Godot.
-- **Tout ce qui bouge est animé** (rien ne glisse ni ne se téléporte). On synchronise l'**état**, chaque joueur joue l'animation chez lui.
-
-## Usage des MCP
-- **MCP Godot** : utiliser pour lancer le projet, lire les erreurs/sorties du debugger, inspecter l'arborescence des scènes. Après toute modification de script, **lancer le jeu et vérifier la sortie** avant de dire que c'est fini.
-- **MCP Blender** : Blender doit être ouvert avec l'addon connecté. Si la connexion échoue, le dire au lieu d'improviser.
-- Les fichiers `.tscn` / `.tres` sont du texte : on peut les éditer à la main, mais avec prudence (ids `ExtResource`/`SubResource` cohérents). Pour les scènes complexes, préférer passer par le MCP ou demander à l'utilisateur de le faire dans l'éditeur.
-
-## Ce qu'il ne faut PAS faire
-- Ne jamais toucher à `.godot/`, aux fichiers `*.import`, ni à `addons/` (sauf demande explicite).
-- Ne pas ajouter de plugin/addon sans demander. Tout addon ajouté doit être inscrit dans `addons/ADDONS.txt` (version, source, dossier, rôle, installation).
-- Ne pas implémenter une idée de `docs/ideas.md` sans qu'elle ait été validée par un humain.
-- Ne jamais commiter directement sur `main` (on y fusionne seulement une branche terminée), ni faire `git push --force`.
-- Ne pas faire de gros refactors non demandés. Petits pas, testables.
-- Pas de dépendance à Steam dans le gameplay (le jeu doit tourner en ENet local).
+## 3D
+- Style et couleurs : `docs/modeles_3d.md` et `prop_kit.PALETTE`. Un modèle = un script Python dans `blender/` (le script fait foi), exporté par `kit.save_and_export`.
+- 1 unité = 1 m ; l'avant regarde vers +Y dans Blender (-Z dans Godot) ; ne jamais éditer un `.glb` dans Godot.
+- Tout ce qui bouge est animé ; on synchronise l'**état**, chaque joueur joue l'animation chez lui.
 
 ## Façon de travailler
-1. Pour toute feature : proposer un plan court (fichiers touchés, nœuds créés, impact réseau) → l'humain valide → implémentation.
-2. Prototyper chaque mécanique dans `tests/sandbox_<feature>.tscn`, qui vérifie son résultat avec `TestCheck`. Avant de fusionner une branche qui touche au code : `sh tests/tools/run_tests.sh` → `TOUS LES TESTS OK`. Pendant le travail, ne lancer que les tests de la tâche. Une scène de test attend en temps de jeu, jamais en temps réel. Détail (options, test du multi, export) : `docs/tests.md`.
-3. Après chaque étape qui marche : proposer un message de commit git clair.
-4. Noter les décisions importantes dans `docs/decisions.md` et, si elles changent le jeu, mettre à jour `docs/jeu.md`.
+1. Toute feature : plan court (fichiers, nœuds, impact réseau) → validation de l'humain → petits pas testables. Pas de gros refactor non demandé.
+2. Prototyper dans `tests/sandbox_<feature>.tscn`, qui vérifie son résultat avec `TestCheck`. Avant de fusionner une branche qui touche au code : `sh tests/tools/run_tests.sh` → `TOUS LES TESTS OK` (détail : `docs/tests.md`).
+3. Après une modification de script : lancer le jeu (MCP Godot) et lire la sortie avant de dire que c'est fini.
+4. Noter les décisions dans `docs/decisions.md` ; si elles changent le jeu, mettre à jour `docs/jeu.md`.
+5. MCP Blender : s'il ne répond pas, le dire au lieu d'improviser. `.tscn` / `.tres` s'éditent à la main avec prudence (ids cohérents).
 
-## Travail à deux (deux humains, deux IA)
-Deux développeurs, chacun avec son IA (Claude Code, Antigravity). Les IA ne se parlent pas : **le dépôt git est leur seule mémoire commune**.
+## Interdits
+- Toucher à `.godot/`, aux `*.import` ou à `addons/` (sauf demande). Ajouter un addon sans demander (et sans l'inscrire dans `addons/ADDONS.txt`).
+- Commiter sur `main`, `git push --force`, rebase d'une branche déjà poussée.
+- Mettre un chemin propre à une machine dans un fichier versionné (utiliser `GODOT_PATH` ou un fichier ignoré).
 
-**Début de session (obligatoire)**
-1. `git pull` sur `main`, puis créer ou mettre à jour sa branche.
-2. Relire `docs/roadmap.md` et les dernières entrées de `docs/decisions.md` : l'autre a peut-être changé quelque chose depuis.
+## Travail à deux (Claude Code : `Marchma0`, Antigravity : `massyl12`)
+**Début de session** : `git pull` sur `main`, relire `docs/roadmap.md` et les dernières entrées de `docs/decisions.md`.
+**Avant une tâche** : la marquer `[en cours — pseudo]` dans la roadmap et pousser tout de suite ; ne pas prendre une tâche marquée par l'autre sans lui en parler.
 
-**Où écrire quoi** : voir le tableau « Les documents du projet » en haut. Ne jamais mettre une règle ou une info du projet dans la mémoire privée de son IA, ni dans `CLAUDE.md` ou `.agent/rules/` : l'autre IA ne la verrait pas.
-
-**Qui fait quoi**
-- Avant de commencer un jalon ou une tâche, l'indiquer dans la roadmap avec le pseudo GitHub (ex. `[en cours — Marchma0]`) et pousser ce changement tout de suite, pour que l'autre le voie.
-- Ne pas travailler sur une tâche marquée par l'autre sans lui en parler.
-
-**Branches et commits — procédure git (ce sont les IA qui font les commits et les push : suivre ces étapes à la lettre)**
-- `main` = toujours une version qui se lance. **Aucun commit directement sur `main`.**
-- **Pas de Pull Request, pas d'interface GitHub** : les humains ne passent pas par GitHub, c'est l'IA qui fusionne elle-même sa branche dans `main` et pousse (étape « Finir une tâche »).
-- Une branche **courte** par tâche (quelques jours au plus), nommée avec le **pseudo GitHub** de l'humain : `pseudo/sujet` (ex. `Marchma0/m7-jambes`). Pseudos connus : `Marchma0` (Claude Code) ; `massyl12` (Antigravity).
-- Commencer une tâche :
-  ```
-  git status                      # doit être propre, sinon demander à l'humain quoi faire
-  git switch main
-  git pull
-  git switch -c pseudo/sujet
-  ```
-- Pendant la tâche : commits petits et fréquents, `git add` **fichier par fichier** (relire `git status` avant, ne jamais ajouter `.godot/`, `addons/`, `build/`), puis `git push -u origin pseudo/sujet`.
-- Récupérer le travail de l'autre dans sa branche : `git pull origin main` (**merge, jamais de rebase** sur une branche déjà poussée → donc jamais besoin de `--force`).
-- Finir une tâche (quand l'humain dit que c'est bon) :
-  ```
-  git pull origin main            # dans sa branche : récupérer le travail de l'autre, régler les conflits
-  # relancer le jeu et vérifier la sortie : main doit toujours se lancer
-  git switch main
-  git pull
-  git merge --no-ff pseudo/sujet  # ne doit plus y avoir de conflit, sinon s'arrêter et demander
-  git push
-  git push origin --delete pseudo/sujet   # la branche distante d'abord, sinon -d refuse
-  git branch -d pseudo/sujet
-  ```
-  Si `git push` sur `main` est refusé (l'autre a poussé entre-temps) : `git pull` puis `git push`, **jamais `--force`**.
-- Conflit sur un fichier binaire (`.blend`, `.glb`, image, son) ou sur une `.tscn` peu claire : **ne pas trancher seul**, demander à l'humain.
-- Changer de branche avec l'éditeur Godot ouvert : le fermer avant, ou recharger le projet après (sinon il réécrit les anciennes scènes).
-- Messages de commit en français, au présent, qui disent ce que ça change pour le jeu (même style que l'historique).
-
-**Fichiers qui se fusionnent mal**
-- `.blend`, `.glb`, images, sons : **impossibles à fusionner**. Une seule personne les modifie à la fois : le dire à l'autre avant.
-- `.tscn` / `.tres` : du texte, mais les conflits sont pénibles (ids). Éviter de modifier la même scène en parallèle ; préférer des sous-scènes séparées.
-- `project.godot` (Input Map, autoloads) : modifications petites et ciblées, à signaler à l'autre humain.
-
-**Machine de chacun**
-- Godot **4.7.2** pour les deux (même version, sinon les fichiers d'import changent).
-- Les chemins propres à une machine ne vont jamais dans un fichier versionné : variables d'environnement (`GODOT_PATH`) ou fichiers locaux ignorés.
-
-## Roadmap
-Dans `docs/roadmap.md` : à relire en début de session. Avant de commencer une tâche, la marquer `[en cours — pseudo]` et pousser tout de suite.
+**Procédure git** (ce sont les IA qui commitent, pas de Pull Request) :
+```
+git status                       # propre, sinon demander
+git switch main && git pull
+git switch -c pseudo/sujet       # une branche courte par tâche
+# commits petits, git add fichier par fichier, messages en français au présent ; git push -u origin pseudo/sujet
+# récupérer le travail de l'autre : git pull origin main (merge)
+```
+**Finir** (quand l'humain dit que c'est bon) :
+```
+git pull origin main             # régler les conflits, relancer le jeu
+git switch main && git pull
+git merge --no-ff pseudo/sujet   # conflit = s'arrêter et demander
+git push                         # refusé ? git pull puis git push
+git push origin --delete pseudo/sujet && git branch -d pseudo/sujet
+```
+- Conflit sur un binaire (`.blend`, `.glb`, image, son) ou une `.tscn` peu claire : demander à l'humain. Un seul développeur modifie un binaire à la fois (prévenir l'autre).
+- Éviter de modifier la même scène en parallèle ; changements de `project.godot` petits et signalés à l'autre.
+- Changer de branche avec l'éditeur Godot ouvert : le fermer avant, ou recharger le projet après.

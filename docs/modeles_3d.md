@@ -32,7 +32,6 @@ Une capture prise au hasard doit être **lisible en petit** (vignette de la page
   sortie, objet à prendre).
 - **Lumière de contour** (rim) froide sur les personnages et le robot pour les détacher du fond.
 - **Chaque mission a sa couleur dominante** (canyon orangé, grotte bleue, forêt verte…) mais garde la règle chaud / froid.
-- **Performances (Iris Xe)** : peu de lumières à ombres, les autres sans ombre.
 
 ## Couleurs
 - **Valeurs moyennes à claires et saturées**, comme un jouet peint ; les ombres viennent de l'éclairage, pas des couleurs.
