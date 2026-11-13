@@ -117,7 +117,6 @@ func _run_host() -> void:
 	arm.grab_node(_world.get_node("Mecha/Props").get_child(0) as Node3D, "poop")
 	await get_tree().create_timer(STEP_WAIT * 3.0).timeout
 	await _check("caca attrapé par le grappin et rangé dans le sac")
-	await _grab_ally_steps()
 	await _inventory_steps()
 
 	_director._travel(&"lobby")
@@ -165,15 +164,9 @@ func _run_host() -> void:
 	_client_action.rpc_id(_client_id, "Mecha", "place_at", [Vector3(-35.0, 0.1, -46.4)])
 	await get_tree().create_timer(STEP_WAIT).timeout
 	await _client_step("tuto : bouton au sol (client)", "Level/DevTutorial/OutsideButton", "stay:request_press")
-	if tuto.step != DevTutorial.Step.LIFT:
+	if tuto.step != DevTutorial.Step.CLIMB or not tuto.is_gate_open(DevTutorial.Gate.BUTTON):
 		_failures += 1
-		_log("ÉCHEC  tuto : le bouton au sol n'a pas fait avancer l'étape (%d)" % tuto.step)
-	_client_action.rpc_id(_client_id, "Mecha", "place_at", [Vector3(-45.2, DevTutorial.TOWER_HEIGHT + 0.1, -58.5)])
-	await get_tree().create_timer(STEP_WAIT).timeout
-	await _client_step("tuto : bouton de la tour (client)", "Level/DevTutorial/TowerButton", "stay:request_press")
-	if tuto.step != DevTutorial.Step.CLIMB or not tuto.is_gate_open(DevTutorial.Gate.LIFT):
-		_failures += 1
-		_log("ÉCHEC  tuto : le bouton de la tour n'a pas ouvert la porte 3 (étape %d)" % tuto.step)
+		_log("ÉCHEC  tuto : le bouton au sol n'a pas ouvert la porte 3 (étape %d)" % tuto.step)
 
 	_finish.rpc_id(_client_id)
 	_log("NET TEST %s (%d étape(s) en échec)" % ["OK" if _failures == 0 else "ÉCHEC", _failures])
@@ -467,31 +460,3 @@ func _on_timeout() -> void:
 func _log(text: String) -> void:
 	print("[net_test %s] %s" % [_role, text])
 
-
-## Grappin (3.14) : le nain du client est dehors, la pince de l'hôte le saisit (il pend dessous, chez tout le
-## monde), puis le pose au sol sous le rayon tracteur. C'est le client qui déplace son nain (il en a l'autorité).
-func _grab_ally_steps() -> void:
-	var mecha: Node3D = _world.get_node("Mecha") as Node3D
-	var arm: GrabberArm = mecha.get_node("GrabberArm") as GrabberArm
-	var client_dwarf: Dwarf = Dwarf.of_peer(_client_id)
-	var outside: Vector3 = mecha.global_transform * Vector3(-6.0, 0.2, -4.0)
-	_client_action.rpc_id(_client_id, "Mecha", "place_at", [outside])
-	await get_tree().create_timer(STEP_WAIT).timeout
-	if not arm.grab_node(client_dwarf, GrabberArm.KIND_DWARF):
-		_failures += 1
-		_log("ÉCHEC  grappin : la pince ne saisit pas le nain du client (dehors)")
-		return
-	await get_tree().create_timer(0.3).timeout
-	var hold: Vector3 = arm.get_hold_point().global_position
-	if client_dwarf.global_position.distance_to(hold) > 2.0:
-		_failures += 1
-		_log("ÉCHEC  grappin : le nain du client ne pend pas sous la pince (%.1f m)" % client_dwarf.global_position.distance_to(hold))
-	else:
-		_log("OK     grappin : le nain du client pend sous la pince")
-	await get_tree().create_timer(GrabberArm.DELIVER_DURATION + STEP_WAIT).timeout
-	var beam: Vector3 = mecha.get_node("TractorBeam").global_position
-	var flat: float = Vector2(client_dwarf.global_position.x - beam.x, client_dwarf.global_position.z - beam.z).length()
-	if arm.held_peer_id != 0 or flat > 1.0:
-		_failures += 1
-		_log("ÉCHEC  grappin : le nain du client n'est pas posé sous le rayon tracteur (%.1f m)" % flat)
-	await _check("grappin : le nain du client est posé sous le robot")

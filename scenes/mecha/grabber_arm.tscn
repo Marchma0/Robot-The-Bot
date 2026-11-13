@@ -31,15 +31,6 @@ roughness = 0.55
 material = SubResource("StandardMaterial3D_hub")
 size = Vector3(0.62, 0.3, 0.2)
 
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_shoulder_body"]
-size = Vector3(0.93, 1.98, 1.04)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_barrel_body"]
-size = Vector3(0.57, 0.58, 1.7)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_slider_body"]
-size = Vector3(0.7, 0.89, 2.155)
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_grabber"]
 properties/0/path = NodePath(".:arm_yaw")
 properties/0/spawn = true
@@ -59,9 +50,6 @@ properties/4/replication_mode = 2
 properties/5/path = NodePath(".:shot_distance")
 properties/5/spawn = true
 properties/5/replication_mode = 1
-properties/6/path = NodePath(".:held_peer_id")
-properties/6/spawn = true
-properties/6/replication_mode = 2
 
 [node name="GrabberArm" type="Node3D"]
 script = ExtResource("1_script")
@@ -141,21 +129,3 @@ omni_range = 4.5
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_grabber")
 replication_interval = 0.033
-
-[node name="ShoulderBody" type="StaticBody3D" parent="."]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ShoulderBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1325, 0.69, 0)
-shape = SubResource("BoxShape3D_shoulder_body")
-
-[node name="BarrelBody" type="StaticBody3D" parent="ElbowPivot"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ElbowPivot/BarrelBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, -0.87)
-shape = SubResource("BoxShape3D_barrel_body")
-
-[node name="SliderBody" type="StaticBody3D" parent="ElbowPivot/SliderPivot"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ElbowPivot/SliderPivot/SliderBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.095, 0.5725)
-shape = SubResource("BoxShape3D_slider_body")

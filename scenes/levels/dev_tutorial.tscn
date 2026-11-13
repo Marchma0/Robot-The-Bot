@@ -75,12 +75,6 @@ transform = Transform3D(-3, 0, 0, 0, 3, 0, 0, 0, -3, -35, 1, -45.2)
 display_name = "Bouton du tuto"
 cap_color = Color(0.2, 0.75, 0.25, 1)
 
-[node name="TowerButton" parent="." instance=ExtResource("5_button")]
-unique_name_in_owner = true
-transform = Transform3D(0, 0, 3, 0, 3, 0, -3, 0, 0, -44, 6.3, -58.5)
-display_name = "Bouton de la tour du tuto"
-cap_color = Color(0.2, 0.75, 0.25, 1)
-
 [node name="MovingCrates" type="Node3D" parent="."]
 unique_name_in_owner = true
 
